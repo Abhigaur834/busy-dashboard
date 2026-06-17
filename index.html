@@ -360,7 +360,6 @@ window.downloadTemplate = function() {
   ];
   const ws2 = XLSX.utils.aoa_to_sheet(lmRows);
   ws2['!cols'] = [{wch:20},{wch:20},{wch:24},{wch:20},{wch:24}];
-  XLSX.utils.book_append_sheet(wb, wb.SheetNames.length>0?wb:'', ws2, 'Last Month');
   XLSX.utils.book_append_sheet(wb, ws2, 'Last Month');
 
   // ── Sheet 3: Instructions ──
