@@ -10,230 +10,355 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
 :root{
-  --bblue:#1565C0;--bblue-l:#e3f2fd;--bblue-m:#90caf9;--bblue-d:#0d47a1;
-  --bg:#f0f2f5;--sur:#fff;--bdr:#e0e0e0;--txt:#0d0d0d;--mut:#6b7280;
-  --up:#16a34a;--up-l:#f0fdf4;--dn:#dc2626;--dn-l:#fef2f2;--warn:#d97706;--warn-l:#fffbeb;
-  --n50:#fafafa;--n100:#f5f5f5;--n200:#e5e5e5;--n300:#d4d4d4;--n400:#a3a3a3;--n500:#737373;
-  --r:8px;--r-lg:12px;
-  --sh:0 1px 4px rgba(0,0,0,.08);--sh-md:0 4px 16px rgba(0,0,0,.12);
+  --blue:#1565C0;--blue-l:#e3f2fd;--blue-m:#90caf9;--blue-d:#0d47a1;
+  --green:#16a34a;--green-l:#f0fdf4;--red:#dc2626;--red-l:#fef2f2;
+  --amber:#d97706;--amber-l:#fffbeb;--purple:#7c3aed;--teal:#0d9488;
+  --bg:#f5f6fa;--sur:#ffffff;--bdr:#e8eaf0;--txt:#1a1d2e;--mut:#6b7280;
+  --n50:#fafafa;--n100:#f4f4f5;--n200:#e4e4e7;--n300:#d1d5db;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 12px rgba(0,0,0,.08);--sh-lg:0 8px 32px rgba(0,0,0,.12);
+  --r:10px;--r-lg:14px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);font-size:13px;min-height:100vh;-webkit-font-smoothing:antialiased;}
 
-/* TOPBAR */
-.topbar{background:#0a0a0a;height:58px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 2px 0 var(--bblue),0 4px 20px rgba(0,0,0,.5);}
-.tb-l{display:flex;align-items:center;gap:0;}
-.logo-busy{font-size:22px;font-weight:900;color:#fff;letter-spacing:2px;}
-.logo-busy span{color:var(--bblue-m);}
-.tb-div{width:1px;height:28px;background:rgba(255,255,255,.15);margin:0 16px;}
-.ocube-logo{display:flex;align-items:center;gap:7px;}
-.ocube-logo svg{width:24px;height:24px;}
-.ocube-word{font-size:13px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.5px;}
-.tb-div2{width:1px;height:20px;background:rgba(255,255,255,.12);margin:0 14px;}
-.tb-title{font-size:10px;font-weight:600;color:rgba(255,255,255,.4);letter-spacing:.8px;text-transform:uppercase;}
-.tb-r{display:flex;align-items:center;gap:10px;}
-.live-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.1);}
-.live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 2s ease-in-out infinite;}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.8);}}
-.btn-upd{background:var(--bblue);color:#fff;border:none;padding:8px 18px;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;box-shadow:0 2px 12px rgba(21,101,192,.4);}
-.btn-upd:hover{background:var(--bblue-d);}
+/* ── TOPBAR ── */
+.topbar{background:#fff;border-bottom:1px solid var(--bdr);height:60px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--sh);}
+.tb-l{display:flex;align-items:center;gap:12px;}
+.logo-busy{font-size:21px;font-weight:900;color:#0a0a0a;letter-spacing:1.5px;display:flex;align-items:center;gap:1px;}
+.logo-busy .u{color:var(--blue);}
+.ocube-wrap{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--n100);border-radius:20px;border:1px solid var(--bdr);}
+.ocube-wrap svg{width:18px;height:18px;}
+.ocube-word{font-size:12px;font-weight:700;color:var(--txt);letter-spacing:.3px;}
+.tb-div{width:1px;height:22px;background:var(--bdr);}
+.tb-title{font-size:11px;font-weight:600;color:var(--mut);letter-spacing:.5px;}
+.tb-date{font-size:11px;font-weight:600;color:var(--blue);background:var(--blue-l);padding:3px 10px;border-radius:20px;}
+.tb-r{display:flex;align-items:center;gap:8px;}
+.live-pill{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--green);background:var(--green-l);padding:4px 10px;border-radius:20px;font-weight:600;border:1px solid #bbf7d0;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.7);}}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-blue{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(21,101,192,.3);}
+.btn-blue:hover{background:var(--blue-d);}
+.btn-green{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(22,163,74,.3);}
+.btn-green:hover{background:#15803d;}
+.btn-outline{background:#fff;color:var(--txt);border:1.5px solid var(--bdr);}
+.btn-outline:hover{background:var(--n50);border-color:var(--n300);}
 
-/* SYNC BAR */
-.sync-bar{background:#052e16;border-bottom:1px solid rgba(21,101,192,.2);padding:0 24px;height:28px;display:flex;align-items:center;gap:8px;font-size:11px;color:rgba(255,255,255,.55);position:sticky;top:58px;z-index:199;}
-.sync-bar.err{background:#450a0a;}
-.sync-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0;}
-.sync-dot.conn{background:#fbbf24;animation:blink .8s infinite;}
-.sync-dot.error{background:#ef4444;}
-@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
-.sync-r{margin-left:auto;font-size:10px;color:rgba(255,255,255,.35);}
+/* ── LAYOUT ── */
+.wrap{max-width:1440px;margin:0 auto;padding:20px 24px;}
+@media(max-width:640px){.wrap{padding:14px 12px;}}
 
-/* WRAP */
-.wrap{max-width:1400px;margin:0 auto;padding:20px 24px;}
-.sec{font-size:10px;font-weight:800;color:var(--n500);text-transform:uppercase;letter-spacing:1.2px;margin:24px 0 12px;display:flex;align-items:center;gap:10px;}
-.sec::before{content:'';width:3px;height:11px;background:var(--bblue);border-radius:2px;flex-shrink:0;}
+.sec{font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:1.2px;margin:28px 0 14px;display:flex;align-items:center;gap:10px;}
+.sec::before{content:'';width:3px;height:11px;background:var(--blue);border-radius:2px;flex-shrink:0;}
 .sec::after{content:'';flex:1;height:1px;background:var(--bdr);}
 .sec:first-child{margin-top:0;}
 
-/* KPI */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:4px;}
-.kc{background:var(--sur);border-radius:var(--r-lg);padding:14px 16px 12px;border:1px solid var(--bdr);border-top:3px solid var(--ac,var(--bblue));box-shadow:var(--sh);transition:transform .2s,box-shadow .2s;}
-.kc:hover{transform:translateY(-2px);box-shadow:var(--sh-md);}
-.kc-icon{font-size:16px;margin-bottom:8px;display:block;}
-.kc-lbl{font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;}
-.kc-val{font-size:19px;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1.2;}
-.kc-sub{font-size:10px;color:var(--mut);margin-top:3px;}
-.kc-bar{height:3px;background:var(--n200);border-radius:2px;margin-top:10px;overflow:hidden;}
-.kc-fill{height:100%;border-radius:2px;transition:width .9s cubic-bezier(.34,1.56,.64,1);}
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:4px;}
+.kc{background:var(--sur);border-radius:var(--r-lg);padding:16px 18px 14px;border:1px solid var(--bdr);border-left:4px solid var(--ac,var(--blue));box-shadow:var(--sh);transition:transform .2s,box-shadow .2s;position:relative;overflow:hidden;}
+.kc:hover{transform:translateY(-3px);box-shadow:var(--sh-md);}
+.kc::after{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,var(--ac-glow,transparent),transparent 70%);opacity:.5;pointer-events:none;}
+.kc-icon{font-size:20px;margin-bottom:10px;display:block;}
+.kc-lbl{font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;}
+.kc-val{font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--ac,var(--blue));line-height:1.2;}
+.kc-sub{font-size:10px;color:var(--mut);margin-top:4px;line-height:1.4;}
+.kc-bar{height:4px;background:var(--n200);border-radius:2px;margin-top:12px;overflow:hidden;}
+.kc-fill{height:100%;border-radius:2px;transition:width 1s cubic-bezier(.34,1.56,.64,1);}
+.kc-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:7px;}
+.tag-up{background:var(--green-l);color:#14532d;}
+.tag-dn{background:var(--red-l);color:#991b1b;}
+.tag-neu{background:var(--n100);color:var(--mut);}
 
-/* CARD */
-.card{background:var(--sur);border-radius:var(--r-lg);border:1px solid var(--bdr);overflow:hidden;margin-bottom:12px;box-shadow:var(--sh);}
+/* ── CARD ── */
+.card{background:var(--sur);border-radius:var(--r-lg);border:1px solid var(--bdr);overflow:hidden;margin-bottom:14px;box-shadow:var(--sh);}
 .card:hover{box-shadow:var(--sh-md);}
-.card-hdr{padding:12px 18px;border-bottom:2px solid var(--bblue);display:flex;align-items:center;justify-content:space-between;background:#0a0a0a;}
-.card-hdr h3{font-size:12px;font-weight:700;color:#fff;}
-.card-hdr aside{font-size:10px;color:rgba(255,255,255,.4);}
+.card-hdr{padding:14px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;background:var(--n50);}
+.card-hdr h3{font-size:13px;font-weight:700;color:var(--txt);display:flex;align-items:center;gap:8px;}
+.card-hdr aside{font-size:11px;color:var(--mut);}
+.card-body{padding:16px 20px;}
 
-/* LEADERBOARD */
-.lb-row{display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--n100);transition:background .1s;}
+/* ── FILTERS BAR ── */
+.filter-bar{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid var(--bdr);background:#fff;flex-wrap:wrap;}
+.filter-bar label{font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;}
+.fsel{padding:5px 10px;border:1.5px solid var(--bdr);border-radius:var(--r);font-size:12px;font-family:'Inter',sans-serif;color:var(--txt);background:#fff;outline:none;cursor:pointer;}
+.fsel:focus{border-color:var(--blue);}
+.filter-bar .spacer{flex:1;}
+
+/* ── LEADERBOARD ── */
+.lb-row{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--n100);transition:background .1s;animation:fadeUp .3s ease both;}
 .lb-row:last-child{border-bottom:none;}
 .lb-row:hover{background:var(--n50);}
-.lb-pos{font-size:13px;font-weight:900;width:30px;text-align:center;font-family:'JetBrains Mono',monospace;}
-.gold{color:#d97706;}.silver{color:#94a3b8;}.bronze{color:#b45309;}.rest{color:var(--n400);font-size:11px;}
-.lb-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+.lb-pos{font-size:16px;font-weight:900;width:34px;text-align:center;font-family:'JetBrains Mono',monospace;flex-shrink:0;}
+.gold{color:#d97706;}.silver{color:#94a3b8;}.bronze{color:#b45309;}.rest{color:var(--n300);font-size:12px;}
+.lb-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:var(--sh);}
 .lb-info{flex:1;min-width:0;}
-.lb-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.lb-meta{font-size:10px;color:var(--mut);margin-top:1px;font-family:'JetBrains Mono',monospace;}
-.lb-bar-t{flex:1;height:5px;background:var(--n200);border-radius:3px;overflow:hidden;min-width:80px;}
-.lb-bar-f{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.34,1.56,.64,1);}
-.lb-r{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:100px;}
-.lb-val{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;}
-.lb-pct{font-size:10px;color:var(--mut);}
-.pill{display:inline-flex;align-items:center;font-size:9px;font-weight:700;padding:1px 7px;border-radius:20px;}
-.pill-g{background:var(--up-l);color:#14532d;}
-.pill-a{background:var(--warn-l);color:#78350f;}
-.pill-r{background:var(--dn-l);color:#991b1b;}
+.lb-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-meta{font-size:10px;color:var(--mut);margin-top:2px;font-family:'JetBrains Mono',monospace;}
+.lb-tl{display:inline-block;font-size:9px;font-weight:700;padding:1px 7px;border-radius:10px;background:var(--blue-l);color:var(--blue-d);margin-top:3px;}
+.lb-bar-t{flex:1;height:7px;background:var(--n200);border-radius:4px;overflow:hidden;min-width:80px;}
+.lb-bar-f{height:100%;border-radius:4px;transition:width .8s cubic-bezier(.34,1.56,.64,1);}
+.lb-r{display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:110px;}
+.lb-val{font-size:14px;font-weight:800;font-family:'JetBrains Mono',monospace;}
+.lb-sub{font-size:10px;color:var(--mut);}
 
-/* TABLE */
+/* ── PILL ── */
+.pill{display:inline-flex;align-items:center;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.pill-g{background:var(--green-l);color:#14532d;}
+.pill-a{background:var(--amber-l);color:#78350f;}
+.pill-r{background:var(--red-l);color:#991b1b;}
+
+/* ── CHARTS ── */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+@media(max-width:840px){.chart-grid{grid-template-columns:1fr;}}
+.chart-wrap{position:relative;height:220px;}
+
+/* ── COMPARISON SECTION ── */
+.cmp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:16px 20px;}
+.cmp-card{background:var(--n50);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 14px;text-align:center;}
+.cmp-agent{font-size:11px;font-weight:700;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cmp-row{display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px;}
+.cmp-row span{color:var(--mut);}
+.cmp-row strong{font-family:'JetBrains Mono',monospace;}
+
+/* ── TABLE ── */
 .tbl-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:12px;}
-thead th{background:var(--n50);padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--bdr);white-space:nowrap;}
+thead th{background:var(--n50);padding:9px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;border-bottom:2px solid var(--bdr);white-space:nowrap;cursor:pointer;user-select:none;}
+thead th:hover{background:var(--n100);}
 tbody tr{border-bottom:1px solid var(--n100);transition:background .1s;}
 tbody tr:last-child{border-bottom:none;}
-tbody tr:hover{background:var(--n50);}
-tbody td{padding:8px 12px;white-space:nowrap;}
-tfoot td{padding:8px 12px;font-weight:700;background:var(--n100);border-top:2px solid var(--n200);}
+tbody tr:hover{background:#f0f7ff;}
+tbody tr.row-green{background:#f0fdf4;}
+tbody tr.row-amber{background:#fffbeb;}
+tbody tr.row-red{background:#fef2f2;}
+tbody tr.row-green:hover{background:#dcfce7;}
+tbody tr.row-amber:hover{background:#fef3c7;}
+tbody tr.row-red:hover{background:#fee2e2;}
+tbody td{padding:9px 12px;white-space:nowrap;}
+tfoot td{padding:9px 12px;font-weight:700;background:var(--blue-l);border-top:2px solid var(--blue-m);font-size:12px;}
 .mono{font-family:'JetBrains Mono',monospace;font-size:11px;}
-.up{color:var(--up);}.dn{color:var(--dn);}
+.up{color:var(--green);font-weight:700;}
+.dn{color:var(--red);font-weight:700;}
 .bar-w{background:var(--n200);border-radius:3px;height:5px;width:70px;overflow:hidden;display:inline-block;vertical-align:middle;}
 .bar-f{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.34,1.56,.64,1);}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
-@media(max-width:820px){.two-col{grid-template-columns:1fr;}}
 
-/* MODAL / OVERLAY */
-.ovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+/* ── MODAL ── */
+.ovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
 .ovl.on{display:flex;}
-.modal{background:var(--sur);border-radius:var(--r-lg);padding:24px 26px;width:520px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:var(--sh-md);animation:min .3s cubic-bezier(.34,1.56,.64,1) both;}
-.modal.wide{width:960px;}
-@keyframes min{from{transform:scale(.9) translateY(20px);opacity:0;}to{transform:none;opacity:1;}}
+.modal{background:#fff;border-radius:var(--r-lg);padding:26px 28px;width:560px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:var(--sh-lg);animation:min .3s cubic-bezier(.34,1.56,.64,1) both;}
+.modal.wide{width:980px;}
+@keyframes min{from{transform:scale(.92) translateY(16px);opacity:0;}to{transform:none;opacity:1;}}
 .modal h2{font-size:16px;font-weight:800;margin-bottom:4px;}
 .modal>p{font-size:12px;color:var(--mut);margin-bottom:18px;}
 .m-tabs{display:flex;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--bdr);margin-bottom:18px;}
-.m-tab{flex:1;text-align:center;padding:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:var(--n50);color:var(--mut);transition:all .2s;}
-.m-tab.on{background:#0a0a0a;color:#90caf9;}
+.m-tab{flex:1;text-align:center;padding:9px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:var(--n50);color:var(--mut);transition:all .2s;}
+.m-tab.on{background:var(--blue);color:#fff;}
 .tp{display:none;}.tp.on{display:block;}
 .fg{margin-bottom:11px;}
 .fg label{display:block;font-size:9px;font-weight:700;color:var(--mut);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
-.fg input,.fg select{width:100%;padding:7px 10px;border:1.5px solid var(--bdr);border-radius:var(--r);font-size:12px;font-family:'Inter',sans-serif;color:var(--txt);background:var(--sur);outline:none;transition:border .15s;}
-.fg input:focus,.fg select:focus{border-color:var(--bblue);}
+.fg input,.fg select{width:100%;padding:7px 10px;border:1.5px solid var(--bdr);border-radius:var(--r);font-size:12px;font-family:'Inter',sans-serif;color:var(--txt);background:#fff;outline:none;transition:border .15s;}
+.fg input:focus,.fg select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,101,192,.1);}
 .m-act{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
-.btn-primary{background:var(--bblue);color:#fff;border:none;padding:9px 22px;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;}
-.btn-primary:hover{background:var(--bblue-d);}
+.btn-primary{background:var(--blue);color:#fff;border:none;padding:9px 22px;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;}
+.btn-primary:hover{background:var(--blue-d);}
 .btn-sec{background:var(--n100);color:var(--txt);border:1.5px solid var(--bdr);padding:9px 22px;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;}
 .btn-sec:hover{background:var(--n200);}
-.err{color:var(--dn);font-size:11px;margin-top:4px;display:none;}
 .two-inp{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.info-box{background:var(--bblue-l);border:1px solid var(--bblue-m);border-radius:var(--r);padding:8px 12px;margin-bottom:12px;font-size:11px;color:var(--bblue-d);}
 .ag-wrap{border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:8px;overflow:hidden;}
-.ag-hdr{background:var(--n50);padding:8px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
+.ag-hdr{background:var(--n50);padding:9px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;transition:background .15s;}
+.ag-hdr:hover{background:var(--n100);}
 .ag-hdr strong{font-size:12px;flex:1;}
-.ag-body{display:none;padding:10px 12px;border-top:1px solid var(--bdr);}
-.ag-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px;}
-.dw span{display:block;font-size:9px;color:var(--mut);margin-bottom:2px;font-weight:600;}
-.dw input{width:100%;padding:4px 5px;font-size:11px;border:1px solid var(--bdr);border-radius:5px;font-family:'JetBrains Mono',monospace;outline:none;}
-.dw input:focus{border-color:var(--bblue);}
-.live-bar{background:var(--bblue-l);border:1px solid var(--bblue-m);border-radius:var(--r);padding:8px 14px;margin-top:10px;display:flex;gap:16px;flex-wrap:wrap;}
-.lv span{display:block;font-size:9px;color:var(--bblue-d);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:1px;}
-.lv strong{font-size:12px;font-family:'JetBrains Mono',monospace;color:#0d47a1;}
-/* Saving overlay */
-.sov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:900;display:none;align-items:center;justify-content:center;}
+.ag-body{display:none;padding:12px 14px;border-top:1px solid var(--bdr);background:#fff;}
+.info-box{background:var(--blue-l);border:1px solid var(--blue-m);border-radius:var(--r);padding:9px 13px;margin-bottom:14px;font-size:11px;color:var(--blue-d);line-height:1.5;}
+.err{color:var(--red);font-size:11px;margin-top:4px;display:none;}
+/* Saving */
+.sov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;display:none;align-items:center;justify-content:center;}
 .sov.on{display:flex;}
-.sov-box{background:#fff;border-radius:var(--r-lg);padding:22px 30px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:600;box-shadow:var(--sh-md);}
-.spin{width:20px;height:20px;border:3px solid var(--n200);border-top-color:var(--bblue);border-radius:50%;animation:sp .7s linear infinite;flex-shrink:0;}
+.sov-box{background:#fff;border-radius:var(--r-lg);padding:22px 30px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:600;box-shadow:var(--sh-lg);}
+.spin{width:20px;height:20px;border:3px solid var(--n200);border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite;}
 @keyframes sp{to{transform:rotate(360deg);}}
 /* Toast */
-.toast{position:fixed;bottom:22px;right:22px;z-index:9999;background:#0a0a0a;color:#fff;padding:11px 18px;border-radius:var(--r-lg);font-size:12px;font-weight:500;box-shadow:var(--sh-md);display:flex;align-items:center;gap:8px;transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;}
+.toast{position:fixed;bottom:22px;right:22px;z-index:9999;background:#1a1d2e;color:#fff;padding:12px 20px;border-radius:var(--r-lg);font-size:12px;font-weight:500;box-shadow:var(--sh-lg);transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;max-width:320px;}
 .toast.show{transform:translateY(0);opacity:1;}
-@media(max-width:640px){.kpi-grid{grid-template-columns:repeat(2,1fr);}.wrap{padding:14px 14px;}}
+/* Print */
+@media print{
+  .topbar,.filter-bar,.btn,.m-act,.ovl,.sov,.toast{display:none!important;}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid;}
+  body{background:#fff;}
+}
+/* Mobile */
+@media(max-width:640px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .tb-title,.tb-date{display:none;}
+  .topbar{padding:0 14px;}
+  .wrap{padding:12px 10px;}
+  .lb-bar-t{display:none;}
+}
 </style>
 </head>
 <body>
 
-<div class="sync-bar" id="syncBar">
-  <div class="sync-dot conn" id="syncDot"></div>
-  <span id="syncMsg">Connecting to Firebase…</span>
-  <span class="sync-r" id="syncR">—</span>
-</div>
-
 <div class="topbar">
   <div class="tb-l">
-    <div class="logo-busy">B<span>U</span>SY</div>
+    <div class="logo-busy">B<span class="u">U</span>SY</div>
     <div class="tb-div"></div>
-    <div class="ocube-logo">
+    <div class="ocube-wrap">
       <svg viewBox="0 0 40 40" fill="none">
-        <circle cx="20" cy="4"  r="2"   fill="white" opacity="1"/>
-        <circle cx="28" cy="6"  r="1.8" fill="white" opacity=".9"/>
-        <circle cx="35" cy="12" r="1.7" fill="white" opacity=".8"/>
-        <circle cx="38" cy="20" r="1.6" fill="white" opacity=".7"/>
-        <circle cx="36" cy="28" r="1.5" fill="white" opacity=".6"/>
-        <circle cx="30" cy="34" r="1.4" fill="white" opacity=".55"/>
-        <circle cx="22" cy="38" r="1.3" fill="white" opacity=".5"/>
-        <circle cx="14" cy="37" r="1.2" fill="white" opacity=".45"/>
-        <circle cx="7"  cy="33" r="1.2" fill="white" opacity=".4"/>
-        <circle cx="3"  cy="26" r="1.1" fill="white" opacity=".35"/>
-        <circle cx="2"  cy="18" r="1.1" fill="white" opacity=".3"/>
-        <circle cx="5"  cy="11" r="1.2" fill="white" opacity=".35"/>
-        <circle cx="11" cy="5"  r="1.3" fill="white" opacity=".4"/>
-        <circle cx="20" cy="9"  r="1.4" fill="white" opacity=".7"/>
-        <circle cx="26" cy="11" r="1.3" fill="white" opacity=".65"/>
-        <circle cx="31" cy="16" r="1.2" fill="white" opacity=".6"/>
-        <circle cx="32" cy="22" r="1.2" fill="white" opacity=".55"/>
-        <circle cx="28" cy="28" r="1.1" fill="white" opacity=".5"/>
-        <circle cx="22" cy="32" r="1.1" fill="white" opacity=".45"/>
-        <circle cx="16" cy="31" r="1"   fill="white" opacity=".4"/>
-        <circle cx="11" cy="27" r="1"   fill="white" opacity=".35"/>
-        <circle cx="9"  cy="22" r="1"   fill="white" opacity=".35"/>
-        <circle cx="10" cy="15" r="1.1" fill="white" opacity=".4"/>
-        <circle cx="14" cy="10" r="1.2" fill="white" opacity=".45"/>
+        <circle cx="20" cy="4" r="2" fill="#1565C0"/><circle cx="28" cy="6" r="1.8" fill="#1565C0" opacity=".85"/>
+        <circle cx="35" cy="12" r="1.7" fill="#1565C0" opacity=".7"/><circle cx="38" cy="20" r="1.6" fill="#1565C0" opacity=".6"/>
+        <circle cx="36" cy="28" r="1.5" fill="#1565C0" opacity=".55"/><circle cx="30" cy="34" r="1.4" fill="#1565C0" opacity=".5"/>
+        <circle cx="22" cy="38" r="1.3" fill="#1565C0" opacity=".45"/><circle cx="14" cy="37" r="1.2" fill="#1565C0" opacity=".4"/>
+        <circle cx="7" cy="33" r="1.2" fill="#1565C0" opacity=".35"/><circle cx="3" cy="26" r="1.1" fill="#1565C0" opacity=".3"/>
+        <circle cx="2" cy="18" r="1.1" fill="#1565C0" opacity=".3"/><circle cx="5" cy="11" r="1.2" fill="#1565C0" opacity=".35"/>
+        <circle cx="11" cy="5" r="1.3" fill="#1565C0" opacity=".4"/><circle cx="20" cy="9" r="1.4" fill="#1565C0" opacity=".65"/>
+        <circle cx="26" cy="11" r="1.3" fill="#1565C0" opacity=".6"/><circle cx="31" cy="16" r="1.2" fill="#1565C0" opacity=".55"/>
+        <circle cx="32" cy="22" r="1.2" fill="#1565C0" opacity=".5"/><circle cx="28" cy="28" r="1.1" fill="#1565C0" opacity=".45"/>
       </svg>
-      <span class="ocube-word">cube</span>
+      <span class="ocube-word">OcubeServices</span>
     </div>
-    <div class="tb-div2"></div>
+    <div class="tb-div"></div>
     <span class="tb-title">Sales Funnel Dashboard</span>
+    <span class="tb-date" id="todayDate">—</span>
   </div>
   <div class="tb-r">
-    <span class="live-badge"><span class="live-dot"></span><span id="updBadge">Connecting…</span></span>
-    <button class="btn-upd" onclick="openLogin()" style="background:var(--bblue)">✏️ Update Data</button>
-    <button class="btn-upd" onclick="forcePush()" style="background:#16a34a;margin-left:6px" id="forceBtn">⚡ Load Excel Data</button>
+    <span class="live-pill"><span class="live-dot"></span><span id="syncLbl">Connecting…</span></span>
+    <button class="btn btn-outline" onclick="window.print()">🖨 Print</button>
+    <button class="btn btn-green" onclick="forcePush()" id="forceBtn">⚡ Load Data</button>
+    <button class="btn btn-blue" onclick="openLogin()">✏️ Update Data</button>
   </div>
 </div>
 
 <div class="wrap">
 
+  <!-- KPI -->
   <div class="sec">June 2026 — Funnel Snapshot</div>
   <div class="kpi-grid" id="kpiGrid"></div>
 
-  <div class="sec">Performance Leaderboard — DS→DD Conversion</div>
-  <div class="card">
-    <div class="card-hdr"><h3>🏆 Agent Rankings — MTD DS→DD %</h3><aside id="lbDate">—</aside></div>
-    <div id="lbWrap"></div>
+  <!-- CHARTS -->
+  <div class="sec">DS→DD Conversion — Visual Breakdown</div>
+  <div class="chart-grid">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-hdr"><h3>📊 MTD vs LM — DS & DD by TL</h3><aside>All TLs</aside></div>
+      <div class="card-body"><div class="chart-wrap"><canvas id="tlChart"></canvas></div></div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-hdr"><h3>🎯 DS→DD Conversion % by TL</h3><aside>MTD vs Last Month</aside></div>
+      <div class="card-body"><div class="chart-wrap"><canvas id="convChart"></canvas></div></div>
+    </div>
+  </div>
+  <div style="margin-bottom:14px"></div>
+  <div class="chart-grid">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-hdr"><h3>📈 WTD vs MTD — Top 15 Agents DS</h3><aside>Demo Scheduled</aside></div>
+      <div class="card-body"><div class="chart-wrap"><canvas id="wtdChart"></canvas></div></div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-hdr"><h3>🔥 Activations MTD — Top Agents</h3><aside>Deals Matured</aside></div>
+      <div class="card-body"><div class="chart-wrap"><canvas id="actChart"></canvas></div></div>
+    </div>
   </div>
 
-  <div class="sec">DS→DD Breakdown by TL</div>
+  <!-- LEADERBOARD -->
+  <div class="sec">Performance Leaderboard</div>
   <div class="card">
-    <div class="card-hdr"><h3>📊 TL-wise Performance</h3><aside>MTD</aside></div>
+    <div class="filter-bar">
+      <h3 style="font-size:13px;font-weight:700">🏆 Agent Rankings — DS→DD %</h3>
+      <span class="spacer"></span>
+      <label>Filter TL:</label>
+      <select class="fsel" id="lbTLFilter" onchange="renderLeaderboard()">
+        <option value="">All TLs</option>
+        <option>Sagar Maheshwari</option><option>Amit Verma</option>
+        <option>Akash Tomer</option><option>Himanshu Tiwari</option><option>Anshu Sharma</option>
+      </select>
+      <label>Sort by:</label>
+      <select class="fsel" id="lbSort" onchange="renderLeaderboard()">
+        <option value="pct">DS→DD %</option>
+        <option value="mtd_ds">MTD DS</option>
+        <option value="mtd_dd">MTD DD</option>
+        <option value="mtd_act">Activations</option>
+      </select>
+    </div>
+    <div id="lbWrap"></div>
+    <div style="padding:8px 20px;font-size:10px;color:var(--mut);border-top:1px solid var(--n100)" id="lbFooter"></div>
+  </div>
+
+  <!-- TL TABLE -->
+  <div class="sec">TL-wise Performance Summary</div>
+  <div class="card">
+    <div class="card-hdr"><h3>📋 Team Lead Breakdown</h3><aside>MTD · June 2026</aside></div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>TL</th><th>Agents</th><th>MTD DS</th><th>MTD DD</th><th>DS→DD %</th><th>LM DS→DD %</th><th>Trend</th><th>Activations</th><th>DD→Act %</th></tr></thead>
+        <thead><tr>
+          <th>Team Lead</th><th>Agents</th>
+          <th>MTD DS</th><th>MTD DD</th><th>DS→DD %</th>
+          <th>LM DS→DD %</th><th>Trend</th>
+          <th>Activations</th><th>DD→Act %</th>
+          <th>WTD DS</th><th>WTD DD</th><th>WTD %</th>
+        </tr></thead>
         <tbody id="tlBody"></tbody>
       </table>
     </div>
   </div>
 
-  <div class="sec">Agent-wise Full Detail — June 2026</div>
+  <!-- WTD vs MTD COMPARISON -->
+  <div class="sec">WTD vs MTD Comparison — All Agents</div>
   <div class="card">
-    <div class="card-hdr"><h3>Individual Tracker</h3><aside>Auto-sorted by MTD DS→DD %</aside></div>
+    <div class="filter-bar">
+      <h3 style="font-size:13px;font-weight:700">📅 This Week vs This Month</h3>
+      <span class="spacer"></span>
+      <label>TL:</label>
+      <select class="fsel" id="cmpTLFilter" onchange="renderCmp()">
+        <option value="">All TLs</option>
+        <option>Sagar Maheshwari</option><option>Amit Verma</option>
+        <option>Akash Tomer</option><option>Himanshu Tiwari</option><option>Anshu Sharma</option>
+      </select>
+    </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>#</th><th>Agent</th><th>TL</th><th>LM DS</th><th>LM DD</th><th>LM DD→Act</th><th>LM%</th><th>MTD DS</th><th>MTD DD</th><th>MTD Act</th><th>MTD%</th><th>WTD DS</th><th>WTD DD</th><th>WTD%</th><th>Trend</th></tr></thead>
+        <thead><tr>
+          <th>Agent</th><th>TL</th>
+          <th>MTD DS</th><th>MTD DD</th><th>MTD %</th>
+          <th>WTD DS</th><th>WTD DD</th><th>WTD %</th>
+          <th>WTD vs MTD</th>
+        </tr></thead>
+        <tbody id="cmpBody"></tbody>
+        <tfoot id="cmpFoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- AGENT FULL TABLE -->
+  <div class="sec">Agent-wise Full Detail</div>
+  <div class="card">
+    <div class="filter-bar">
+      <h3 style="font-size:13px;font-weight:700">👤 Individual Tracker</h3>
+      <span class="spacer"></span>
+      <label>TL:</label>
+      <select class="fsel" id="agTLFilter" onchange="renderAgents()">
+        <option value="">All TLs</option>
+        <option>Sagar Maheshwari</option><option>Amit Verma</option>
+        <option>Akash Tomer</option><option>Himanshu Tiwari</option><option>Anshu Sharma</option>
+      </select>
+      <label>Sort:</label>
+      <select class="fsel" id="agSort" onchange="renderAgents()">
+        <option value="mtd_pct">MTD DS→DD %</option>
+        <option value="mtd_ds">MTD DS</option>
+        <option value="mtd_dd">MTD DD</option>
+        <option value="lm_pct">LM %</option>
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Agent</th><th>TL</th>
+          <th>LM DS</th><th>LM DD</th><th>LM Act</th><th>LM %</th>
+          <th>MTD DS</th><th>MTD DD</th><th>MTD Act</th><th>MTD %</th>
+          <th>WTD DS</th><th>WTD DD</th><th>WTD %</th>
+          <th>Trend</th><th>Status</th>
+        </tr></thead>
         <tbody id="agBody"></tbody>
         <tfoot id="agFoot"></tfoot>
       </table>
@@ -242,41 +367,36 @@ tfoot td{padding:8px 12px;font-weight:700;background:var(--n100);border-top:2px 
 
 </div><!-- /wrap -->
 
-<!-- LOGIN MODAL -->
+<!-- LOGIN -->
 <div class="ovl" id="loginOvl">
   <div class="modal">
     <h2>🔐 Admin Login</h2>
     <p>Enter your password to update dashboard data.</p>
-    <div class="fg"><label>Password</label><input type="password" id="loginPw" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()"><div class="err" id="loginErr">Incorrect password.</div></div>
+    <div class="fg"><label>Password</label><input type="password" id="loginPw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"><div class="err" id="loginErr">Incorrect password.</div></div>
     <div class="m-act"><button class="btn-sec" onclick="closeLogin()">Cancel</button><button class="btn-primary" onclick="doLogin()">Login</button></div>
   </div>
 </div>
 
-<!-- EDIT MODAL -->
+<!-- EDIT -->
 <div class="ovl" id="editOvl">
   <div class="modal wide">
     <h2>✏️ Update Dashboard Data</h2>
-    <p>All KPIs, charts and rankings update automatically on save — and sync live to all viewers.</p>
+    <p>Changes sync live to all viewers instantly after saving.</p>
     <div class="m-tabs">
-      <button class="m-tab on"  onclick="swTab('tpMTD',0)">MTD / WTD Totals</button>
-      <button class="m-tab"     onclick="swTab('tpLM',1)">Last Month</button>
+      <button class="m-tab on" onclick="swTab('tpMTD',0)">MTD / WTD Totals</button>
+      <button class="m-tab" onclick="swTab('tpLM',1)">Last Month</button>
     </div>
-
-    <!-- TAB: MTD / WTD -->
     <div class="tp on" id="tpMTD">
-      <div class="info-box">💡 Enter <strong>running totals</strong> for this month and this week. These are the cumulative numbers from day 1 to today — not just today's activity.</div>
+      <div class="info-box">💡 Enter <strong>running totals</strong> for this month (MTD) and this week (WTD). Expand each agent to edit.</div>
       <div id="agMTDWrap"></div>
     </div>
-
-    <!-- TAB: LAST MONTH -->
     <div class="tp" id="tpLM">
       <div class="info-box">📅 Update <strong>Last Month</strong> totals once at the start of each new month.</div>
       <div id="agLMWrap"></div>
     </div>
-
     <div class="m-act">
       <button class="btn-sec" onclick="closeEdit()">Cancel</button>
-      <button class="btn-primary" onclick="saveData()">☁️ Save &amp; Sync</button>
+      <button class="btn-primary" onclick="saveData()">☁️ Save & Sync</button>
     </div>
   </div>
 </div>
@@ -295,12 +415,12 @@ firebase.initializeApp({
   messagingSenderId:"995856024225",
   appId:"1:995856024225:web:6621d5dd3f66d70b1da6e0"
 });
-const db = firebase.database();
-const DB_KEY = "busy_funnel_v1";
-const ADMIN_PW = btoa("busy2026"); // Change this password
+const db=firebase.database();
+const DB_KEY="busy_funnel_v2";
+const ADMIN_PW=btoa("busy2026");
 
-// ── AGENT MASTER ──────────────────────────────────────────────────────────────
-const AGENTS = [
+// ── AGENTS ───────────────────────────────────────────────────────────────────
+const AGENTS=[
   {name:"AayushKOcube_TSE02_0426",     tl:"Sagar Maheshwari",  short:"AayushK"},
   {name:"AbhishekYOcube_TSE05_0626",   tl:"Himanshu Tiwari",   short:"AbhishekY"},
   {name:"AdityaSOcube_TSE02_0426",     tl:"Amit Verma",        short:"AdityaS"},
@@ -343,206 +463,287 @@ const AGENTS = [
   {name:"TejalOcube_Mov_0925",         tl:"Akash Tomer",       short:"Tejal"},
   {name:"VishalOcube_Mov_0326",        tl:"Akash Tomer",       short:"Vishal"},
 ];
+const TLS=["Sagar Maheshwari","Amit Verma","Akash Tomer","Himanshu Tiwari","Anshu Sharma"];
+const AVC=["#1565C0","#dc2626","#16a34a","#7c3aed","#d97706","#0d9488","#c2255c","#ea580c","#4f46e5","#0284c7","#65a30d","#9333ea"];
+const avCol=i=>AVC[i%AVC.length];
+const ini=n=>n.split(/[\s_]+/).map(w=>w[0]).filter(Boolean).slice(0,2).join('').toUpperCase();
 
-const TLS = ['Sagar Maheshwari','Amit Verma','Akash Tomer','Himanshu Tiwari','Anshu Sharma'];
-const AV_COLORS = ["#1565C0","#dc2626","#16a34a","#7c3aed","#d97706","#0d9488","#c2255c","#ea580c","#4f46e5","#0284c7"];
-const avCol = i => AV_COLORS[i % AV_COLORS.length];
-const ini = n => n.split(/[\s_]+/).map(w=>w[0]).filter(Boolean).slice(0,2).join('').toUpperCase();
-
-// Default zero data
-function makeDefault(){
-  const agents = {};
-  AGENTS.forEach(a=>{
-    agents[a.name]={mtd_ds:0,mtd_dd:0,mtd_act:0,wtd_ds:0,wtd_dd:0,lm_ds:0,lm_dd:0,lm_act:0};
-  });
-  return {lastUpdated:'2026-06-17', agents};
-}
-
-// Pre-filled from Excel: Agent_wise_Performance.xlsx — June 2026
-const PREFILLED = {
-  lastUpdated: "2026-06-17",
-  agents: {
-    "AayushKOcube_TSE02_0426":     {lm_ds:80,  lm_dd:28, lm_act:5,  mtd_ds:47,  mtd_dd:23, mtd_act:1,  wtd_ds:5,  wtd_dd:4},
-    "AbhishekYOcube_TSE05_0626":   {lm_ds:42,  lm_dd:8,  lm_act:0,  mtd_ds:0,   mtd_dd:0,  mtd_act:0,  wtd_ds:0,  wtd_dd:0},
-    "AdityaSOcube_TSE02_0426":     {lm_ds:74,  lm_dd:21, lm_act:3,  mtd_ds:35,  mtd_dd:8,  mtd_act:1,  wtd_ds:0,  wtd_dd:0},
-    "AmitOcube_TSE04_0526":        {lm_ds:0,   lm_dd:0,  lm_act:0,  mtd_ds:24,  mtd_dd:9,  mtd_act:0,  wtd_ds:7,  wtd_dd:2},
-    "AnamOcube_Mov_0526":          {lm_ds:29,  lm_dd:7,  lm_act:0,  mtd_ds:78,  mtd_dd:27, mtd_act:0,  wtd_ds:9,  wtd_dd:2},
-    "AnkitOcube_Mov_0326":         {lm_ds:93,  lm_dd:20, lm_act:0,  mtd_ds:40,  mtd_dd:12, mtd_act:0,  wtd_ds:0,  wtd_dd:0},
-    "AnshuOcube_Mov_0925":         {lm_ds:26,  lm_dd:17, lm_act:0,  mtd_ds:49,  mtd_dd:16, mtd_act:5,  wtd_ds:2,  wtd_dd:0},
-    "AreebOcube_TSE05_0626":       {lm_ds:0,   lm_dd:0,  lm_act:0,  mtd_ds:1,   mtd_dd:0,  mtd_act:0,  wtd_ds:0,  wtd_dd:0},
-    "ArshdeepOcube_Mov_0526":      {lm_ds:40,  lm_dd:9,  lm_act:0,  mtd_ds:71,  mtd_dd:17, mtd_act:0,  wtd_ds:5,  wtd_dd:1},
-    "AyushSOcube_TSE02_0426":      {lm_ds:80,  lm_dd:26, lm_act:5,  mtd_ds:59,  mtd_dd:24, mtd_act:2,  wtd_ds:0,  wtd_dd:0},
-    "BhanuTOcube_TSE02_0426":      {lm_ds:59,  lm_dd:16, lm_act:1,  mtd_ds:56,  mtd_dd:16, mtd_act:2,  wtd_ds:0,  wtd_dd:0},
-    "ChandaOcube_Mov_0526":        {lm_ds:25,  lm_dd:5,  lm_act:0,  mtd_ds:56,  mtd_dd:15, mtd_act:2,  wtd_ds:9,  wtd_dd:0},
-    "ChitvanOcube_TSE05_0626":     {lm_ds:0,   lm_dd:0,  lm_act:0,  mtd_ds:0,   mtd_dd:0,  mtd_act:0,  wtd_ds:0,  wtd_dd:0},
-    "DivyanshuOcube_Mov_0526":     {lm_ds:31,  lm_dd:8,  lm_act:0,  mtd_ds:56,  mtd_dd:9,  mtd_act:0,  wtd_ds:9,  wtd_dd:0},
-    "HarshitaOcube_Mov_0326":      {lm_ds:113, lm_dd:35, lm_act:0,  mtd_ds:56,  mtd_dd:26, mtd_act:1,  wtd_ds:0,  wtd_dd:0},
-    "HarshSOcube_TSE05_0626":      {lm_ds:0,   lm_dd:0,  lm_act:0,  mtd_ds:0,   mtd_dd:0,  mtd_act:0,  wtd_ds:0,  wtd_dd:0},
-    "HimaniOcube_TSE05_0626":      {lm_ds:39,  lm_dd:8,  lm_act:0,  mtd_ds:0,   mtd_dd:0,  mtd_act:0,  wtd_ds:0,  wtd_dd:0},
-    "HimanshuOcube_Mov_0925":      {lm_ds:66,  lm_dd:18, lm_act:0,  mtd_ds:47,  mtd_dd:16, mtd_act:0,  wtd_ds:0,  wtd_dd:0},
-    "HitanshuOcube_Mov_0326":      {lm_ds:57,  lm_dd:10, lm_act:0,  mtd_ds:49,  mtd_dd:11, mtd_act:0,  wtd_ds:0,  wtd_dd:0},
-    "IshaOcube_Mov_0925":          {lm_ds:130, lm_dd:38, lm_act:0,  mtd_ds:70,  mtd_dd:26, mtd_act:3,  wtd_ds:0,  wtd_dd:0},
-    "JaydeepSOcube_TSE02_0426":    {lm_ds:65,  lm_dd:24, lm_act:2,  mtd_ds:47,  mtd_dd:14, mtd_act:3,  wtd_ds:7,  wtd_dd:2},
-    "JyotiOcube_Mov_0925":         {lm_ds:14,  lm_dd:5,  lm_act:0,  mtd_ds:47,  mtd_dd:15, mtd_act:0,  wtd_ds:0,  wtd_dd:0},
-    "KajalOcube_TSE01_0426":       {lm_ds:83,  lm_dd:28, lm_act:7,  mtd_ds:41,  mtd_dd:14, mtd_act:5,  wtd_ds:0,  wtd_dd:0},
-    "KhushiOcube_TSE05_0626":      {lm_ds:0,   lm_dd:0,  lm_act:0,  mtd_ds:0,   mtd_dd:0,  mtd_act:0,  wtd_ds:0,  wtd_dd:0},
-    "KumkumOcube_TSE04_0526":      {lm_ds:72,  lm_dd:16, lm_act:0,  mtd_ds:24,  mtd_dd:9,  mtd_act:0,  wtd_ds:6,  wtd_dd:1},
-    "Meenakshi_TSE03_0426":        {lm_ds:69,  lm_dd:17, lm_act:2,  mtd_ds:45,  mtd_dd:17, mtd_act:0,  wtd_ds:0,  wtd_dd:0},
-    "MohitOcube_TSE01_0426":       {lm_ds:35,  lm_dd:23, lm_act:3,  mtd_ds:51,  mtd_dd:19, mtd_act:0,  wtd_ds:0,  wtd_dd:0},
-    "MoOcube_Mov_0426":            {lm_ds:66,  lm_dd:15, lm_act:0,  mtd_ds:45,  mtd_dd:23, mtd_act:0,  wtd_ds:4,  wtd_dd:2},
-    "NehaOcube_Mov_0326":          {lm_ds:93,  lm_dd:33, lm_act:0,  mtd_ds:47,  mtd_dd:15, mtd_act:2,  wtd_ds:6,  wtd_dd:1},
-    "NikitaOcube_Mov_1225":        {lm_ds:3,   lm_dd:2,  lm_act:0,  mtd_ds:39,  mtd_dd:11, mtd_act:3,  wtd_ds:0,  wtd_dd:0},
-    "Nishchals_TSE03_0426":        {lm_ds:43,  lm_dd:12, lm_act:9,  mtd_ds:54,  mtd_dd:21, mtd_act:0,  wtd_ds:7,  wtd_dd:3},
-    "PrabhatOcube_Mov_0725":       {lm_ds:98,  lm_dd:20, lm_act:0,  mtd_ds:42,  mtd_dd:17, mtd_act:2,  wtd_ds:2,  wtd_dd:0},
-    "RakhiOcube_Mov_0925":         {lm_ds:77,  lm_dd:17, lm_act:0,  mtd_ds:58,  mtd_dd:18, mtd_act:0,  wtd_ds:8,  wtd_dd:2},
-    "RiturajOcube_Mov_0426":       {lm_ds:65,  lm_dd:10, lm_act:0,  mtd_ds:78,  mtd_dd:30, mtd_act:2,  wtd_ds:0,  wtd_dd:0},
-    "SangamOcube_TSE01_0426":      {lm_ds:80,  lm_dd:23, lm_act:4,  mtd_ds:28,  mtd_dd:11, mtd_act:1,  wtd_ds:0,  wtd_dd:0},
-    "SatishOcube_Mov_0426":        {lm_ds:53,  lm_dd:11, lm_act:0,  mtd_ds:66,  mtd_dd:20, mtd_act:2,  wtd_ds:5,  wtd_dd:2},
-    "ShubhanjaliOcube_TSE01_0426": {lm_ds:78,  lm_dd:25, lm_act:4,  mtd_ds:34,  mtd_dd:20, mtd_act:6,  wtd_ds:4,  wtd_dd:3},
-    "ShwetaOcube_Mov_0326":        {lm_ds:150, lm_dd:23, lm_act:0,  mtd_ds:75,  mtd_dd:26, mtd_act:3,  wtd_ds:10, wtd_dd:2},
-    "SushmitaCOcube_TSE02_0426":   {lm_ds:46,  lm_dd:25, lm_act:1,  mtd_ds:58,  mtd_dd:17, mtd_act:1,  wtd_ds:9,  wtd_dd:1},
-    "TejalOcube_Mov_0925":         {lm_ds:95,  lm_dd:22, lm_act:0,  mtd_ds:89,  mtd_dd:28, mtd_act:1,  wtd_ds:5,  wtd_dd:0},
-    "VishalOcube_Mov_0326":        {lm_ds:67,  lm_dd:25, lm_act:0,  mtd_ds:64,  mtd_dd:31, mtd_act:0,  wtd_ds:8,  wtd_dd:2},
+// ── PRE-FILLED DATA FROM EXCEL ────────────────────────────────────────────────
+const PREFILLED={
+  lastUpdated:"2026-06-17",
+  agents:{
+    "AayushKOcube_TSE02_0426":     {lm_ds:80, lm_dd:28,lm_act:5, mtd_ds:47, mtd_dd:23,mtd_act:1, wtd_ds:5, wtd_dd:4},
+    "AbhishekYOcube_TSE05_0626":   {lm_ds:42, lm_dd:8, lm_act:0, mtd_ds:0,  mtd_dd:0, mtd_act:0, wtd_ds:0, wtd_dd:0},
+    "AdityaSOcube_TSE02_0426":     {lm_ds:74, lm_dd:21,lm_act:3, mtd_ds:35, mtd_dd:8, mtd_act:1, wtd_ds:0, wtd_dd:0},
+    "AmitOcube_TSE04_0526":        {lm_ds:0,  lm_dd:0, lm_act:0, mtd_ds:24, mtd_dd:9, mtd_act:0, wtd_ds:7, wtd_dd:2},
+    "AnamOcube_Mov_0526":          {lm_ds:29, lm_dd:7, lm_act:0, mtd_ds:78, mtd_dd:27,mtd_act:0, wtd_ds:9, wtd_dd:2},
+    "AnkitOcube_Mov_0326":         {lm_ds:93, lm_dd:20,lm_act:0, mtd_ds:40, mtd_dd:12,mtd_act:0, wtd_ds:0, wtd_dd:0},
+    "AnshuOcube_Mov_0925":         {lm_ds:26, lm_dd:17,lm_act:0, mtd_ds:49, mtd_dd:16,mtd_act:5, wtd_ds:2, wtd_dd:0},
+    "AreebOcube_TSE05_0626":       {lm_ds:0,  lm_dd:0, lm_act:0, mtd_ds:1,  mtd_dd:0, mtd_act:0, wtd_ds:0, wtd_dd:0},
+    "ArshdeepOcube_Mov_0526":      {lm_ds:40, lm_dd:9, lm_act:0, mtd_ds:71, mtd_dd:17,mtd_act:0, wtd_ds:5, wtd_dd:1},
+    "AyushSOcube_TSE02_0426":      {lm_ds:80, lm_dd:26,lm_act:5, mtd_ds:59, mtd_dd:24,mtd_act:2, wtd_ds:0, wtd_dd:0},
+    "BhanuTOcube_TSE02_0426":      {lm_ds:59, lm_dd:16,lm_act:1, mtd_ds:56, mtd_dd:16,mtd_act:2, wtd_ds:0, wtd_dd:0},
+    "ChandaOcube_Mov_0526":        {lm_ds:25, lm_dd:5, lm_act:0, mtd_ds:56, mtd_dd:15,mtd_act:2, wtd_ds:9, wtd_dd:0},
+    "ChitvanOcube_TSE05_0626":     {lm_ds:0,  lm_dd:0, lm_act:0, mtd_ds:0,  mtd_dd:0, mtd_act:0, wtd_ds:0, wtd_dd:0},
+    "DivyanshuOcube_Mov_0526":     {lm_ds:31, lm_dd:8, lm_act:0, mtd_ds:56, mtd_dd:9, mtd_act:0, wtd_ds:9, wtd_dd:0},
+    "HarshitaOcube_Mov_0326":      {lm_ds:113,lm_dd:35,lm_act:0, mtd_ds:56, mtd_dd:26,mtd_act:1, wtd_ds:0, wtd_dd:0},
+    "HarshSOcube_TSE05_0626":      {lm_ds:0,  lm_dd:0, lm_act:0, mtd_ds:0,  mtd_dd:0, mtd_act:0, wtd_ds:0, wtd_dd:0},
+    "HimaniOcube_TSE05_0626":      {lm_ds:39, lm_dd:8, lm_act:0, mtd_ds:0,  mtd_dd:0, mtd_act:0, wtd_ds:0, wtd_dd:0},
+    "HimanshuOcube_Mov_0925":      {lm_ds:66, lm_dd:18,lm_act:0, mtd_ds:47, mtd_dd:16,mtd_act:0, wtd_ds:0, wtd_dd:0},
+    "HitanshuOcube_Mov_0326":      {lm_ds:57, lm_dd:10,lm_act:0, mtd_ds:49, mtd_dd:11,mtd_act:0, wtd_ds:0, wtd_dd:0},
+    "IshaOcube_Mov_0925":          {lm_ds:130,lm_dd:38,lm_act:0, mtd_ds:70, mtd_dd:26,mtd_act:3, wtd_ds:0, wtd_dd:0},
+    "JaydeepSOcube_TSE02_0426":    {lm_ds:65, lm_dd:24,lm_act:2, mtd_ds:47, mtd_dd:14,mtd_act:3, wtd_ds:7, wtd_dd:2},
+    "JyotiOcube_Mov_0925":         {lm_ds:14, lm_dd:5, lm_act:0, mtd_ds:47, mtd_dd:15,mtd_act:0, wtd_ds:0, wtd_dd:0},
+    "KajalOcube_TSE01_0426":       {lm_ds:83, lm_dd:28,lm_act:7, mtd_ds:41, mtd_dd:14,mtd_act:5, wtd_ds:0, wtd_dd:0},
+    "KhushiOcube_TSE05_0626":      {lm_ds:0,  lm_dd:0, lm_act:0, mtd_ds:0,  mtd_dd:0, mtd_act:0, wtd_ds:0, wtd_dd:0},
+    "KumkumOcube_TSE04_0526":      {lm_ds:72, lm_dd:16,lm_act:0, mtd_ds:24, mtd_dd:9, mtd_act:0, wtd_ds:6, wtd_dd:1},
+    "Meenakshi_TSE03_0426":        {lm_ds:69, lm_dd:17,lm_act:2, mtd_ds:45, mtd_dd:17,mtd_act:0, wtd_ds:0, wtd_dd:0},
+    "MohitOcube_TSE01_0426":       {lm_ds:35, lm_dd:23,lm_act:3, mtd_ds:51, mtd_dd:19,mtd_act:0, wtd_ds:0, wtd_dd:0},
+    "MoOcube_Mov_0426":            {lm_ds:66, lm_dd:15,lm_act:0, mtd_ds:45, mtd_dd:23,mtd_act:0, wtd_ds:4, wtd_dd:2},
+    "NehaOcube_Mov_0326":          {lm_ds:93, lm_dd:33,lm_act:0, mtd_ds:47, mtd_dd:15,mtd_act:2, wtd_ds:6, wtd_dd:1},
+    "NikitaOcube_Mov_1225":        {lm_ds:3,  lm_dd:2, lm_act:0, mtd_ds:39, mtd_dd:11,mtd_act:3, wtd_ds:0, wtd_dd:0},
+    "Nishchals_TSE03_0426":        {lm_ds:43, lm_dd:12,lm_act:9, mtd_ds:54, mtd_dd:21,mtd_act:0, wtd_ds:7, wtd_dd:3},
+    "PrabhatOcube_Mov_0725":       {lm_ds:98, lm_dd:20,lm_act:0, mtd_ds:42, mtd_dd:17,mtd_act:2, wtd_ds:2, wtd_dd:0},
+    "RakhiOcube_Mov_0925":         {lm_ds:77, lm_dd:17,lm_act:0, mtd_ds:58, mtd_dd:18,mtd_act:0, wtd_ds:8, wtd_dd:2},
+    "RiturajOcube_Mov_0426":       {lm_ds:65, lm_dd:10,lm_act:0, mtd_ds:78, mtd_dd:30,mtd_act:2, wtd_ds:0, wtd_dd:0},
+    "SangamOcube_TSE01_0426":      {lm_ds:80, lm_dd:23,lm_act:4, mtd_ds:28, mtd_dd:11,mtd_act:1, wtd_ds:0, wtd_dd:0},
+    "SatishOcube_Mov_0426":        {lm_ds:53, lm_dd:11,lm_act:0, mtd_ds:66, mtd_dd:20,mtd_act:2, wtd_ds:5, wtd_dd:2},
+    "ShubhanjaliOcube_TSE01_0426": {lm_ds:78, lm_dd:25,lm_act:4, mtd_ds:34, mtd_dd:20,mtd_act:6, wtd_ds:4, wtd_dd:3},
+    "ShwetaOcube_Mov_0326":        {lm_ds:150,lm_dd:23,lm_act:0, mtd_ds:75, mtd_dd:26,mtd_act:3, wtd_ds:10,wtd_dd:2},
+    "SushmitaCOcube_TSE02_0426":   {lm_ds:46, lm_dd:25,lm_act:1, mtd_ds:58, mtd_dd:17,mtd_act:1, wtd_ds:9, wtd_dd:1},
+    "TejalOcube_Mov_0925":         {lm_ds:95, lm_dd:22,lm_act:0, mtd_ds:89, mtd_dd:28,mtd_act:1, wtd_ds:5, wtd_dd:0},
+    "VishalOcube_Mov_0326":        {lm_ds:67, lm_dd:25,lm_act:0, mtd_ds:64, mtd_dd:31,mtd_act:0, wtd_ds:8, wtd_dd:2},
   }
 };
-let D = PREFILLED;
+
+let D=JSON.parse(JSON.stringify(PREFILLED));
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const pct=(n,d)=>d>0?Math.round(n/d*1000)/10:0;
-const pCol=p=>p>=40?'#16a34a':p>=25?'#d97706':'#dc2626';
-const pillCls=p=>p>=40?'pill-g':p>=25?'pill-a':'pill-r';
-const pillTxt=p=>p>=40?'✓ Good':p>=25?'▲ Fair':'✗ Low';
+const pCol=p=>p>=40?"#16a34a":p>=25?"#d97706":"#dc2626";
+const pillCls=p=>p>=40?"pill-g":p>=25?"pill-a":"pill-r";
+const rowCls=p=>p>=40?"row-green":p>=25?"row-amber":"row-red";
+const pillTxt=p=>p>=40?"✓ Good":p>=25?"▲ Fair":"✗ Low";
 
 function toast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3500);
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),3500);
+}
+function ag(name){return D.agents[name]||{mtd_ds:0,mtd_dd:0,mtd_act:0,wtd_ds:0,wtd_dd:0,lm_ds:0,lm_dd:0,lm_act:0};}
+
+// ── CHARTS ───────────────────────────────────────────────────────────────────
+const charts={};
+function mkChart(id,cfg){if(charts[id])charts[id].destroy();const el=document.getElementById(id);if(el)charts[id]=new Chart(el,cfg);}
+const gridColor="rgba(0,0,0,.05)";
+const tickColor="#9ca3af";
+const baseOpts={responsive:true,maintainAspectRatio:false,animation:{duration:700},plugins:{legend:{display:false}}};
+
+function renderCharts(){
+  // TL DS/DD bar chart
+  const tlDS=TLS.map(tl=>AGENTS.filter(a=>a.tl===tl).reduce((s,a)=>s+(ag(a.name).mtd_ds||0),0));
+  const tlDD=TLS.map(tl=>AGENTS.filter(a=>a.tl===tl).reduce((s,a)=>s+(ag(a.name).mtd_dd||0),0));
+  mkChart("tlChart",{type:"bar",data:{
+    labels:TLS.map(t=>t.split(" ")[0]),
+    datasets:[
+      {label:"MTD DS",data:tlDS,backgroundColor:"rgba(21,101,192,.7)",borderRadius:5,borderSkipped:false},
+      {label:"MTD DD",data:tlDD,backgroundColor:"rgba(21,101,192,.25)",borderRadius:5,borderSkipped:false},
+    ]
+  },options:{...baseOpts,plugins:{legend:{display:true,labels:{color:tickColor,font:{size:11}}}},
+    scales:{x:{grid:{display:false},ticks:{color:tickColor}},y:{grid:{color:gridColor},ticks:{color:tickColor}}}}});
+
+  // Conversion % chart
+  const tlMTDPct=TLS.map(tl=>{
+    const m=AGENTS.filter(a=>a.tl===tl),ds=m.reduce((s,a)=>s+(ag(a.name).mtd_ds||0),0),dd=m.reduce((s,a)=>s+(ag(a.name).mtd_dd||0),0);
+    return pct(dd,ds);
+  });
+  const tlLMPct=TLS.map(tl=>{
+    const m=AGENTS.filter(a=>a.tl===tl),ds=m.reduce((s,a)=>s+(ag(a.name).lm_ds||0),0),dd=m.reduce((s,a)=>s+(ag(a.name).lm_dd||0),0);
+    return pct(dd,ds);
+  });
+  mkChart("convChart",{type:"bar",data:{
+    labels:TLS.map(t=>t.split(" ")[0]),
+    datasets:[
+      {label:"MTD %",data:tlMTDPct,backgroundColor:tlMTDPct.map(p=>pCol(p)+"cc"),borderRadius:5,borderSkipped:false},
+      {label:"LM %",data:tlLMPct,backgroundColor:"rgba(0,0,0,.1)",borderRadius:5,borderSkipped:false},
+    ]
+  },options:{...baseOpts,plugins:{legend:{display:true,labels:{color:tickColor,font:{size:11}}}},
+    scales:{x:{grid:{display:false},ticks:{color:tickColor}},y:{max:60,grid:{color:gridColor},ticks:{color:tickColor,callback:v=>v+"%"}}}}});
+
+  // WTD vs MTD top agents
+  const top15=AGENTS.map((a,i)=>({...a,i,mtd_ds:ag(a.name).mtd_ds||0,wtd_ds:ag(a.name).wtd_ds||0}))
+    .filter(a=>a.mtd_ds>0).sort((a,b)=>b.mtd_ds-a.mtd_ds).slice(0,15);
+  mkChart("wtdChart",{type:"bar",data:{
+    labels:top15.map(a=>a.short),
+    datasets:[
+      {label:"MTD DS",data:top15.map(a=>a.mtd_ds),backgroundColor:"rgba(21,101,192,.6)",borderRadius:4,borderSkipped:false},
+      {label:"WTD DS",data:top15.map(a=>a.wtd_ds),backgroundColor:"rgba(13,148,136,.75)",borderRadius:4,borderSkipped:false},
+    ]
+  },options:{...baseOpts,plugins:{legend:{display:true,labels:{color:tickColor,font:{size:11}}}},
+    scales:{x:{grid:{display:false},ticks:{color:tickColor,font:{size:10},maxRotation:35}},y:{grid:{color:gridColor},ticks:{color:tickColor}}}}});
+
+  // Activations
+  const withAct=AGENTS.map((a,i)=>({...a,i,act:ag(a.name).mtd_act||0})).filter(a=>a.act>0).sort((a,b)=>b.act-a.act);
+  mkChart("actChart",{type:"bar",data:{
+    labels:withAct.map(a=>a.short),
+    datasets:[{label:"Activations",data:withAct.map(a=>a.act),backgroundColor:withAct.map((_,i)=>AVC[i%AVC.length]+"cc"),borderRadius:5,borderSkipped:false}]
+  },options:{...baseOpts,plugins:{legend:{display:false}},
+    scales:{x:{grid:{display:false},ticks:{color:tickColor,font:{size:10}}},y:{grid:{color:gridColor},ticks:{color:tickColor,stepSize:1}}}}});
 }
 
-// ── RENDER ───────────────────────────────────────────────────────────────────
-function renderAll(){
-  renderKPIs();
-  renderLeaderboard();
-  renderTL();
-  renderAgents();
-}
-
+// ── KPIs ──────────────────────────────────────────────────────────────────────
 function renderKPIs(){
-  const sum=k=>AGENTS.reduce((s,a)=>s+(D.agents[a.name]?.[k]||0),0);
-  const mtd_ds=sum('mtd_ds'),mtd_dd=sum('mtd_dd'),mtd_act=sum('mtd_act');
-  const lm_ds=sum('lm_ds'),lm_dd=sum('lm_dd'),lm_act=sum('lm_act');
-  const wtd_ds=sum('wtd_ds'),wtd_dd=sum('wtd_dd');
+  const sum=k=>AGENTS.reduce((s,a)=>s+(ag(a.name)[k]||0),0);
+  const mtd_ds=sum("mtd_ds"),mtd_dd=sum("mtd_dd"),mtd_act=sum("mtd_act");
+  const lm_ds=sum("lm_ds"),lm_dd=sum("lm_dd"),lm_act=sum("lm_act");
+  const wtd_ds=sum("wtd_ds"),wtd_dd=sum("wtd_dd");
   const dp=pct(mtd_dd,mtd_ds),lp=pct(lm_dd,lm_ds);
   const diff=(dp-lp).toFixed(1);
   const dtap=pct(mtd_act,mtd_dd),ldta=pct(lm_act,lm_dd);
+  const active=AGENTS.filter(a=>(ag(a.name).mtd_ds||0)>0).length;
 
   const kpis=[
-    {icon:'📅',lbl:'DS — MTD',     val:mtd_ds,          sub:'Demo Scheduled',          ac:'#1565C0',bar:null},
-    {icon:'✅',lbl:'DD — MTD',     val:mtd_dd,           sub:'Demo Done',               ac:'#16a34a',bar:null},
-    {icon:'📊',lbl:'DS→DD % MTD', val:dp+'%',           sub:(diff>=0?'↑':'↓')+Math.abs(diff)+'pp vs LM ('+lp+'%)',ac:pCol(dp),bar:Math.min(dp,100),barC:pCol(dp)},
-    {icon:'🎯',lbl:'Activations',  val:mtd_act,          sub:'Deals matured MTD',       ac:'#7c3aed',bar:null},
-    {icon:'💡',lbl:'DD→Act % MTD',val:dtap+'%',          sub:'vs '+ldta+'% last month', ac:pCol(dtap),bar:Math.min(dtap*2,100),barC:pCol(dtap)},
-    {icon:'📈',lbl:'WTD DS→DD',   val:pct(wtd_dd,wtd_ds)+'%',sub:wtd_ds+' DS → '+wtd_dd+' DD this week',ac:'#0d9488',bar:null},
-    {icon:'🏆',lbl:'LM DS→DD %',  val:lp+'%',            sub:'Last month conversion',   ac:'#c2255c',bar:Math.min(lp,100),barC:'#c2255c'},
-    {icon:'⚡',lbl:'Active Agents',val:AGENTS.filter(a=>(D.agents[a.name]?.mtd_ds||0)>0).length,sub:'of '+AGENTS.length+' total',ac:'#d97706',bar:null},
+    {icon:"📅",lbl:"DS — MTD",val:mtd_ds,sub:"Demos Scheduled",ac:"#1565C0","ac-glow":"#1565C020",bar:null},
+    {icon:"✅",lbl:"DD — MTD",val:mtd_dd,sub:"Demos Done",ac:"#16a34a","ac-glow":"#16a34a20",bar:null},
+    {icon:"📊",lbl:"DS→DD %",val:dp+"%",sub:(diff>=0?"↑":"↓")+Math.abs(diff)+"pp vs LM ("+lp+"%)",ac:pCol(dp),"ac-glow":pCol(dp)+"20",bar:Math.min(dp,100),barC:pCol(dp),tag:diff>=0?"tag-up":"tag-dn",tagTxt:(diff>=0?"↑":"↓")+" vs LM"},
+    {icon:"🎯",lbl:"Activations",val:mtd_act,sub:"Deals Matured MTD",ac:"#7c3aed","ac-glow":"#7c3aed20",bar:null},
+    {icon:"💡",lbl:"DD→Act %",val:dtap+"%",sub:"vs "+ldta+"% last month",ac:pCol(dtap*2),"ac-glow":pCol(dtap*2)+"20",bar:Math.min(dtap*2,100),barC:pCol(dtap*2)},
+    {icon:"📈",lbl:"WTD DS→DD",val:pct(wtd_dd,wtd_ds)+"%",sub:wtd_ds+" DS → "+wtd_dd+" DD this week",ac:"#0d9488","ac-glow":"#0d948820",bar:null},
+    {icon:"📋",lbl:"LM DS→DD %",val:lp+"%",sub:"Last month benchmark",ac:"#c2255c","ac-glow":"#c2255c20",bar:Math.min(lp,100),barC:"#c2255c"},
+    {icon:"⚡",lbl:"Active Agents",val:active+"/"+AGENTS.length,sub:"with MTD activity",ac:"#d97706","ac-glow":"#d9770620",bar:Math.round(active/AGENTS.length*100),barC:"#d97706"},
   ];
 
-  document.getElementById('kpiGrid').innerHTML=kpis.map(k=>`
-    <div class="kc" style="--ac:${k.ac}">
+  document.getElementById("kpiGrid").innerHTML=kpis.map(k=>`
+    <div class="kc" style="--ac:${k.ac};--ac-glow:${k["ac-glow"]||"transparent"}">
       <span class="kc-icon">${k.icon}</span>
       <div class="kc-lbl">${k.lbl}</div>
-      <div class="kc-val" style="color:${k.ac}">${k.val}</div>
+      <div class="kc-val">${k.val}</div>
       <div class="kc-sub">${k.sub}</div>
-      ${k.bar!=null?`<div class="kc-bar"><div class="kc-fill" style="background:${k.barC};width:${k.bar}%"></div></div>`:''}
-    </div>`).join('');
-
-  document.getElementById('updBadge').textContent='Updated: '+D.lastUpdated;
+      ${k.tag?`<span class="kc-tag ${k.tag}">${k.tagTxt}</span>`:""}
+      ${k.bar!=null?`<div class="kc-bar"><div class="kc-fill" style="background:${k.barC};width:${k.bar}%"></div></div>`:""}
+    </div>`).join("");
 }
 
+// ── LEADERBOARD ───────────────────────────────────────────────────────────────
 function renderLeaderboard(){
-  const ranked=AGENTS.map((a,i)=>{
-    const d=D.agents[a.name]||{};
-    return{...a,i,mtd_ds:d.mtd_ds||0,mtd_dd:d.mtd_dd||0,mtd_act:d.mtd_act||0,pct:pct(d.mtd_dd||0,d.mtd_ds||0)};
-  }).filter(a=>a.mtd_ds>0).sort((a,b)=>b.pct-a.pct);
+  const tlF=document.getElementById("lbTLFilter").value;
+  const srt=document.getElementById("lbSort").value;
+  let data=AGENTS.map((a,i)=>({...a,i,...ag(a.name),_pct:pct(ag(a.name).mtd_dd||0,ag(a.name).mtd_ds||0)}))
+    .filter(a=>!tlF||a.tl===tlF);
+  const sortMap={pct:a=>a._pct,mtd_ds:a=>a.mtd_ds||0,mtd_dd:a=>a.mtd_dd||0,mtd_act:a=>a.mtd_act||0};
+  data.sort((a,b)=>sortMap[srt](b)-sortMap[srt](a));
+  const active=data.filter(a=>(a.mtd_ds||0)>0);
+  const max=Math.max(...active.map(a=>a._pct),1);
+  const medals=["🥇","🥈","🥉"];
+  const posC=i=>i===0?"gold":i===1?"silver":i===2?"bronze":"rest";
 
-  const maxPct=ranked[0]?.pct||1;
-  const medals=['🥇','🥈','🥉'];
-  const posC=i=>i===0?'gold':i===1?'silver':i===2?'bronze':'rest';
-
-  document.getElementById('lbWrap').innerHTML=ranked.length===0
-    ?'<div style="padding:24px;text-align:center;color:var(--mut)">No MTD data yet — click Update Data to add numbers</div>'
-    :ranked.map((a,i)=>{
-      const bc=pCol(a.pct),bw=Math.min(a.pct/maxPct*100,100).toFixed(1);
-      return`<div class="lb-row">
-        <div class="lb-pos ${posC(i)}">${i<3?medals[i]:'#'+(i+1)}</div>
+  document.getElementById("lbWrap").innerHTML=active.length===0
+    ?`<div style="padding:28px;text-align:center;color:var(--mut)">No active agents — click ⚡ Load Data or ✏️ Update Data</div>`
+    :active.map((a,i)=>{
+      const bc=pCol(a._pct),bw=Math.min(a._pct/max*100,100).toFixed(1);
+      return`<div class="lb-row" style="animation-delay:${i*25}ms">
+        <div class="lb-pos ${posC(i)}">${i<3?medals[i]:"#"+(i+1)}</div>
         <div class="lb-av" style="background:${avCol(a.i)}">${ini(a.short)}</div>
-        <div class="lb-info"><div class="lb-name">${a.short}</div><div class="lb-meta">${a.tl.split(' ')[0]} · ${a.mtd_ds} DS → ${a.mtd_dd} DD</div></div>
+        <div class="lb-info">
+          <div class="lb-name">${a.short}</div>
+          <div class="lb-meta">${a.mtd_ds||0} DS → ${a.mtd_dd||0} DD · Act: ${a.mtd_act||0}</div>
+          <span class="lb-tl">${a.tl.split(" ")[0]}</span>
+        </div>
         <div class="lb-bar-t"><div class="lb-bar-f" style="width:${bw}%;background:${bc}"></div></div>
-        <div class="lb-r"><div class="lb-val" style="color:${bc}">${a.pct}%</div><div class="lb-pct">${a.mtd_dd} demos done</div><span class="pill ${pillCls(a.pct)}">${pillTxt(a.pct)}</span></div>
+        <div class="lb-r">
+          <div class="lb-val" style="color:${bc}">${a._pct}%</div>
+          <div class="lb-sub">DS→DD conversion</div>
+          <span class="pill ${pillCls(a._pct)}">${pillTxt(a._pct)}</span>
+        </div>
       </div>`;
-    }).join('');
+    }).join("");
 
-  document.getElementById('lbDate').textContent=`${ranked.length} active agents · as of ${D.lastUpdated}`;
+  document.getElementById("lbFooter").textContent=
+    `${active.length} active agents shown · Updated: ${D.lastUpdated}`;
 }
 
+// ── TL TABLE ──────────────────────────────────────────────────────────────────
 function renderTL(){
-  document.getElementById('tlBody').innerHTML=TLS.map(tl=>{
-    const members=AGENTS.filter(a=>a.tl===tl);
-    const sum=k=>members.reduce((s,a)=>s+(D.agents[a.name]?.[k]||0),0);
-    const mtd_ds=sum('mtd_ds'),mtd_dd=sum('mtd_dd'),mtd_act=sum('mtd_act');
-    const lm_ds=sum('lm_ds'),lm_dd=sum('lm_dd');
-    const mp=pct(mtd_dd,mtd_ds),lp=pct(lm_dd,lm_ds);
+  document.getElementById("tlBody").innerHTML=TLS.map(tl=>{
+    const m=AGENTS.filter(a=>a.tl===tl);
+    const s=k=>m.reduce((sum,a)=>sum+(ag(a.name)[k]||0),0);
+    const md=s("mtd_ds"),mdd=s("mtd_dd"),ma=s("mtd_act"),ld=s("lm_ds"),ldd=s("lm_dd"),wd=s("wtd_ds"),wdd=s("wtd_dd");
+    const mp=pct(mdd,md),lp=pct(ldd,ld),wp=pct(wdd,wd),dta=pct(ma,mdd);
     const diff=(mp-lp).toFixed(1);
-    const dta=pct(mtd_act,mtd_dd);
-    const trendHtml=mp>lp?`<span style="color:var(--up)">▲ +${diff}pp</span>`:mp<lp?`<span style="color:var(--dn)">▼ ${diff}pp</span>`:`<span style="color:var(--mut)">—</span>`;
     return`<tr>
-      <td><strong>${tl.split(' ')[0]}</strong> <span style="font-size:10px;color:var(--mut)">${tl.split(' ')[1]||''}</span></td>
-      <td class="mono">${members.length}</td>
-      <td class="mono">${mtd_ds}</td>
-      <td class="mono">${mtd_dd}</td>
-      <td><div style="display:flex;align-items:center;gap:6px"><div class="bar-w"><div class="bar-f" style="width:${Math.min(mp,100)}%;background:${pCol(mp)}"></div></div><span style="font-weight:700;color:${pCol(mp)}">${mp}%</span></div></td>
+      <td><strong>${tl.split(" ")[0]}</strong> <span style="color:var(--mut);font-size:10px">${tl.split(" ")[1]||""}</span></td>
+      <td class="mono">${m.length}</td>
+      <td class="mono"><strong>${md}</strong></td>
+      <td class="mono"><strong>${mdd}</strong></td>
+      <td><div style="display:flex;align-items:center;gap:7px"><div class="bar-w"><div class="bar-f" style="width:${Math.min(mp,100)}%;background:${pCol(mp)}"></div></div><span style="font-weight:700;color:${pCol(mp)}">${mp}%</span></div></td>
       <td class="mono">${lp}%</td>
-      <td>${trendHtml}</td>
-      <td class="mono">${mtd_act}</td>
+      <td>${mp>lp?`<span class="up">▲ +${diff}pp</span>`:mp<lp?`<span class="dn">▼ ${diff}pp</span>`:"<span style='color:var(--mut)'>—</span>"}</td>
+      <td class="mono">${ma}</td>
       <td style="font-weight:700;color:${pCol(dta*2)}">${dta}%</td>
+      <td class="mono">${wd}</td>
+      <td class="mono">${wdd}</td>
+      <td><span class="pill ${pillCls(wp)}">${wp}%</span></td>
     </tr>`;
-  }).join('');
+  }).join("");
 }
 
-function renderAgents(){
-  const sorted=AGENTS.map((a,i)=>{
-    const d=D.agents[a.name]||{};
-    return{...a,i,...d,_pct:pct(d.mtd_dd||0,d.mtd_ds||0)};
-  }).sort((a,b)=>b._pct-a._pct);
-
-  const sums={mtd_ds:0,mtd_dd:0,mtd_act:0,wtd_ds:0,wtd_dd:0,lm_ds:0,lm_dd:0,lm_act:0};
-
-  document.getElementById('agBody').innerHTML=sorted.map((a,rank)=>{
-    const mp=pct(a.mtd_dd||0,a.mtd_ds||0),lp=pct(a.lm_dd||0,a.lm_ds||0);
-    const wp=pct(a.wtd_dd||0,a.wtd_ds||0);
-    const diff=(mp-lp).toFixed(1);
-    const trend=mp>lp?`<span class="up">▲ +${diff}pp</span>`:mp<lp?`<span class="dn">▼ ${diff}pp</span>`:`<span style="color:var(--mut)">—</span>`;
-    Object.keys(sums).forEach(k=>{sums[k]+=(a[k]||0);});
-    return`<tr>
-      <td style="color:var(--mut);font-size:10px;font-weight:600">${rank+1}</td>
-      <td><div style="display:flex;align-items:center;gap:7px"><div style="width:22px;height:22px;border-radius:50%;background:${avCol(a.i)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">${ini(a.short)}</div><span style="font-weight:600">${a.short}</span></div></td>
-      <td style="font-size:10px;color:var(--mut)">${a.tl.split(' ')[0]}</td>
-      <td class="mono">${a.lm_ds||0}</td>
-      <td class="mono">${a.lm_dd||0}</td>
-      <td class="mono">${a.lm_act||0}</td>
-      <td><span class="pill ${pillCls(lp)}">${lp}%</span></td>
-      <td class="mono"><strong>${a.mtd_ds||0}</strong></td>
-      <td class="mono"><strong>${a.mtd_dd||0}</strong></td>
-      <td class="mono">${a.mtd_act||0}</td>
+// ── WTD vs MTD COMPARISON ────────────────────────────────────────────────────
+function renderCmp(){
+  const tlF=document.getElementById("cmpTLFilter").value;
+  const data=AGENTS.filter(a=>!tlF||a.tl===tlF).map((a,i)=>({...a,i,...ag(a.name)}));
+  const sums={mtd_ds:0,mtd_dd:0,wtd_ds:0,wtd_dd:0};
+  document.getElementById("cmpBody").innerHTML=data.map(a=>{
+    const mp=pct(a.mtd_dd||0,a.mtd_ds||0),wp=pct(a.wtd_dd||0,a.wtd_ds||0);
+    const diff=(wp-mp).toFixed(1);
+    Object.keys(sums).forEach(k=>sums[k]+=(a[k]||0));
+    return`<tr class="${rowCls(mp)}">
+      <td><div style="display:flex;align-items:center;gap:7px"><div style="width:22px;height:22px;border-radius:50%;background:${avCol(a.i)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">${ini(a.short)}</div><span style="font-weight:600">${a.short}</span></div></td>
+      <td style="font-size:10px;color:var(--mut)">${a.tl.split(" ")[0]}</td>
+      <td class="mono">${a.mtd_ds||0}</td><td class="mono">${a.mtd_dd||0}</td>
       <td><span class="pill ${pillCls(mp)}">${mp}%</span></td>
-      <td class="mono">${a.wtd_ds||0}</td>
-      <td class="mono">${a.wtd_dd||0}</td>
+      <td class="mono">${a.wtd_ds||0}</td><td class="mono">${a.wtd_dd||0}</td>
       <td><span class="pill ${pillCls(wp)}">${wp}%</span></td>
-      <td>${trend}</td>
+      <td>${wp>mp?`<span class="up">▲ +${diff}pp</span>`:wp<mp?`<span class="dn">▼ ${diff}pp</span>`:"<span style='color:var(--mut)'>—</span>"}</td>
     </tr>`;
-  }).join('');
+  }).join("");
+  document.getElementById("cmpFoot").innerHTML=`<tr>
+    <td colspan="2"><strong>Total</strong></td>
+    <td class="mono">${sums.mtd_ds}</td><td class="mono">${sums.mtd_dd}</td>
+    <td><strong>${pct(sums.mtd_dd,sums.mtd_ds)}%</strong></td>
+    <td class="mono">${sums.wtd_ds}</td><td class="mono">${sums.wtd_dd}</td>
+    <td><strong>${pct(sums.wtd_dd,sums.wtd_ds)}%</strong></td><td></td>
+  </tr>`;
+}
 
-  document.getElementById('agFoot').innerHTML=`<tr>
+// ── AGENT TABLE ───────────────────────────────────────────────────────────────
+function renderAgents(){
+  const tlF=document.getElementById("agTLFilter").value;
+  const srt=document.getElementById("agSort").value;
+  let data=AGENTS.map((a,i)=>({...a,i,...ag(a.name)})).filter(a=>!tlF||a.tl===tlF);
+  const sm={mtd_pct:a=>pct(a.mtd_dd||0,a.mtd_ds||0),mtd_ds:a=>a.mtd_ds||0,mtd_dd:a=>a.mtd_dd||0,lm_pct:a=>pct(a.lm_dd||0,a.lm_ds||0)};
+  data.sort((a,b)=>sm[srt](b)-sm[srt](a));
+  const sums={lm_ds:0,lm_dd:0,lm_act:0,mtd_ds:0,mtd_dd:0,mtd_act:0,wtd_ds:0,wtd_dd:0};
+
+  document.getElementById("agBody").innerHTML=data.map((a,rank)=>{
+    const mp=pct(a.mtd_dd||0,a.mtd_ds||0),lp=pct(a.lm_dd||0,a.lm_ds||0),wp=pct(a.wtd_dd||0,a.wtd_ds||0);
+    const diff=(mp-lp).toFixed(1);
+    Object.keys(sums).forEach(k=>sums[k]+=(a[k]||0));
+    return`<tr class="${rowCls(mp)}">
+      <td style="color:var(--mut);font-weight:600;font-size:10px">${rank+1}</td>
+      <td><div style="display:flex;align-items:center;gap:7px"><div style="width:24px;height:24px;border-radius:50%;background:${avCol(a.i)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">${ini(a.short)}</div><span style="font-weight:600">${a.short}</span></div></td>
+      <td style="font-size:10px;color:var(--mut)">${a.tl.split(" ")[0]}</td>
+      <td class="mono">${a.lm_ds||0}</td><td class="mono">${a.lm_dd||0}</td><td class="mono">${a.lm_act||0}</td>
+      <td><span class="pill ${pillCls(lp)}">${lp}%</span></td>
+      <td class="mono"><strong>${a.mtd_ds||0}</strong></td><td class="mono"><strong>${a.mtd_dd||0}</strong></td><td class="mono">${a.mtd_act||0}</td>
+      <td><span class="pill ${pillCls(mp)}">${mp}%</span></td>
+      <td class="mono">${a.wtd_ds||0}</td><td class="mono">${a.wtd_dd||0}</td>
+      <td><span class="pill ${pillCls(wp)}">${wp}%</span></td>
+      <td>${mp>lp?`<span class="up">▲ +${diff}pp</span>`:mp<lp?`<span class="dn">▼ ${diff}pp</span>`:`<span style="color:var(--mut)">—</span>`}</td>
+      <td><span class="pill ${pillCls(mp)}">${pillTxt(mp)}</span></td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("agFoot").innerHTML=`<tr>
     <td colspan="3"><strong>Total</strong></td>
     <td class="mono">${sums.lm_ds}</td><td class="mono">${sums.lm_dd}</td><td class="mono">${sums.lm_act}</td>
     <td><strong>${pct(sums.lm_dd,sums.lm_ds)}%</strong></td>
@@ -550,164 +751,111 @@ function renderAgents(){
     <td><strong>${pct(sums.mtd_dd,sums.mtd_ds)}%</strong></td>
     <td class="mono">${sums.wtd_ds}</td><td class="mono">${sums.wtd_dd}</td>
     <td><strong>${pct(sums.wtd_dd,sums.wtd_ds)}%</strong></td>
-    <td></td>
+    <td colspan="2"></td>
   </tr>`;
+}
+
+function renderAll(){renderKPIs();renderLeaderboard();renderTL();renderCmp();renderAgents();renderCharts();}
+
+// ── DATE ─────────────────────────────────────────────────────────────────────
+function setDate(){
+  const d=new Date();
+  document.getElementById("todayDate").textContent=d.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric",weekday:"short"});
 }
 
 // ── FIREBASE ──────────────────────────────────────────────────────────────────
 function connectFirebase(){
   const r=db.ref(DB_KEY);
-
-  r.on('value',snap=>{
+  r.on("value",snap=>{
     if(snap.exists()){
       const val=snap.val();
       const hasData=val.agents&&Object.values(val.agents).some(a=>(a.mtd_ds||0)>0||(a.lm_ds||0)>0);
-      if(hasData){
-        D=val;
-        if(!D.agents)D.agents={};
-      } else {
-        // Firebase has empty data — overwrite with PREFILLED
-        r.set(PREFILLED).catch(()=>{});
-      }
+      if(hasData){D=val;if(!D.agents)D.agents={};}
+      else{r.set(PREFILLED).catch(()=>{});}
     } else {
       r.set(PREFILLED).catch(()=>{});
     }
     renderAll();
-    setSyncOk();
+    document.getElementById("syncLbl").textContent="Live · "+D.lastUpdated;
   },err=>{
-    setSyncErr('Offline — showing pre-loaded data');
+    document.getElementById("syncLbl").textContent="Offline";
     renderAll();
   });
 }
 
-// ── FORCE PUSH EXCEL DATA TO FIREBASE ────────────────────────────────────────
 function forcePush(){
-  const btn=document.getElementById('forceBtn');
-  btn.textContent='⏳ Pushing…';btn.disabled=true;
+  const btn=document.getElementById("forceBtn");
+  btn.textContent="⏳ Pushing…";btn.disabled=true;
   db.ref(DB_KEY).set(PREFILLED)
-    .then(()=>{
-      toast('✅ All Excel data loaded to Firebase!');
-      btn.textContent='✅ Done!';
-      setTimeout(()=>{btn.textContent='⚡ Load Excel Data';btn.disabled=false;},3000);
-    })
-    .catch(e=>{
-      toast('❌ Failed: '+e.message);
-      btn.textContent='⚡ Load Excel Data';btn.disabled=false;
-    });
+    .then(()=>{toast("✅ All Excel data loaded!");btn.textContent="✅ Done";setTimeout(()=>{btn.textContent="⚡ Load Data";btn.disabled=false;},3000);})
+    .catch(e=>{toast("❌ "+e.message);btn.textContent="⚡ Load Data";btn.disabled=false;});
 }
-window.forcePush=forcePush;
-window.forceReset=forcePush;
-
-function setSyncOk(){
-  const dot=document.getElementById('syncDot'),bar=document.getElementById('syncBar');
-  dot.className='sync-dot';
-  bar.className='sync-bar';
-  document.getElementById('syncMsg').textContent='● Firebase connected — live sync active';
-  document.getElementById('syncR').textContent='Last synced: just now';
-}
-function setSyncErr(msg){
-  document.getElementById('syncDot').className='sync-dot error';
-  document.getElementById('syncBar').className='sync-bar err';
-  document.getElementById('syncMsg').textContent='⚠ '+msg;
-}
+window.forcePush=forcePush;window.forceReset=forcePush;
 
 // ── MODALS ────────────────────────────────────────────────────────────────────
-function openLogin(){document.getElementById('loginOvl').classList.add('on');document.getElementById('loginPw').value='';document.getElementById('loginErr').style.display='none';setTimeout(()=>document.getElementById('loginPw').focus(),100);}
-function closeLogin(){document.getElementById('loginOvl').classList.remove('on');}
-function doLogin(){if(btoa(document.getElementById('loginPw').value)===ADMIN_PW){closeLogin();openEdit();}else document.getElementById('loginErr').style.display='block';}
-function openEdit(){populateEdit();document.getElementById('editOvl').classList.add('on');}
-function closeEdit(){document.getElementById('editOvl').classList.remove('on');}
-function swTab(id,idx){document.querySelectorAll('.tp').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.m-tab').forEach(t=>t.classList.remove('on'));document.getElementById(id).classList.add('on');document.querySelectorAll('.m-tab')[idx].classList.add('on');}
+function openLogin(){document.getElementById("loginOvl").classList.add("on");document.getElementById("loginPw").value="";document.getElementById("loginErr").style.display="none";setTimeout(()=>document.getElementById("loginPw").focus(),100);}
+function closeLogin(){document.getElementById("loginOvl").classList.remove("on");}
+function doLogin(){if(btoa(document.getElementById("loginPw").value)===ADMIN_PW){closeLogin();openEdit();}else document.getElementById("loginErr").style.display="block";}
+function openEdit(){populateEdit();document.getElementById("editOvl").classList.add("on");}
+function closeEdit(){document.getElementById("editOvl").classList.remove("on");}
+function swTab(id,idx){document.querySelectorAll(".tp").forEach(p=>p.classList.remove("on"));document.querySelectorAll(".m-tab").forEach(t=>t.classList.remove("on"));document.getElementById(id).classList.add("on");document.querySelectorAll(".m-tab")[idx].classList.add("on");}
 
 function populateEdit(){
-  // MTD/WTD tab
-  document.getElementById('agMTDWrap').innerHTML=AGENTS.map((a,ai)=>{
-    const d=D.agents[a.name]||{};
-    const mp=pct(d.mtd_dd||0,d.mtd_ds||0);
-    return`<div class="ag-wrap">
-      <div class="ag-hdr" onclick="toggleAg('mtd${ai}','arr${ai}')">
-        <div style="width:24px;height:24px;border-radius:50%;background:${avCol(ai)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">${ini(a.short)}</div>
-        <strong>${a.short}</strong>
-        <span style="font-size:10px;color:var(--mut)">${a.tl.split(' ')[0]}</span>
-        <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:${pCol(mp)};font-weight:700;margin-left:auto">${mp}% conv</span>
-        <span id="arr${ai}" style="font-size:10px;color:var(--mut);margin-left:8px">▼</span>
-      </div>
-      <div class="ag-body" id="mtd${ai}">
-        <div class="two-inp">
-          <div class="fg"><label>MTD DS (Demo Scheduled)</label><input type="number" id="m_mtd_ds_${ai}" value="${d.mtd_ds||0}" min="0"></div>
-          <div class="fg"><label>MTD DD (Demo Done)</label><input type="number" id="m_mtd_dd_${ai}" value="${d.mtd_dd||0}" min="0"></div>
-          <div class="fg"><label>MTD Activations (Matured)</label><input type="number" id="m_mtd_act_${ai}" value="${d.mtd_act||0}" min="0"></div>
-          <div class="fg"><label>WTD DS (This Week DS)</label><input type="number" id="m_wtd_ds_${ai}" value="${d.wtd_ds||0}" min="0"></div>
-          <div class="fg"><label>WTD DD (This Week DD)</label><input type="number" id="m_wtd_dd_${ai}" value="${d.wtd_dd||0}" min="0"></div>
+  ["MTD","LM"].forEach(type=>{
+    document.getElementById("ag"+type+"Wrap").innerHTML=AGENTS.map((a,ai)=>{
+      const d=ag(a.name);
+      const mp=type==="MTD"?pct(d.mtd_dd||0,d.mtd_ds||0):pct(d.lm_dd||0,d.lm_ds||0);
+      const fields=type==="MTD"
+        ?[["MTD DS","m_mtd_ds",d.mtd_ds||0],["MTD DD","m_mtd_dd",d.mtd_dd||0],["MTD Act","m_mtd_act",d.mtd_act||0],["WTD DS","m_wtd_ds",d.wtd_ds||0],["WTD DD","m_wtd_dd",d.wtd_dd||0]]
+        :[["LM DS","l_lm_ds",d.lm_ds||0],["LM DD","l_lm_dd",d.lm_dd||0],["LM Act","l_lm_act",d.lm_act||0]];
+      const pfx=type.toLowerCase();
+      return`<div class="ag-wrap">
+        <div class="ag-hdr" onclick="toggleAg('${pfx}sec${ai}','${pfx}arr${ai}')">
+          <div style="width:24px;height:24px;border-radius:50%;background:${avCol(ai)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">${ini(a.short)}</div>
+          <strong>${a.short}</strong>
+          <span style="font-size:10px;color:var(--mut)">${a.tl.split(" ")[0]}</span>
+          <span style="margin-left:auto;font-size:11px;font-weight:700;color:${pCol(mp)}">${mp}%</span>
+          <span id="${pfx}arr${ai}" style="font-size:10px;color:var(--mut);margin-left:8px;transition:transform .2s">▼</span>
         </div>
-      </div>
-    </div>`;
-  }).join('');
-
-  // Last Month tab
-  document.getElementById('agLMWrap').innerHTML=AGENTS.map((a,ai)=>{
-    const d=D.agents[a.name]||{};
-    const lp=pct(d.lm_dd||0,d.lm_ds||0);
-    return`<div class="ag-wrap">
-      <div class="ag-hdr" onclick="toggleAg('lm${ai}','larr${ai}')">
-        <div style="width:24px;height:24px;border-radius:50%;background:${avCol(ai)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">${ini(a.short)}</div>
-        <strong>${a.short}</strong>
-        <span style="font-size:10px;color:var(--mut)">${a.tl.split(' ')[0]}</span>
-        <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:${pCol(lp)};font-weight:700;margin-left:auto">${lp}% LM conv</span>
-        <span id="larr${ai}" style="font-size:10px;color:var(--mut);margin-left:8px">▼</span>
-      </div>
-      <div class="ag-body" id="lm${ai}">
-        <div class="two-inp">
-          <div class="fg"><label>LM DS (Last Month DS)</label><input type="number" id="l_lm_ds_${ai}" value="${d.lm_ds||0}" min="0"></div>
-          <div class="fg"><label>LM DD (Last Month DD)</label><input type="number" id="l_lm_dd_${ai}" value="${d.lm_dd||0}" min="0"></div>
-          <div class="fg"><label>LM Activations (Last Month)</label><input type="number" id="l_lm_act_${ai}" value="${d.lm_act||0}" min="0"></div>
+        <div class="ag-body" id="${pfx}sec${ai}">
+          <div class="two-inp">${fields.map(([lbl,id,val])=>`<div class="fg"><label>${lbl}</label><input type="number" id="${id}_${ai}" value="${val}" min="0"></div>`).join("")}</div>
         </div>
-      </div>
-    </div>`;
-  }).join('');
+      </div>`;
+    }).join("");
+  });
 }
 
-function toggleAg(bodyId,arrId){
-  const b=document.getElementById(bodyId),a=document.getElementById(arrId);
-  const open=b.style.display!=='none'&&b.style.display!=='';
-  b.style.display=open?'none':'block';
-  a.style.transform=open?'':'rotate(180deg)';
-  a.style.transition='transform .2s';
+function toggleAg(bid,aid){
+  const b=document.getElementById(bid),a=document.getElementById(aid);
+  const open=b.style.display==="block";
+  b.style.display=open?"none":"block";
+  if(a)a.style.transform=open?"":"rotate(180deg)";
 }
 
 function saveData(){
   const now=new Date();
-  const dateStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-  const newD={lastUpdated:dateStr,agents:{}};
-
+  const ds=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+  const g=(id,fb)=>{const e=document.getElementById(id);return e?parseInt(e.value)||0:fb||0;};
+  const newD={lastUpdated:ds,agents:{}};
   AGENTS.forEach((a,ai)=>{
-    const existing=D.agents[a.name]||{};
-    // Read MTD/WTD fields (may not be open/visible — use existing if input not found)
-    const g=(id,fallback)=>{const e=document.getElementById(id);return e?parseInt(e.value)||0:fallback||0;};
+    const ex=ag(a.name);
     newD.agents[a.name]={
-      mtd_ds:  g(`m_mtd_ds_${ai}`,  existing.mtd_ds),
-      mtd_dd:  g(`m_mtd_dd_${ai}`,  existing.mtd_dd),
-      mtd_act: g(`m_mtd_act_${ai}`, existing.mtd_act),
-      wtd_ds:  g(`m_wtd_ds_${ai}`,  existing.wtd_ds),
-      wtd_dd:  g(`m_wtd_dd_${ai}`,  existing.wtd_dd),
-      lm_ds:   g(`l_lm_ds_${ai}`,   existing.lm_ds),
-      lm_dd:   g(`l_lm_dd_${ai}`,   existing.lm_dd),
-      lm_act:  g(`l_lm_act_${ai}`,  existing.lm_act),
+      mtd_ds:g(`m_mtd_ds_${ai}`,ex.mtd_ds),mtd_dd:g(`m_mtd_dd_${ai}`,ex.mtd_dd),
+      mtd_act:g(`m_mtd_act_${ai}`,ex.mtd_act),wtd_ds:g(`m_wtd_ds_${ai}`,ex.wtd_ds),
+      wtd_dd:g(`m_wtd_dd_${ai}`,ex.wtd_dd),lm_ds:g(`l_lm_ds_${ai}`,ex.lm_ds),
+      lm_dd:g(`l_lm_dd_${ai}`,ex.lm_dd),lm_act:g(`l_lm_act_${ai}`,ex.lm_act),
     };
   });
-
   closeEdit();
-  document.getElementById('savOvl').classList.add('on');
-
+  document.getElementById("savOvl").classList.add("on");
   db.ref(DB_KEY).set(newD)
-    .then(()=>{document.getElementById('savOvl').classList.remove('on');toast('☁️ Saved & synced to all viewers!');})
-    .catch(err=>{document.getElementById('savOvl').classList.remove('on');toast('❌ Save failed: '+err.message);});
+    .then(()=>{document.getElementById("savOvl").classList.remove("on");toast("☁️ Saved & synced!");})
+    .catch(e=>{document.getElementById("savOvl").classList.remove("on");toast("❌ Save failed: "+e.message);});
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-// Render immediately with pre-filled data — don't wait for Firebase
+setDate();
 renderAll();
-// Then connect Firebase for live sync
 connectFirebase();
 </script>
 </body>
