@@ -8,26 +8,23 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, set, get, update }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey:            "AIzaSyB58QT7Zm5AD_9I6gRhw_Z2uWCK0zOsHZc",
-  authDomain:        "busy-dashboard-cbdff.firebaseapp.com",
-  databaseURL:       "https://busy-dashboard-cbdff-default-rtdb.firebaseio.com",
-  projectId:         "busy-dashboard-cbdff",
-  storageBucket:     "busy-dashboard-cbdff.firebasestorage.app",
-  messagingSenderId: "995856024225",
-  appId:             "1:995856024225:web:6621d5dd3f66d70b1da6e0"
+  apiKey:"AIzaSyB58QT7Zm5AD_9I6gRhw_Z2uWCK0zOsHZc",
+  authDomain:"busy-dashboard-cbdff.firebaseapp.com",
+  databaseURL:"https://busy-dashboard-cbdff-default-rtdb.firebaseio.com",
+  projectId:"busy-dashboard-cbdff",
+  storageBucket:"busy-dashboard-cbdff.firebasestorage.app",
+  messagingSenderId:"995856024225",
+  appId:"1:995856024225:web:6621d5dd3f66d70b1da6e0"
 };
 
 const app  = initializeApp(firebaseConfig);
 const db   = getDatabase(app);
 const auth = getAuth(app);
 
-// ─── AGENT MASTER LIST ────────────────────────────────────────────────────────
 const AGENT_MASTER = [
   {name:"AayushKOcube_TSE02_0426",     tl:"Sagar Maheshwari",  short:"AayushK"},
   {name:"AbhishekYOcube_TSE05_0626",   tl:"Himanshu Tiwari",   short:"AbhishekY"},
@@ -72,786 +69,444 @@ const AGENT_MASTER = [
   {name:"VishalOcube_Mov_0326",        tl:"Akash Tomer",       short:"Vishal"},
 ];
 
-// ─── DATE HELPERS ─────────────────────────────────────────────────────────────
-function toKey(d) {
-  return d.toISOString().slice(0,10); // YYYY-MM-DD
-}
-function getMonday(d) {
-  const dt = new Date(d);
-  const day = dt.getDay(); // 0=Sun
-  const diff = day === 0 ? -6 : 1 - day;
-  dt.setDate(dt.getDate() + diff);
-  return dt;
-}
-function getMTDDates() {
-  const today = new Date();
-  const dates = [];
-  const d = new Date(today.getFullYear(), today.getMonth(), 1);
-  while (d <= today) { dates.push(toKey(new Date(d))); d.setDate(d.getDate()+1); }
-  return dates;
-}
-function getWTDDates() {
-  const today = new Date();
-  const mon = getMonday(today);
-  const dates = [];
-  const d = new Date(mon);
-  while (d <= today) { dates.push(toKey(new Date(d))); d.setDate(d.getDate()+1); }
-  return dates;
-}
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+const pct=(n,d)=>d>0?Math.round(n/d*1000)/10:0;
+function pill(v,hi=40,lo=25){const c=v>=hi?'pill-good':v>=lo?'pill-warn':'pill-bad';return `<span class="pill ${c}">${v}%</span>`;}
+function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(ok?'tok':'terr');setTimeout(()=>t.className='toast',3500);}
+function txt(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+const charts={};
+function mkChart(id,cfg){if(charts[id])charts[id].destroy();const e=document.getElementById(id);if(e)charts[id]=new Chart(e,cfg);}
+function cOpts(max,legend=false){return{responsive:true,plugins:{legend:{display:legend,labels:{color:'#b0bec5',font:{size:11}}}},scales:{y:{max,ticks:{color:'#546e7a',font:{size:10}},grid:{color:'rgba(255,255,255,.06)'}},x:{ticks:{color:'#546e7a',font:{size:10},maxRotation:35},grid:{display:false}}}};}
 
-// ─── STATE ───────────────────────────────────────────────────────────────────
-let DAILY_LOGS  = {};   // { "2025-06-17": { AayushK: {ds,dd,act}, ... } }
-let LAST_MONTH  = {};   // { AayushK: {lm_ds, lm_dd, lm_act} }
-let COMPUTED    = [];   // final array used by all render functions
+// ── STATE ─────────────────────────────────────────────────────────────────────
+// Firebase stores ONE record per agent with all fields directly
+// Structure: agents_data / agentName / { mtd_ds, mtd_dd, mtd_act, wtd_ds, wtd_dd, lm_ds, lm_dd, lm_act }
+let DATA = []; // computed array for rendering
 
-// ─── COMPUTE TOTALS FROM DAILY LOGS ──────────────────────────────────────────
-function computeAgents() {
-  const mtdDates = getMTDDates();
-  const wtdDates = getWTDDates();
-
-  COMPUTED = AGENT_MASTER.map(a => {
-    let mtd_ds=0, mtd_dd=0, mtd_act=0;
-    let wtd_ds=0, wtd_dd=0;
-
-    mtdDates.forEach(dt => {
-      const entry = DAILY_LOGS[dt]?.[a.name];
-      if (entry) { mtd_ds += entry.ds||0; mtd_dd += entry.dd||0; mtd_act += entry.act||0; }
-    });
-    wtdDates.forEach(dt => {
-      const entry = DAILY_LOGS[dt]?.[a.name];
-      if (entry) { wtd_ds += entry.ds||0; wtd_dd += entry.dd||0; }
-    });
-
-    const lm = LAST_MONTH[a.name] || {};
+function buildData(snap) {
+  const raw = snap || {};
+  DATA = AGENT_MASTER.map(a => {
+    const d = raw[a.name] || {};
     return {
       name:    a.name,
       short:   a.short,
       tl:      a.tl,
-      lm_ds:   lm.lm_ds  || 0,
-      lm_dd:   lm.lm_dd  || 0,
-      lm_mat:  lm.lm_act || 0,
-      mtd_ds, mtd_dd, mtd_mat: mtd_act,
-      wtd_ds,  wtd_dd,
+      lm_ds:   d.lm_ds  || 0,
+      lm_dd:   d.lm_dd  || 0,
+      lm_mat:  d.lm_act || 0,
+      mtd_ds:  d.mtd_ds || 0,
+      mtd_dd:  d.mtd_dd || 0,
+      mtd_mat: d.mtd_act|| 0,
+      wtd_ds:  d.wtd_ds || 0,
+      wtd_dd:  d.wtd_dd || 0,
     };
   });
 }
 
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-const pct = (n,d) => d > 0 ? Math.round(n/d*1000)/10 : 0;
-function pillHtml(v, hi=40, lo=25) {
-  const cls = v>=hi?'pill-good':v>=lo?'pill-warn':'pill-bad';
-  return `<span class="pill ${cls}">${v}%</span>`;
-}
-function showToast(msg, ok=true) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show '+(ok?'toast-ok':'toast-err');
-  setTimeout(()=>t.className='toast', 3000);
-}
-function setText(id,v){ const e=document.getElementById(id); if(e) e.textContent=v; }
-function setStatus(msg){ setText('dbStatus', msg); }
+// ── RENDER OVERVIEW ──────────────────────────────────────────────────────────
+function renderOverview(){
+  const sum=k=>DATA.reduce((s,a)=>s+a[k],0);
+  const lm_ds=sum('lm_ds'),lm_dd=sum('lm_dd'),lm_mat=sum('lm_mat');
+  const mtd_ds=sum('mtd_ds'),mtd_dd=sum('mtd_dd'),mtd_mat=sum('mtd_mat');
+  const wtd_ds=sum('wtd_ds'),wtd_dd=sum('wtd_dd');
+  const dp=pct(mtd_dd,mtd_ds),lp=pct(lm_dd,lm_ds);
+  const diff=(dp-lp).toFixed(1);
+  txt('kpi-mtd-ds',mtd_ds.toLocaleString());
+  txt('kpi-mtd-dd',mtd_dd.toLocaleString());
+  txt('kpi-dsdd',dp+'%');
+  txt('kpi-dsdd-sub',(diff>=0?'↑':'↓')+' '+Math.abs(diff)+'pp vs last month ('+lp+'%)');
+  txt('kpi-act',mtd_mat);
+  const dtap=pct(mtd_mat,mtd_dd),ldta=pct(lm_mat,lm_dd);
+  txt('kpi-dta',dtap+'%');
+  txt('kpi-dta-sub','vs '+ldta+'% last month');
+  txt('kpi-wtd',pct(wtd_dd,wtd_ds)+'%');
+  txt('kpi-wtd-sub',wtd_ds+' DS → '+wtd_dd+' DD this week');
+  txt('lastUpdated','Updated: '+new Date().toLocaleTimeString('en-IN'));
 
-const charts = {};
-function mkChart(id, cfg) {
-  if (charts[id]) charts[id].destroy();
-  const el = document.getElementById(id);
-  if (el) charts[id] = new Chart(el, cfg);
-}
-function chartOpts({max,legend=false}={}) {
-  return {
-    responsive:true,
-    plugins:{ legend:{ display:legend, labels:{color:'#b0bec5',font:{size:11}} } },
-    scales:{
-      y:{ max, ticks:{color:'#546e7a',font:{size:10}}, grid:{color:'rgba(255,255,255,.06)'} },
-      x:{ ticks:{color:'#546e7a',font:{size:10},maxRotation:35}, grid:{display:false} }
-    }
-  };
+  mkChart('momChart',{type:'bar',data:{labels:['Last Month','MTD'],datasets:[{data:[lp,dp],backgroundColor:['rgba(21,101,192,.4)','rgba(21,101,192,.9)'],borderRadius:6,borderSkipped:false}]},options:cOpts(80)});
+  mkChart('dtaMomChart',{type:'bar',data:{labels:['Last Month','MTD'],datasets:[{data:[ldta,dtap],backgroundColor:['rgba(255,255,255,.15)','rgba(255,255,255,.55)'],borderRadius:6,borderSkipped:false}]},options:cOpts(30)});
+  const t20=[...DATA].filter(a=>a.mtd_ds>0).sort((a,b)=>b.mtd_ds-a.mtd_ds).slice(0,20);
+  mkChart('funnelChart',{type:'bar',data:{labels:t20.map(a=>a.short),datasets:[{label:'DS',data:t20.map(a=>a.mtd_ds),backgroundColor:'rgba(21,101,192,.6)',borderRadius:4},{label:'DD',data:t20.map(a=>a.mtd_dd),backgroundColor:'rgba(100,181,246,.85)',borderRadius:4}]},options:cOpts(undefined,true)});
 }
 
-// ─── RENDER OVERVIEW ─────────────────────────────────────────────────────────
-function renderOverview() {
-  const A = COMPUTED;
-  const sum = k => A.reduce((s,a)=>s+a[k],0);
-  const lm_ds=sum('lm_ds'), lm_dd=sum('lm_dd'), lm_mat=sum('lm_mat');
-  const mtd_ds=sum('mtd_ds'), mtd_dd=sum('mtd_dd'), mtd_mat=sum('mtd_mat');
-  const wtd_ds=sum('wtd_ds'), wtd_dd=sum('wtd_dd');
-
-  setText('kpi-mtd-ds', mtd_ds.toLocaleString());
-  setText('kpi-mtd-dd', mtd_dd.toLocaleString());
-  const dsddPct=pct(mtd_dd,mtd_ds), lmDsddPct=pct(lm_dd,lm_ds);
-  const delta=(dsddPct-lmDsddPct).toFixed(1);
-  setText('kpi-dsdd', dsddPct+'%');
-  setText('kpi-dsdd-sub', `${delta>=0?'↑':'↓'} ${Math.abs(delta)}pp vs last month (${lmDsddPct}%)`);
-  setText('kpi-act', mtd_mat);
-  const dtaPct=pct(mtd_mat,mtd_dd), lmDta=pct(lm_mat,lm_dd);
-  setText('kpi-dta', dtaPct+'%');
-  setText('kpi-dta-sub', `vs ${lmDta}% last month`);
-  setText('kpi-wtd', pct(wtd_dd,wtd_ds)+'%');
-  setText('kpi-wtd-sub', `${wtd_ds} DS → ${wtd_dd} DD this week`);
-  setText('lastUpdated', 'Updated: '+new Date().toLocaleTimeString('en-IN'));
-
-  mkChart('momChart',{type:'bar',data:{labels:['Last Month','MTD'],datasets:[{
-    data:[lmDsddPct,dsddPct],backgroundColor:['rgba(21,101,192,.4)','rgba(21,101,192,.9)'],borderRadius:6,borderSkipped:false
-  }]},options:chartOpts({max:60})});
-
-  mkChart('dtaMomChart',{type:'bar',data:{labels:['Last Month','MTD'],datasets:[{
-    data:[lmDta,dtaPct],backgroundColor:['rgba(255,255,255,.15)','rgba(255,255,255,.55)'],borderRadius:6,borderSkipped:false
-  }]},options:chartOpts({max:20})});
-
-  const top20=[...A].filter(a=>a.mtd_ds>0).sort((a,b)=>b.mtd_ds-a.mtd_ds).slice(0,20);
-  mkChart('funnelChart',{type:'bar',data:{
-    labels:top20.map(a=>a.short),
-    datasets:[
-      {label:'DS',data:top20.map(a=>a.mtd_ds),backgroundColor:'rgba(21,101,192,.55)',borderRadius:4},
-      {label:'DD',data:top20.map(a=>a.mtd_dd),backgroundColor:'rgba(100,181,246,.85)',borderRadius:4},
-    ]
-  },options:chartOpts({legend:true})});
-}
-
-// ─── RENDER DS→DD TABLE ───────────────────────────────────────────────────────
-function renderDsddTable() {
-  const tlF  = document.getElementById('tlFilter')?.value || '';
-  const sort = document.getElementById('dsddSort')?.value  || 'mtd_pct';
-  let data = COMPUTED.filter(a=>!tlF||a.tl===tlF);
-  const sortMap={mtd_pct:a=>pct(a.mtd_dd,a.mtd_ds),mtd_dd:a=>a.mtd_dd,mtd_ds:a=>a.mtd_ds,wtd_pct:a=>pct(a.wtd_dd,a.wtd_ds)};
-  data.sort((a,b)=>sortMap[sort](b)-sortMap[sort](a));
-
-  document.getElementById('dsddBody').innerHTML = data.map(a=>{
+// ── RENDER DS→DD ─────────────────────────────────────────────────────────────
+function renderDsdd(){
+  const tlF=document.getElementById('tlFilter')?.value||'';
+  const srt=document.getElementById('dsddSort')?.value||'mtd_pct';
+  let d=[...DATA].filter(a=>!tlF||a.tl===tlF);
+  const sm={mtd_pct:a=>pct(a.mtd_dd,a.mtd_ds),mtd_dd:a=>a.mtd_dd,mtd_ds:a=>a.mtd_ds,wtd_pct:a=>pct(a.wtd_dd,a.wtd_ds)};
+  d.sort((a,b)=>sm[srt](b)-sm[srt](a));
+  document.getElementById('dsddBody').innerHTML=d.map(a=>{
     const lp=pct(a.lm_dd,a.lm_ds),mp=pct(a.mtd_dd,a.mtd_ds),wp=pct(a.wtd_dd,a.wtd_ds);
-    const diff=(mp-lp).toFixed(1);
-    const trend=mp>lp?`<span class="up">▲ +${diff}pp</span>`:mp<lp?`<span class="dn">▼ ${diff}pp</span>`:`<span class="muted">—</span>`;
-    return `<tr><td class="fw6" title="${a.name}">${a.short}</td><td class="muted sm">${a.tl.split(' ')[0]}</td>
-      <td>${a.lm_ds}</td><td>${a.lm_dd}</td><td>${pillHtml(lp)}</td>
-      <td>${a.mtd_ds}</td><td>${a.mtd_dd}</td><td>${pillHtml(mp)}</td>
-      <td>${a.wtd_ds}</td><td>${a.wtd_dd}</td><td>${pillHtml(wp)}</td>
-      <td>${trend}</td></tr>`;
+    const df=(mp-lp).toFixed(1);
+    const tr=mp>lp?`<span class="up">▲ +${df}pp</span>`:mp<lp?`<span class="dn">▼ ${df}pp</span>`:`<span class="muted">—</span>`;
+    return `<tr><td class="fw6" title="${a.name}">${a.short}</td><td class="muted sm">${a.tl.split(' ')[0]}</td><td>${a.lm_ds}</td><td>${a.lm_dd}</td><td>${pill(lp)}</td><td>${a.mtd_ds}</td><td>${a.mtd_dd}</td><td>${pill(mp)}</td><td>${a.wtd_ds}</td><td>${a.wtd_dd}</td><td>${pill(wp)}</td><td>${tr}</td></tr>`;
   }).join('');
-
-  const active=COMPUTED.filter(a=>a.mtd_ds>=5);
-  renderLb('lb-dsdd-top',[...active].sort((a,b)=>pct(b.mtd_dd,b.mtd_ds)-pct(a.mtd_dd,a.mtd_ds)).slice(0,8),a=>pct(a.mtd_dd,a.mtd_ds));
-  renderLb('lb-dsdd-bot',[...active].sort((a,b)=>pct(a.mtd_dd,a.mtd_ds)-pct(b.mtd_dd,b.mtd_ds)).slice(0,8),a=>pct(a.mtd_dd,a.mtd_ds));
+  const act=DATA.filter(a=>a.mtd_ds>=5);
+  renderLb('lb-dsdd-top',[...act].sort((a,b)=>pct(b.mtd_dd,b.mtd_ds)-pct(a.mtd_dd,a.mtd_ds)).slice(0,8),a=>pct(a.mtd_dd,a.mtd_ds));
+  renderLb('lb-dsdd-bot',[...act].sort((a,b)=>pct(a.mtd_dd,a.mtd_ds)-pct(b.mtd_dd,b.mtd_ds)).slice(0,8),a=>pct(a.mtd_dd,a.mtd_ds));
 }
 
-// ─── RENDER DD→ACT TABLE ─────────────────────────────────────────────────────
-function renderDtaTable() {
+// ── RENDER DD→ACT ────────────────────────────────────────────────────────────
+function renderDta(){
   const tlF=document.getElementById('tlFilterDta')?.value||'';
-  let data=COMPUTED.filter(a=>!tlF||a.tl===tlF);
-  data.sort((a,b)=>pct(b.mtd_mat,b.mtd_dd)-pct(a.mtd_mat,a.mtd_dd));
-
-  document.getElementById('dtaBody').innerHTML=data.map(a=>{
+  let d=[...DATA].filter(a=>!tlF||a.tl===tlF).sort((a,b)=>pct(b.mtd_mat,b.mtd_dd)-pct(a.mtd_mat,a.mtd_dd));
+  document.getElementById('dtaBody').innerHTML=d.map(a=>{
     const lp=pct(a.lm_mat,a.lm_dd),mp=pct(a.mtd_mat,a.mtd_dd);
-    const diff=(mp-lp).toFixed(1);
-    const trend=mp>lp?`<span class="up">▲ +${diff}pp</span>`:mp<lp?`<span class="dn">▼ ${diff}pp</span>`:`<span class="muted">—</span>`;
-    return `<tr><td class="fw6" title="${a.name}">${a.short}</td><td class="muted sm">${a.tl.split(' ')[0]}</td>
-      <td>${a.lm_dd}</td><td>${a.lm_mat}</td><td>${pillHtml(lp,25,10)}</td>
-      <td>${a.mtd_dd}</td><td>${a.mtd_mat}</td><td>${pillHtml(mp,25,10)}</td>
-      <td>${trend}</td></tr>`;
+    const df=(mp-lp).toFixed(1);
+    const tr=mp>lp?`<span class="up">▲ +${df}pp</span>`:mp<lp?`<span class="dn">▼ ${df}pp</span>`:`<span class="muted">—</span>`;
+    return `<tr><td class="fw6" title="${a.name}">${a.short}</td><td class="muted sm">${a.tl.split(' ')[0]}</td><td>${a.lm_dd}</td><td>${a.lm_mat}</td><td>${pill(lp,25,10)}</td><td>${a.mtd_dd}</td><td>${a.mtd_mat}</td><td>${pill(mp,25,10)}</td><td>${tr}</td></tr>`;
   }).join('');
-
-  renderLb('lb-dta-top',[...COMPUTED].filter(a=>a.mtd_dd>0).sort((a,b)=>pct(b.mtd_mat,b.mtd_dd)-pct(a.mtd_mat,a.mtd_dd)).slice(0,8),a=>pct(a.mtd_mat,a.mtd_dd));
-
-  const withMat=COMPUTED.filter(a=>a.mtd_mat>0).sort((a,b)=>b.mtd_mat-a.mtd_mat);
-  mkChart('dtaBarChart',{type:'bar',data:{
-    labels:withMat.map(a=>a.short),
-    datasets:[{label:'Activations MTD',data:withMat.map(a=>a.mtd_mat),backgroundColor:'rgba(21,101,192,.75)',borderRadius:4}]
-  },options:chartOpts()});
+  renderLb('lb-dta-top',[...DATA].filter(a=>a.mtd_dd>0).sort((a,b)=>pct(b.mtd_mat,b.mtd_dd)-pct(a.mtd_mat,a.mtd_dd)).slice(0,8),a=>pct(a.mtd_mat,a.mtd_dd));
+  const wm=DATA.filter(a=>a.mtd_mat>0).sort((a,b)=>b.mtd_mat-a.mtd_mat);
+  mkChart('dtaBarChart',{type:'bar',data:{labels:wm.map(a=>a.short),datasets:[{label:'Activations MTD',data:wm.map(a=>a.mtd_mat),backgroundColor:'rgba(21,101,192,.75)',borderRadius:4}]},options:cOpts()});
 }
 
-// ─── RENDER TL VIEW ───────────────────────────────────────────────────────────
+// ── RENDER TL ────────────────────────────────────────────────────────────────
 const TLS=['Sagar Maheshwari','Amit Verma','Akash Tomer','Himanshu Tiwari','Anshu Sharma'];
-function renderTLView() {
-  const tlStat=(tl,k)=>COMPUTED.filter(a=>a.tl===tl).reduce((s,a)=>s+a[k],0);
+function renderTL(){
+  const ts=(tl,k)=>DATA.filter(a=>a.tl===tl).reduce((s,a)=>s+a[k],0);
   document.getElementById('tlCards').innerHTML=TLS.map(tl=>{
-    const mtd_ds=tlStat(tl,'mtd_ds'),mtd_dd=tlStat(tl,'mtd_dd'),mtd_mat=tlStat(tl,'mtd_mat');
-    const lm_ds=tlStat(tl,'lm_ds'),lm_dd=tlStat(tl,'lm_dd');
-    const cnt=COMPUTED.filter(a=>a.tl===tl).length;
-    return `<div class="tl-card">
-      <div class="tl-name">${tl}</div>
-      <div class="tl-row"><span>Agents</span><strong>${cnt}</strong></div>
-      <div class="tl-row"><span>MTD DS</span><strong>${mtd_ds}</strong></div>
-      <div class="tl-row"><span>MTD DD</span><strong>${mtd_dd}</strong></div>
-      <div class="tl-row"><span>DS→DD %</span><strong>${pct(mtd_dd,mtd_ds)}%</strong></div>
-      <div class="tl-row"><span>Activations</span><strong>${mtd_mat}</strong></div>
-      <div class="tl-row"><span>DD→Act %</span><strong>${pct(mtd_mat,mtd_dd)}%</strong></div>
-    </div>`;
+    const md=ts(tl,'mtd_ds'),mdd=ts(tl,'mtd_dd'),ma=ts(tl,'mtd_mat');
+    const ld=ts(tl,'lm_ds'),ldd=ts(tl,'lm_dd');
+    return `<div class="tl-card"><div class="tl-name">${tl}</div>
+      <div class="tl-row"><span>Agents</span><strong>${DATA.filter(a=>a.tl===tl).length}</strong></div>
+      <div class="tl-row"><span>MTD DS</span><strong>${md}</strong></div>
+      <div class="tl-row"><span>MTD DD</span><strong>${mdd}</strong></div>
+      <div class="tl-row"><span>DS→DD %</span><strong>${pct(mdd,md)}%</strong></div>
+      <div class="tl-row"><span>Activations</span><strong>${ma}</strong></div>
+      <div class="tl-row"><span>DD→Act %</span><strong>${pct(ma,mdd)}%</strong></div></div>`;
   }).join('');
-
-  mkChart('tlConvChart',{type:'bar',data:{
-    labels:TLS.map(t=>t.split(' ')[0]),
-    datasets:[
-      {label:'LM %',data:TLS.map(t=>pct(tlStat(t,'lm_dd'),tlStat(t,'lm_ds'))),backgroundColor:'rgba(21,101,192,.35)',borderRadius:4},
-      {label:'MTD %',data:TLS.map(t=>pct(tlStat(t,'mtd_dd'),tlStat(t,'mtd_ds'))),backgroundColor:'rgba(21,101,192,.9)',borderRadius:4},
-    ]
-  },options:chartOpts({legend:true})});
-
-  mkChart('tlDtaChart',{type:'bar',data:{
-    labels:TLS.map(t=>t.split(' ')[0]),
-    datasets:[
-      {label:'LM %',data:TLS.map(t=>pct(tlStat(t,'lm_mat'),tlStat(t,'lm_dd'))),backgroundColor:'rgba(255,255,255,.18)',borderRadius:4},
-      {label:'MTD %',data:TLS.map(t=>pct(tlStat(t,'mtd_mat'),tlStat(t,'mtd_dd'))),backgroundColor:'rgba(255,255,255,.55)',borderRadius:4},
-    ]
-  },options:chartOpts({legend:true})});
+  mkChart('tlConvChart',{type:'bar',data:{labels:TLS.map(t=>t.split(' ')[0]),datasets:[{label:'LM %',data:TLS.map(t=>pct(ts(t,'lm_dd'),ts(t,'lm_ds'))),backgroundColor:'rgba(21,101,192,.35)',borderRadius:4},{label:'MTD %',data:TLS.map(t=>pct(ts(t,'mtd_dd'),ts(t,'mtd_ds'))),backgroundColor:'rgba(21,101,192,.9)',borderRadius:4}]},options:cOpts(undefined,true)});
+  mkChart('tlDtaChart',{type:'bar',data:{labels:TLS.map(t=>t.split(' ')[0]),datasets:[{label:'LM %',data:TLS.map(t=>pct(ts(t,'lm_mat'),ts(t,'lm_dd'))),backgroundColor:'rgba(255,255,255,.18)',borderRadius:4},{label:'MTD %',data:TLS.map(t=>pct(ts(t,'mtd_mat'),ts(t,'mtd_dd'))),backgroundColor:'rgba(255,255,255,.55)',borderRadius:4}]},options:cOpts(undefined,true)});
 }
 
-// ─── LEADERBOARD ──────────────────────────────────────────────────────────────
 function renderLb(id,data,fn){
-  const max=Math.max(...data.map(fn),1);
+  const mx=Math.max(...data.map(fn),1);
   document.getElementById(id).innerHTML=data.map((a,i)=>{
-    const v=fn(a),cls=v>=40?'up':v>=25?'warn-clr':'dn';
-    return `<div class="lb-row">
-      <div class="lb-rank ${i<3?'lb-gold':''}">${i+1}</div>
-      <div class="lb-name" title="${a.name}">${a.short}</div>
-      <div class="lb-bar-wrap"><div class="lb-bar" style="width:${Math.min(100,v/max*100)}%"></div></div>
-      <div class="lb-pct ${cls}">${v}%</div>
-    </div>`;
+    const v=fn(a),c=v>=40?'up':v>=25?'warn-clr':'dn';
+    return `<div class="lb-row"><div class="lb-rank ${i<3?'lb-gold':''}">${i+1}</div><div class="lb-name" title="${a.name}">${a.short}</div><div class="lb-bar-wrap"><div class="lb-bar" style="width:${Math.min(100,v/mx*100)}%"></div></div><div class="lb-pct ${c}">${v}%</div></div>`;
   }).join('');
 }
 
-// ─── FULL RENDER ─────────────────────────────────────────────────────────────
-function renderAll() {
-  computeAgents();
-  renderOverview();
-  renderDsddTable();
-  renderDtaTable();
-  renderTLView();
-}
+function renderAll(){renderOverview();renderDsdd();renderDta();renderTL();}
 
-// ─── FIREBASE LISTENERS ───────────────────────────────────────────────────────
-function startListeners() {
-  // Listen to daily logs
-  onValue(ref(db,'daily_logs'), snap => {
-    DAILY_LOGS = snap.val() || {};
-    renderAll();
-    setStatus('● Live');
-  }, ()=>setStatus('✕ Error'));
+// ── FIREBASE LISTENER ────────────────────────────────────────────────────────
+onValue(ref(db,'agents_data'), snap=>{
+  buildData(snap.val()||{});
+  renderAll();
+  document.getElementById('dbStatus').textContent='● Live';
+  txt('lastUpdated','Updated: '+new Date().toLocaleTimeString('en-IN'));
+}, ()=>{
+  document.getElementById('dbStatus').textContent='✕ Error';
+});
 
-  // Listen to last month
-  onValue(ref(db,'last_month'), snap => {
-    LAST_MONTH = snap.val() || {};
-    renderAll();
-  });
-}
+// ── EXCEL UPLOAD ─────────────────────────────────────────────────────────────
+window.handleFileUpload = function(e){
+  const file=e.target.files[0]; if(!file)return;
+  toast('Reading file…');
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+      const result={};   // agentName → merged fields
 
-// ─── DOWNLOAD TEMPLATE ───────────────────────────────────────────────────────
-window.downloadTemplate = function() {
-  const wb = XLSX.utils.book_new();
-
-  // ── Sheet 1: Daily Entry ──
-  const today = toKey(new Date());
-  const dailyRows = [
-    ['DAILY ENTRY SHEET — Fill DS, DD, Activations for each agent for the selected date'],
-    ['Date (YYYY-MM-DD):', today, '', '', '', '', 'Change the date in cell B2 before filling data'],
-    [],
-    ['Agent Name (do not edit)', 'Short Name', 'TL', 'DS (Demo Scheduled)', 'DD (Demo Done)', 'Activations (Matured)'],
-    ...AGENT_MASTER.map(a => [a.name, a.short, a.tl, 0, 0, 0])
-  ];
-  const ws1 = XLSX.utils.aoa_to_sheet(dailyRows);
-  ws1['!cols'] = [{wch:36},{wch:16},{wch:20},{wch:22},{wch:18},{wch:22}];
-  XLSX.utils.book_append_sheet(wb, ws1, 'Daily Entry');
-
-  // ── Sheet 2: Last Month ──
-  const lmRows = [
-    ['LAST MONTH DATA — Update once at the start of each new month'],
-    [],
-    ['Agent Name (do not edit)', 'Short Name', 'TL', 'LM DS (Demo Scheduled)', 'LM DD (Demo Done)', 'LM Activations (Matured)'],
-    ...AGENT_MASTER.map(a => {
-      const lm = LAST_MONTH[a.name]||{};
-      return [a.name, a.short, a.tl, lm.lm_ds||0, lm.lm_dd||0, lm.lm_act||0];
-    })
-  ];
-  const ws2 = XLSX.utils.aoa_to_sheet(lmRows);
-  ws2['!cols'] = [{wch:36},{wch:16},{wch:20},{wch:24},{wch:20},{wch:24}];
-  XLSX.utils.book_append_sheet(wb, ws2, 'Last Month');
-
-  // ── Sheet 3: Instructions ──
-  const instrRows = [
-    ['HOW TO USE THIS FILE'],
-    [],
-    ['DAILY WORKFLOW:'],
-    ['1. Open this file every day after end of business'],
-    ['2. Go to "Daily Entry" sheet'],
-    ['3. Change the date in cell B2 to today\'s date (format: YYYY-MM-DD e.g. 2025-06-17)'],
-    ['4. Fill DS, DD, Activations for each agent (leave 0 if no activity)'],
-    ['5. Save the file'],
-    ['6. Go to dashboard → Admin Login → Upload Data tab'],
-    ['7. Choose "Daily Entry" and upload this file'],
-    ['8. Dashboard updates instantly for everyone'],
-    [],
-    ['LAST MONTH WORKFLOW (do once at start of month):'],
-    ['1. Go to "Last Month" sheet'],
-    ['2. Fill LM DS, LM DD, LM Activations from previous month\'s final totals'],
-    ['3. Upload the file with "Last Month" selected in the upload tab'],
-    [],
-    ['IMPORTANT RULES:'],
-    ['- Date format must be YYYY-MM-DD (e.g. 2025-06-17)'],
-    ['- Agent names must exactly match the list (do not rename)'],
-    ['- Enter 0 for agents with no activity that day (not blank)'],
-    ['- Each day\'s data is stored separately — MTD/WTD auto-calculated'],
-  ];
-  const ws3 = XLSX.utils.aoa_to_sheet(instrRows);
-  ws3['!cols'] = [{wch:60}];
-  XLSX.utils.book_append_sheet(wb, ws3, 'Instructions');
-
-  XLSX.writeFile(wb, 'BUSY_Dashboard_Template.xlsx');
-  showToast('Template downloaded ✓');
-};
-
-// ─── UPLOAD & PROCESS FILE ───────────────────────────────────────────────────
-window.handleFileUpload = function(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  showToast('Reading file…');
-  const reader = new FileReader();
-  reader.onload = async ev => {
-    try {
-      const data = new Uint8Array(ev.target.result);
-      const wb = XLSX.read(data, {type:'array'});
-      console.log('Workbook sheets found:', wb.SheetNames);
-
-      let dailyOk = false, lmOk = false;
-      let dailyDate = '', dailyData = {}, lmData = {};
-
-      // ── Try Daily Entry sheet ──
-      if (wb.SheetNames.includes('Daily Entry')) {
-        const ws = wb.Sheets['Daily Entry'];
-        const allRows = XLSX.utils.sheet_to_json(ws, {header:1});
-        console.log('Daily Entry first 5 rows:', JSON.stringify(allRows.slice(0,5)));
-        const dateRow = allRows[1];
-        if (dateRow) {
-          const rawDate = String(dateRow[1]||'').trim();
-          // Accept YYYY-MM-DD or auto-convert serial number
-          let dateVal = rawDate;
-          if (/^\d{5}$/.test(rawDate)) {
-            // Excel serial date — convert
-            const d = new Date((parseInt(rawDate)-25569)*86400*1000);
-            dateVal = d.toISOString().slice(0,10);
-          }
-          console.log('Date value:', dateVal);
-          if (/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
-            dailyDate = dateVal;
-            const dataRows = allRows.slice(4);
-            dataRows.forEach(row => {
-              const name = String(row[0]||'').trim();
-              if (!name || !AGENT_MASTER.find(a=>a.name===name)) return;
-              dailyData[name] = {
-                ds:  parseInt(row[3])||0,
-                dd:  parseInt(row[4])||0,
-                act: parseInt(row[5])||0,
-              };
-            });
-            dailyOk = Object.keys(dailyData).length > 0;
-            console.log('Daily parsed:', Object.keys(dailyData).length, 'agents');
-          }
-        }
-      }
-
-      // ── Try Last Month sheet ──
-      if (wb.SheetNames.includes('Last Month')) {
-        const ws = wb.Sheets['Last Month'];
-        const allRows = XLSX.utils.sheet_to_json(ws, {header:1});
-        console.log('Last Month first 4 rows:', JSON.stringify(allRows.slice(0,4)));
-        const dataRows = allRows.slice(3);
-        dataRows.forEach(row => {
-          const name = String(row[0]||'').trim();
-          if (!name || !AGENT_MASTER.find(a=>a.name===name)) return;
-          lmData[name] = {
-            lm_ds:  parseInt(row[3])||0,
-            lm_dd:  parseInt(row[4])||0,
-            lm_act: parseInt(row[5])||0,
-          };
+      // Sheet: Daily Entry  → mtd_ds, mtd_dd, mtd_act, wtd_ds, wtd_dd
+      if(wb.SheetNames.includes('Daily Entry')){
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets['Daily Entry'],{header:1});
+        // find data rows: skip until first cell matches an agent name
+        let start=0;
+        for(let i=0;i<rows.length;i++){if(AGENT_MASTER.find(a=>a.name===String(rows[i][0]||'').trim())){start=i;break;}}
+        rows.slice(start).forEach(row=>{
+          const name=String(row[0]||'').trim();
+          if(!AGENT_MASTER.find(a=>a.name===name))return;
+          if(!result[name])result[name]={};
+          // Cols: A=name B=short C=TL D=mtd_ds E=mtd_dd F=mtd_act G=wtd_ds H=wtd_dd
+          result[name].mtd_ds  = parseInt(row[3])||0;
+          result[name].mtd_dd  = parseInt(row[4])||0;
+          result[name].mtd_act = parseInt(row[5])||0;
+          result[name].wtd_ds  = parseInt(row[6])||0;
+          result[name].wtd_dd  = parseInt(row[7])||0;
         });
-        lmOk = Object.keys(lmData).length > 0;
-        console.log('LM parsed:', Object.keys(lmData).length, 'agents');
       }
 
-      if (!dailyOk && !lmOk) {
-        showToast('Could not read any data — check sheet names match exactly', false);
-        return;
+      // Sheet: Last Month → lm_ds, lm_dd, lm_act
+      if(wb.SheetNames.includes('Last Month')){
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets['Last Month'],{header:1});
+        let start=0;
+        for(let i=0;i<rows.length;i++){if(AGENT_MASTER.find(a=>a.name===String(rows[i][0]||'').trim())){start=i;break;}}
+        rows.slice(start).forEach(row=>{
+          const name=String(row[0]||'').trim();
+          if(!AGENT_MASTER.find(a=>a.name===name))return;
+          if(!result[name])result[name]={};
+          result[name].lm_ds  = parseInt(row[3])||0;
+          result[name].lm_dd  = parseInt(row[4])||0;
+          result[name].lm_act = parseInt(row[5])||0;
+        });
       }
 
-      // Show combined preview
-      showCombinedPreview(dailyOk, dailyDate, dailyData, lmOk, lmData);
+      const count=Object.keys(result).length;
+      if(count===0){toast('No agent data found in file',false);return;}
 
-    } catch(err) {
-      console.error('Upload error:', err);
-      showToast('Error: '+err.message, false);
-    }
-    e.target.value = '';
+      // Merge with existing Firebase data so partial uploads don't wipe other fields
+      const existing={};
+      DATA.forEach(a=>{
+        existing[a.name]={
+          mtd_ds:a.mtd_ds,mtd_dd:a.mtd_dd,mtd_act:a.mtd_mat,
+          wtd_ds:a.wtd_ds,wtd_dd:a.wtd_dd,
+          lm_ds:a.lm_ds,lm_dd:a.lm_dd,lm_act:a.lm_mat
+        };
+      });
+      const merged={};
+      AGENT_MASTER.forEach(a=>{merged[a.name]={...existing[a.name],...(result[a.name]||{})};});
+
+      // Show preview
+      showPreview(merged,count);
+
+    }catch(err){toast('Read error: '+err.message,false);console.error(err);}
+    e.target.value='';
   };
-  reader.onerror = () => showToast('Could not read file', false);
   reader.readAsArrayBuffer(file);
 };
 
-async function processDailySheet(wb) {
-  const ws = wb.Sheets['Daily Entry'];
-  if (!ws) { showToast('Sheet "Daily Entry" not found in file', false); return; }
-
-  // Read date from B2 (row index 1, col index 1)
-  const allRows = XLSX.utils.sheet_to_json(ws, {header:1});
-  console.log('All rows:', JSON.stringify(allRows.slice(0,6)));
-
-  const dateRow = allRows[1]; // row 2
-  if (!dateRow) { showToast('Date row missing', false); return; }
-  const dateVal = String(dateRow[1]||'').trim();
-  console.log('Date found:', dateVal);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
-    showToast(`Date format must be YYYY-MM-DD — found: "${dateVal}"`, false); return;
-  }
-
-  // Data starts at row 5 (index 4) — row1=title, row2=date, row3=blank, row4=header, row5+=data
-  const dataRows = allRows.slice(4);
-  console.log('Data rows count:', dataRows.length, 'First row:', JSON.stringify(dataRows[0]));
-  const dayData = {};
-  let count = 0;
-  dataRows.forEach(row => {
-    const name = String(row[0]||'').trim();
-    if (!name || !AGENT_MASTER.find(a=>a.name===name)) return;
-    dayData[name] = {
-      ds:  parseInt(row[3])||0,   // col D
-      dd:  parseInt(row[4])||0,   // col E
-      act: parseInt(row[5])||0,   // col F
-    };
-    count++;
-    console.log(`Parsed: ${name} ds=${dayData[name].ds} dd=${dayData[name].dd} act=${dayData[name].act}`);
-  });
-
-  if (count === 0) { showToast('No valid agent data found — check agent names in column A match exactly', false); return; }
-  showToast(`✓ Read ${count} agents for ${dateVal} — review and confirm below`);
-  // Preview before save
-  showUploadPreview(dateVal, dayData, 'daily');
-}
-
-async function processLastMonthSheet(wb) {
-  const ws = wb.Sheets['Last Month'];
-  if (!ws) { showToast('Sheet "Last Month" not found in file', false); return; }
-
-  const allRowsLM = XLSX.utils.sheet_to_json(ws, {header:1});
-  console.log('LM rows:', JSON.stringify(allRowsLM.slice(0,4)));
-
-  // Data starts at row 4 (index 3) — row1=title, row2=blank, row3=header, row4+=data
-  const dataRowsLM = allRowsLM.slice(3);
-  const lmData = {};
-  let count = 0;
-  dataRowsLM.forEach(row => {
-    const name = String(row[0]||'').trim();
-    if (!name || !AGENT_MASTER.find(a=>a.name===name)) return;
-    lmData[name] = {
-      lm_ds:  parseInt(row[3])||0,   // col D
-      lm_dd:  parseInt(row[4])||0,   // col E
-      lm_act: parseInt(row[5])||0,   // col F
-    };
-    count++;
-    console.log(`LM Parsed: ${name} lm_ds=${lmData[name].lm_ds} lm_dd=${lmData[name].lm_dd}`);
-  });
-
-  if (count === 0) { showToast('No valid agent data found — check agent names in column A match exactly', false); return; }
-  showToast(`✓ Read ${count} agents for Last Month — review and confirm below`);
-  showUploadPreview(null, lmData, 'lastmonth');
-}
-
-// ─── COMBINED PREVIEW & SAVE ──────────────────────────────────────────────────
-let _pendingUpload = null;
-
-function showCombinedPreview(dailyOk, dailyDate, dailyData, lmOk, lmData) {
-  _pendingUpload = {dailyOk, dailyDate, dailyData, lmOk, lmData};
-
-  const modal = document.getElementById('previewModal');
-  const title = document.getElementById('previewTitle');
-  const head  = document.getElementById('previewHead');
-  const tbody = document.getElementById('previewBody');
-
-  const parts = [];
-  if (dailyOk) parts.push(`Daily Entry (${dailyDate}) — ${Object.keys(dailyData).length} agents`);
-  if (lmOk)    parts.push(`Last Month — ${Object.keys(lmData).length} agents`);
-  title.textContent = '✓ Ready to save: ' + parts.join(' + ');
-
-  head.innerHTML = '<tr><th>Agent</th><th>Type</th><th>DS / LM DS</th><th>DD / LM DD</th><th>Act / LM Act</th></tr>';
-
-  const rows = [];
-  if (dailyOk) {
-    Object.entries(dailyData).forEach(([name, d]) => {
-      const ag = AGENT_MASTER.find(a=>a.name===name);
-      rows.push(`<tr><td class="fw6">${ag?ag.short:name}</td><td style="color:var(--blue-lt)">Daily ${dailyDate}</td><td>${d.ds}</td><td>${d.dd}</td><td>${d.act}</td></tr>`);
-    });
-  }
-  if (lmOk) {
-    Object.entries(lmData).forEach(([name, d]) => {
-      const ag = AGENT_MASTER.find(a=>a.name===name);
-      rows.push(`<tr><td class="fw6">${ag?ag.short:name}</td><td style="color:var(--muted)">Last Month</td><td>${d.lm_ds}</td><td>${d.lm_dd}</td><td>${d.lm_act}</td></tr>`);
-    });
-  }
-  tbody.innerHTML = rows.join('');
-  modal.style.display = 'flex';
-}
-
-window.confirmUpload = async function() {
-  if (!_pendingUpload) return;
-  const {dailyOk, dailyDate, dailyData, lmOk, lmData} = _pendingUpload;
-  const btn = document.querySelector('#previewModal .btn-blue');
-  btn.textContent = 'Saving…'; btn.disabled = true;
-  try {
-    if (dailyOk) {
-      await set(ref(db, `daily_logs/${dailyDate}`), dailyData);
-      console.log('Daily saved:', dailyDate);
-    }
-    if (lmOk) {
-      await set(ref(db, 'last_month'), lmData);
-      console.log('LM saved');
-    }
-    const saved = [dailyOk && `Daily (${dailyDate})`, lmOk && 'Last Month'].filter(Boolean).join(' + ');
-    showToast(`✓ Saved ${saved} — dashboard updating…`);
-    closePreview();
-  } catch(e) {
-    console.error('Save error:', e);
-    showToast('Save failed: '+e.message, false);
-    btn.textContent = '✓ Confirm & Save to Firebase'; btn.disabled = false;
-  }
-};
-
-window.closePreview = function() {
-  document.getElementById('previewModal').style.display = 'none';
-  const btn = document.querySelector('#previewModal .btn-blue');
-  if (btn) { btn.textContent = '✓ Confirm & Save to Firebase'; btn.disabled = false; }
-  _pendingUpload = null;
-};
-
-// ─── VIEW DAILY LOG ───────────────────────────────────────────────────────────
-window.loadDailyLog = function() {
-  const dt = document.getElementById('logDatePicker').value;
-  if (!dt) return;
-  const log = DAILY_LOGS[dt] || {};
-  const tbody = document.getElementById('logBody');
-  tbody.innerHTML = AGENT_MASTER.map(a => {
-    const d = log[a.name] || {ds:0,dd:0,act:0};
-    const hasData = d.ds||d.dd||d.act;
-    return `<tr class="${hasData?'':'row-zero'}">
-      <td class="fw6" title="${a.name}">${a.short}</td>
-      <td class="muted sm">${a.tl.split(' ')[0]}</td>
-      <td>${d.ds}</td><td>${d.dd}</td><td>${d.act}</td>
-    </tr>`;
+let _pending=null;
+function showPreview(merged,count){
+  _pending=merged;
+  document.getElementById('pvTitle').textContent=`Preview — ${count} agents updated`;
+  document.getElementById('pvBody').innerHTML=AGENT_MASTER.map(a=>{
+    const d=merged[a.name]||{};
+    return `<tr><td class="fw6">${a.short}</td><td>${d.lm_ds||0}</td><td>${d.lm_dd||0}</td><td>${d.lm_act||0}</td><td>${d.mtd_ds||0}</td><td>${d.mtd_dd||0}</td><td>${d.mtd_act||0}</td><td>${d.wtd_ds||0}</td><td>${d.wtd_dd||0}</td></tr>`;
   }).join('');
-  document.getElementById('logSection').style.display='block';
-};
+  document.getElementById('pvModal').style.display='flex';
+}
 
-// ─── AUTH ─────────────────────────────────────────────────────────────────────
-onAuthStateChanged(auth, user => {
-  const isAdmin = !!user;
-  document.getElementById('adminTabBtn').style.display = isAdmin ? 'block' : 'none';
-  document.getElementById('logoutBtn').style.display   = isAdmin ? 'inline-flex' : 'none';
-  document.getElementById('loginBtn').style.display    = isAdmin ? 'none' : 'inline-flex';
-  document.getElementById('adminUserBadge').textContent = user ? user.email : '';
-  if (!isAdmin && document.getElementById('pane-admin').classList.contains('active')) {
-    switchTab('overview', document.querySelector('.tab'));
+window.confirmSave=async function(){
+  if(!_pending)return;
+  const btn=document.getElementById('pvSaveBtn');
+  btn.textContent='Saving…';btn.disabled=true;
+  try{
+    await set(ref(db,'agents_data'),_pending);
+    toast('✓ Saved — dashboard live for everyone!');
+    document.getElementById('pvModal').style.display='none';
+    _pending=null;
+  }catch(err){
+    toast('Save failed: '+err.message,false);
+    btn.textContent='✓ Confirm & Save';btn.disabled=false;
   }
-});
-
-window.openLogin = ()=>{ document.getElementById('loginModal').style.display='flex'; };
-window.closeLogin= ()=>{ document.getElementById('loginModal').style.display='none'; };
-window.doLogin   = async()=>{
-  try {
-    await signInWithEmailAndPassword(auth,
-      document.getElementById('loginEmail').value,
-      document.getElementById('loginPass').value);
-    closeLogin(); showToast('Signed in ✓');
-  } catch(e){ showToast('Login failed: '+e.message, false); }
 };
-window.doLogout  = async()=>{ await signOut(auth); showToast('Signed out'); };
+window.closePreview=()=>{
+  document.getElementById('pvModal').style.display='none';
+  const b=document.getElementById('pvSaveBtn');
+  if(b){b.textContent='✓ Confirm & Save';b.disabled=false;}
+  _pending=null;
+};
 
-// ─── TAB SWITCH ───────────────────────────────────────────────────────────────
-window.switchTab = (id, el) => {
+// ── DOWNLOAD TEMPLATE ────────────────────────────────────────────────────────
+window.downloadTemplate=function(){
+  const wb=XLSX.utils.book_new();
+
+  // Daily Entry sheet
+  const d1=[
+    ['DAILY ENTRY — Fill every day'],
+    [''],
+    ['Agent Name (do not edit)','Short Name','TL','MTD DS','MTD DD','MTD Activations','WTD DS','WTD DD'],
+    ...AGENT_MASTER.map(a=>{const d=DATA.find(x=>x.name===a.name)||{};return[a.name,a.short,a.tl,d.mtd_ds||0,d.mtd_dd||0,d.mtd_mat||0,d.wtd_ds||0,d.wtd_dd||0];})
+  ];
+  const ws1=XLSX.utils.aoa_to_sheet(d1);
+  ws1['!cols']=[{wch:36},{wch:16},{wch:20},{wch:10},{wch:10},{wch:18},{wch:10},{wch:10}];
+  XLSX.utils.book_append_sheet(wb,ws1,'Daily Entry');
+
+  // Last Month sheet
+  const d2=[
+    ['LAST MONTH — Update once at start of month'],
+    [''],
+    ['Agent Name (do not edit)','Short Name','TL','LM DS','LM DD','LM Activations'],
+    ...AGENT_MASTER.map(a=>{const d=DATA.find(x=>x.name===a.name)||{};return[a.name,a.short,a.tl,d.lm_ds||0,d.lm_dd||0,d.lm_mat||0];})
+  ];
+  const ws2=XLSX.utils.aoa_to_sheet(d2);
+  ws2['!cols']=[{wch:36},{wch:16},{wch:20},{wch:10},{wch:10},{wch:18}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Last Month');
+
+  // Instructions
+  const d3=[
+    ['HOW TO USE'],[''],
+    ['DAILY ENTRY sheet:'],
+    ['- Fill MTD DS, MTD DD, MTD Activations = running totals for this month'],
+    ['- Fill WTD DS, WTD DD = running totals for this week (reset every Monday)'],
+    ['- Upload the file every evening after close of business'],[''],
+    ['LAST MONTH sheet:'],
+    ['- Fill LM DS, LM DD, LM Activations = final totals from last month'],
+    ['- Upload this once at the start of each new month'],[''],
+    ['UPLOAD: Go to dashboard → Upload Data tab → Choose file → Confirm'],
+    ['Both sheets are read automatically from one file upload'],
+  ];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d3),'Instructions');
+  XLSX.writeFile(wb,'BUSY_Dashboard_Template.xlsx');
+  toast('Template downloaded ✓');
+};
+
+// ── AUTH ─────────────────────────────────────────────────────────────────────
+onAuthStateChanged(auth,user=>{
+  const a=!!user;
+  document.getElementById('adminTabBtn').style.display=a?'block':'none';
+  document.getElementById('logoutBtn').style.display=a?'inline-flex':'none';
+  document.getElementById('loginBtn').style.display=a?'none':'inline-flex';
+  document.getElementById('adminBadge').textContent=user?user.email:'';
+});
+window.openLogin=()=>document.getElementById('loginModal').style.display='flex';
+window.closeLogin=()=>document.getElementById('loginModal').style.display='none';
+window.doLogin=async()=>{
+  try{
+    await signInWithEmailAndPassword(auth,document.getElementById('lemail').value,document.getElementById('lpass').value);
+    closeLogin();toast('Signed in ✓');
+  }catch(e){toast('Login failed: '+e.message,false);}
+};
+window.doLogout=async()=>{await signOut(auth);toast('Signed out');};
+window.switchTab=(id,el)=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
-  if(el) el.classList.add('active');
+  if(el)el.classList.add('active');
   document.getElementById('pane-'+id).classList.add('active');
 };
-window.filterDsdd = renderDsddTable;
-window.filterDta  = renderDtaTable;
-
-// ─── BOOT ────────────────────────────────────────────────────────────────────
-setStatus('● Connecting…');
-startListeners();
+window.filterDsdd=renderDsdd;
+window.filterDta=renderDta;
 </script>
-
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-:root {
-  --bg:#0e1117; --surface:#141921; --card:#1a2130; --border:#1e2d42;
-  --blue:#1565C0; --blue-lt:#64b5f6; --text:#dce8f0; --muted:#546e7a;
-  --up:#4caf50; --dn:#ef5350; --warn:#ffa726;
-}
+:root{--bg:#0e1117;--sur:#141921;--card:#1a2130;--bdr:#1e2d42;--blue:#1565C0;--blt:#64b5f6;--txt:#dce8f0;--mut:#546e7a;--up:#4caf50;--dn:#ef5350;--warn:#ffa726;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:13px;min-height:100vh;}
-
-/* HEADER */
-.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
+body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sans-serif;font-size:13px;}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--bdr);background:var(--sur);position:sticky;top:0;z-index:100;}
 .logo{display:flex;align-items:center;gap:0;}
 .logo-box{background:#111;border-radius:6px;padding:5px 10px;font-size:20px;font-weight:800;letter-spacing:2px;color:#fff;display:flex;align-items:center;}
-.logo-box .u-letter{color:var(--blue);}
-.hdr-right{display:flex;align-items:center;gap:10px;}
-#lastUpdated{font-size:10px;color:var(--muted);}
-.db-status{font-size:11px;color:var(--muted);}
-
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
-.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
-.btn-ghost:hover{border-color:var(--blue-lt);color:var(--blue-lt);}
+.logo-box .ul{color:var(--blue);}
+.divider{width:1px;height:32px;background:var(--bdr);margin:0 12px;}
+.hdr-r{display:flex;align-items:center;gap:10px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;}
+.btn-ghost{background:transparent;border:1px solid var(--bdr);color:var(--mut);}
+.btn-ghost:hover{border-color:var(--blt);color:var(--blt);}
 .btn-blue{background:var(--blue);color:#fff;}
 .btn-blue:hover{background:#1976d2;}
+.btn-blue:disabled{opacity:.5;cursor:default;}
 .btn-green{background:#1b5e20;color:#c8e6c9;border:1px solid #2e7d32;}
 .btn-green:hover{background:#2e7d32;}
 .btn-danger{background:transparent;border:1px solid var(--dn);color:var(--dn);}
-.btn-danger:hover{background:rgba(239,83,80,.1);}
-
-/* TABS */
-.tabs{display:flex;gap:2px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;}
-.tab{padding:11px 16px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .18s;}
-.tab:hover{color:var(--text);}
-.tab.active{color:var(--blue-lt);border-bottom-color:var(--blue);}
-
-/* PANES */
+.tabs{display:flex;gap:2px;padding:0 24px;background:var(--sur);border-bottom:1px solid var(--bdr);overflow-x:auto;}
+.tab{padding:11px 16px;font-size:12px;font-weight:600;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .18s;}
+.tab:hover{color:var(--txt);}
+.tab.active{color:var(--blt);border-bottom-color:var(--blue);}
 .pane{display:none;padding:20px 24px;}
 .pane.active{display:block;}
-
-/* KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:20px;}
-.kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
-.kpi .klabel{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:5px;}
-.kpi .kval{font-size:24px;font-weight:800;}
-.kpi .ksub{font-size:10px;color:var(--muted);margin-top:3px;}
-.kpi.accent{border-left:3px solid var(--blue);}
+.kpi{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:14px 16px;}
+.kpi .kl{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--mut);margin-bottom:5px;}
+.kpi .kv{font-size:24px;font-weight:800;}
+.kpi .ks{font-size:10px;color:var(--mut);margin-top:3px;}
+.kpi.ac{border-left:3px solid var(--blue);}
 .kpi.ok{border-left:3px solid var(--up);}
-.kpi.warn-b{border-left:3px solid var(--warn);}
-.kpi.err{border-left:3px solid var(--dn);}
-
-/* CHARTS */
-.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
-.chart-card,.chart-full{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:18px;}
-.chart-card h4,.chart-full h4{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:12px;}
-.chart-card canvas{max-height:200px;}
-.chart-full canvas{max-height:260px;}
-
-/* TABLE */
-.filter-bar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
-.filter-bar label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
-select{background:var(--card);border:1px solid var(--border);color:var(--text);padding:5px 9px;border-radius:5px;font-size:12px;outline:none;}
+.kpi.wb{border-left:3px solid var(--warn);}
+.kpi.er{border-left:3px solid var(--dn);}
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.cc,.cf{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:16px;margin-bottom:18px;}
+.cc h4,.cf h4{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut);margin-bottom:12px;}
+.cc canvas{max-height:200px;}.cf canvas{max-height:260px;}
+.fb{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.fb label{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;}
+select{background:var(--card);border:1px solid var(--bdr);color:var(--txt);padding:5px 9px;border-radius:5px;font-size:12px;outline:none;}
 select:focus{border-color:var(--blue);}
-.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:auto;margin-bottom:20px;}
+.tw{background:var(--card);border:1px solid var(--bdr);border-radius:8px;overflow:auto;margin-bottom:20px;}
 table{width:100%;border-collapse:collapse;font-size:12px;}
-thead th{padding:9px 11px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--border);white-space:nowrap;}
+thead th{padding:9px 11px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--mut);background:var(--sur);border-bottom:1px solid var(--bdr);white-space:nowrap;}
 tbody td{padding:8px 11px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;}
 tbody tr:last-child td{border-bottom:none;}
 tbody tr:hover{background:rgba(21,101,192,.08);}
-.row-zero td{color:var(--muted);}
-
-/* PILLS */
 .pill{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700;}
 .pill-good{background:rgba(76,175,80,.18);color:#81c784;}
 .pill-warn{background:rgba(255,167,38,.18);color:#ffb74d;}
 .pill-bad{background:rgba(239,83,80,.18);color:#ef9a9a;}
-
-/* LEADERBOARD */
-.lb-container{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
-.lb-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;}
-.lb-card h4{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:10px;}
+.lbc{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.lbx{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:14px;}
+.lbx h4{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut);margin-bottom:10px;}
 .lb-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);}
 .lb-row:last-child{border-bottom:none;}
-.lb-rank{font-size:10px;font-weight:800;color:var(--muted);width:18px;}
+.lb-rank{font-size:10px;font-weight:800;color:var(--mut);width:18px;}
 .lb-gold{color:var(--warn)!important;}
 .lb-name{flex:1;font-size:11px;font-weight:600;}
-.lb-bar-wrap{width:90px;height:5px;background:var(--border);border-radius:3px;}
+.lb-bar-wrap{width:90px;height:5px;background:var(--bdr);border-radius:3px;}
 .lb-bar{height:5px;border-radius:3px;background:var(--blue);}
 .lb-pct{font-size:11px;font-weight:700;width:38px;text-align:right;}
-
-/* TL CARDS */
 .tl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;}
-.tl-card{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:14px 16px;}
-.tl-name{font-size:13px;font-weight:700;color:var(--blue-lt);margin-bottom:10px;}
-.tl-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:3px;}
-.tl-row strong{color:var(--text);font-weight:700;}
-
-/* ADMIN UPLOAD PANEL */
-.upload-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:20px;}
-.upload-panel h3{font-size:14px;font-weight:700;margin-bottom:6px;}
-.upload-panel p{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
-.upload-section{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;margin-bottom:14px;}
-.upload-section h4{font-size:12px;font-weight:700;margin-bottom:4px;}
-.upload-section p{font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5;}
-.upload-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-.file-label{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:var(--blue);color:#fff;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;}
+.tl-card{background:var(--card);border:1px solid var(--bdr);border-left:3px solid var(--blue);border-radius:8px;padding:14px 16px;}
+.tl-name{font-size:13px;font-weight:700;color:var(--blt);margin-bottom:10px;}
+.tl-row{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-bottom:3px;}
+.tl-row strong{color:var(--txt);font-weight:700;}
+/* Upload panel */
+.up-panel{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:24px;margin-bottom:16px;}
+.up-panel h3{font-size:14px;font-weight:700;margin-bottom:6px;}
+.up-panel p{font-size:12px;color:var(--mut);margin-bottom:16px;line-height:1.6;}
+.up-box{background:var(--sur);border:2px dashed var(--bdr);border-radius:8px;padding:32px;text-align:center;margin-bottom:16px;transition:border-color .2s;}
+.up-box:hover{border-color:var(--blue);}
+.up-box p{font-size:12px;color:var(--mut);margin-top:10px;}
+.file-label{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:var(--blue);color:#fff;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}
 .file-label:hover{background:#1976d2;}
 .file-input{display:none;}
-.step-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:var(--blue);color:#fff;border-radius:50%;font-size:11px;font-weight:700;flex-shrink:0;}
-.steps{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
-.step{display:flex;align-items:flex-start;gap:10px;font-size:12px;line-height:1.5;}
-.log-viewer{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:16px;}
-.log-viewer h4{font-size:12px;font-weight:700;margin-bottom:12px;}
-.date-input{background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:5px;font-size:12px;outline:none;}
-.date-input:focus{border-color:var(--blue);}
-
-/* MODALS */
+.col-info{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+.col-box{background:var(--sur);border:1px solid var(--bdr);border-radius:8px;padding:14px;}
+.col-box h4{font-size:11px;font-weight:700;color:var(--blt);margin-bottom:8px;}
+.col-box li{font-size:11px;color:var(--mut);margin-bottom:4px;list-style:none;padding-left:12px;position:relative;}
+.col-box li::before{content:'→';position:absolute;left:0;color:var(--blue);}
+/* Modals */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;align-items:center;justify-content:center;}
-.modal-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:28px 32px;width:min(560px,95vw);max-height:85vh;overflow-y:auto;}
-.modal-box h3{font-size:15px;font-weight:700;margin-bottom:16px;}
-.modal-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;}
-.login-box{width:320px;}
+.modal-box{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:28px 32px;width:min(760px,95vw);max-height:88vh;overflow-y:auto;}
+.modal-box h3{font-size:15px;font-weight:700;margin-bottom:14px;}
+.modal-actions{display:flex;gap:10px;margin-top:16px;justify-content:flex-end;}
+.login-inner{width:320px;}
 .field{margin-bottom:14px;}
-.field label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:6px;}
-.field input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:5px;font-size:13px;outline:none;}
+.field label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--mut);margin-bottom:6px;}
+.field input{width:100%;background:var(--sur);border:1px solid var(--bdr);color:var(--txt);padding:8px 10px;border-radius:5px;font-size:13px;outline:none;}
 .field input:focus{border-color:var(--blue);}
-
-/* TOAST */
+.badge-pill{background:var(--card);border:1px solid var(--bdr);border-radius:20px;padding:3px 10px;font-size:10px;color:var(--mut);}
 .toast{position:fixed;bottom:24px;right:24px;padding:10px 18px;border-radius:7px;font-size:12px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9999;}
 .toast.show{opacity:1;}
-.toast-ok{background:#1b5e20;color:#c8e6c9;}
-.toast-err{background:#b71c1c;color:#ffcdd2;}
-
-/* MISC */
-.fw6{font-weight:600;}.sm{font-size:11px;}.muted{color:var(--muted);}.up{color:var(--up);}.dn{color:var(--dn);}.warn-clr{color:var(--warn);}
-.divider{width:1px;height:32px;background:var(--border);margin:0 12px;}
-.badge-pill{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:10px;color:var(--muted);}
-
-@media(max-width:680px){
-  .chart-grid,.lb-container{grid-template-columns:1fr;}
-  .kpi-grid{grid-template-columns:repeat(2,1fr);}
-  #lastUpdated{display:none;}
-  .logo-box{font-size:16px;}
-}
+.tok{background:#1b5e20;color:#c8e6c9;}
+.terr{background:#b71c1c;color:#ffcdd2;}
+.fw6{font-weight:600;}.sm{font-size:11px;}.muted{color:var(--mut);}.up{color:var(--up);}.dn{color:var(--dn);}.warn-clr{color:var(--warn);}
+@media(max-width:680px){.cg,.lbc,.col-info{grid-template-columns:1fr;}.kpi-grid{grid-template-columns:repeat(2,1fr);}#lastUpdated{display:none;}}
 </style>
 </head>
 <body>
-
 <!-- HEADER -->
 <header class="hdr">
   <div class="logo">
-    <div class="logo-box">B<span class="u-letter">U</span>SY</div>
+    <div class="logo-box">B<span class="ul">U</span>SY</div>
     <div class="divider"></div>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 72" height="34" aria-label="OCube">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 72" height="34">
       <g fill="#fff" opacity=".9">
-        <circle cx="36" cy="6"  r="2.8"/><circle cx="46" cy="8"  r="2.4"/><circle cx="55" cy="13" r="2.1"/>
+        <circle cx="36" cy="6" r="2.8"/><circle cx="46" cy="8" r="2.4"/><circle cx="55" cy="13" r="2.1"/>
         <circle cx="62" cy="20" r="1.8"/><circle cx="67" cy="28" r="1.5"/><circle cx="68" cy="37" r="1.4"/>
         <circle cx="65" cy="46" r="1.5"/><circle cx="59" cy="54" r="1.8"/><circle cx="51" cy="60" r="2.1"/>
         <circle cx="42" cy="64" r="2.4"/><circle cx="32" cy="65" r="2.8"/><circle cx="22" cy="63" r="2.4"/>
-        <circle cx="13" cy="57" r="2.1"/><circle cx="7"  cy="49" r="1.8"/><circle cx="4"  cy="40" r="1.5"/>
-        <circle cx="4"  cy="31" r="1.4"/><circle cx="7"  cy="22" r="1.5"/><circle cx="13" cy="14" r="1.8"/>
-        <circle cx="22" cy="8"  r="2.1"/><circle cx="30" cy="5"  r="2.5"/>
+        <circle cx="13" cy="57" r="2.1"/><circle cx="7" cy="49" r="1.8"/><circle cx="4" cy="40" r="1.5"/>
+        <circle cx="4" cy="31" r="1.4"/><circle cx="7" cy="22" r="1.5"/><circle cx="13" cy="14" r="1.8"/>
+        <circle cx="22" cy="8" r="2.1"/><circle cx="30" cy="5" r="2.5"/>
         <circle cx="36" cy="13" r="1.8"/><circle cx="44" cy="16" r="1.5"/><circle cx="51" cy="22" r="1.3"/>
         <circle cx="55" cy="30" r="1.1"/><circle cx="55" cy="39" r="1.1"/><circle cx="51" cy="47" r="1.3"/>
         <circle cx="44" cy="53" r="1.5"/><circle cx="36" cy="56" r="1.8"/><circle cx="27" cy="54" r="1.5"/>
         <circle cx="20" cy="48" r="1.3"/><circle cx="16" cy="40" r="1.1"/><circle cx="16" cy="31" r="1.1"/>
         <circle cx="20" cy="23" r="1.3"/><circle cx="27" cy="17" r="1.5"/>
       </g>
-      <text x="84" y="48" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700" fill="#ffffff" letter-spacing="1">cube</text>
-      <text x="78" y="30" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="400" fill="rgba(255,255,255,.5)">O</text>
+      <text x="84" y="48" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700" fill="#fff" letter-spacing="1">cube</text>
+      <text x="78" y="30" font-family="Inter,Arial,sans-serif" font-size="13" fill="rgba(255,255,255,.5)">O</text>
     </svg>
     <div style="margin-left:12px;">
       <div style="font-size:13px;font-weight:700;">Sales Funnel Dashboard</div>
-      <div style="font-size:10px;color:var(--muted);">OcubeServices · Live Performance</div>
+      <div style="font-size:10px;color:var(--mut);">OcubeServices · Live Performance</div>
     </div>
   </div>
-  <div class="hdr-right">
-    <span class="db-status" id="dbStatus">● Connecting…</span>
-    <span id="lastUpdated"></span>
-    <span id="adminUserBadge" class="badge-pill"></span>
+  <div class="hdr-r">
+    <span style="font-size:11px;color:var(--mut)" id="dbStatus">● Connecting…</span>
+    <span id="lastUpdated" style="font-size:10px;color:var(--mut)"></span>
+    <span id="adminBadge" class="badge-pill"></span>
     <button class="btn btn-ghost" id="loginBtn" onclick="openLogin()">🔐 Admin Login</button>
     <button class="btn btn-danger" id="logoutBtn" style="display:none" onclick="doLogout()">Sign out</button>
   </div>
@@ -866,148 +521,128 @@ tbody tr:hover{background:rgba(21,101,192,.08);}
   <div class="tab" id="adminTabBtn" style="display:none" onclick="switchTab('admin',this)">⚙ Upload Data</div>
 </nav>
 
-<!-- ══════════ OVERVIEW ══════════ -->
+<!-- OVERVIEW -->
 <div class="pane active" id="pane-overview">
   <div class="kpi-grid">
-    <div class="kpi accent"><div class="klabel">DS — MTD</div><div class="kval" id="kpi-mtd-ds">—</div><div class="ksub">Demo Scheduled this month</div></div>
-    <div class="kpi accent"><div class="klabel">DD — MTD</div><div class="kval" id="kpi-mtd-dd">—</div><div class="ksub">Demo Done this month</div></div>
-    <div class="kpi ok"><div class="klabel">DS → DD %</div><div class="kval" id="kpi-dsdd" style="color:var(--up)">—</div><div class="ksub" id="kpi-dsdd-sub"></div></div>
-    <div class="kpi accent"><div class="klabel">Activations MTD</div><div class="kval" id="kpi-act" style="color:var(--blue-lt)">—</div><div class="ksub">Deals matured</div></div>
-    <div class="kpi warn-b"><div class="klabel">DD → Act %</div><div class="kval" id="kpi-dta" style="color:var(--warn)">—</div><div class="ksub" id="kpi-dta-sub"></div></div>
-    <div class="kpi err"><div class="klabel">WTD DS→DD</div><div class="kval" id="kpi-wtd" style="color:var(--dn)">—</div><div class="ksub" id="kpi-wtd-sub"></div></div>
+    <div class="kpi ac"><div class="kl">DS — MTD</div><div class="kv" id="kpi-mtd-ds">—</div><div class="ks">Demo Scheduled</div></div>
+    <div class="kpi ac"><div class="kl">DD — MTD</div><div class="kv" id="kpi-mtd-dd">—</div><div class="ks">Demo Done</div></div>
+    <div class="kpi ok"><div class="kl">DS → DD %</div><div class="kv" id="kpi-dsdd" style="color:var(--up)">—</div><div class="ks" id="kpi-dsdd-sub"></div></div>
+    <div class="kpi ac"><div class="kl">Activations MTD</div><div class="kv" id="kpi-act" style="color:var(--blt)">—</div><div class="ks">Deals matured</div></div>
+    <div class="kpi wb"><div class="kl">DD → ACT %</div><div class="kv" id="kpi-dta" style="color:var(--warn)">—</div><div class="ks" id="kpi-dta-sub"></div></div>
+    <div class="kpi er"><div class="kl">WTD DS→DD</div><div class="kv" id="kpi-wtd" style="color:var(--dn)">—</div><div class="ks" id="kpi-wtd-sub"></div></div>
   </div>
-  <div class="chart-grid">
-    <div class="chart-card"><h4>DS→DD Conversion — MoM</h4><canvas id="momChart"></canvas></div>
-    <div class="chart-card"><h4>DD→Activation — MoM</h4><canvas id="dtaMomChart"></canvas></div>
+  <div class="cg">
+    <div class="cc"><h4>DS→DD Conversion — MoM</h4><canvas id="momChart"></canvas></div>
+    <div class="cc"><h4>DD→Activation — MoM</h4><canvas id="dtaMomChart"></canvas></div>
   </div>
-  <div class="chart-full"><h4>Full Funnel — Top 20 Agents by MTD DS</h4><canvas id="funnelChart"></canvas></div>
+  <div class="cf"><h4>Full Funnel — Top 20 Agents by MTD DS</h4><canvas id="funnelChart"></canvas></div>
 </div>
 
-<!-- ══════════ DS→DD ══════════ -->
+<!-- DS→DD -->
 <div class="pane" id="pane-dsdd">
-  <div class="filter-bar">
+  <div class="fb">
     <label>TL:</label>
     <select id="tlFilter" onchange="filterDsdd()">
-      <option value="">All</option>
-      <option>Sagar Maheshwari</option><option>Amit Verma</option>
-      <option>Akash Tomer</option><option>Himanshu Tiwari</option><option>Anshu Sharma</option>
+      <option value="">All</option><option>Sagar Maheshwari</option><option>Amit Verma</option><option>Akash Tomer</option><option>Himanshu Tiwari</option><option>Anshu Sharma</option>
     </select>
     <label>Sort:</label>
     <select id="dsddSort" onchange="filterDsdd()">
-      <option value="mtd_pct">MTD Conv %</option>
-      <option value="mtd_dd">MTD DD</option>
-      <option value="mtd_ds">MTD DS</option>
-      <option value="wtd_pct">WTD %</option>
+      <option value="mtd_pct">MTD Conv %</option><option value="mtd_dd">MTD DD</option><option value="mtd_ds">MTD DS</option><option value="wtd_pct">WTD %</option>
     </select>
   </div>
-  <div class="lb-container">
-    <div class="lb-card"><h4>🏆 Top 8 — MTD DS→DD %</h4><div id="lb-dsdd-top"></div></div>
-    <div class="lb-card"><h4>⚠ Bottom 8 — MTD DS→DD % (min 5 DS)</h4><div id="lb-dsdd-bot"></div></div>
+  <div class="lbc">
+    <div class="lbx"><h4>🏆 Top 8 — MTD DS→DD %</h4><div id="lb-dsdd-top"></div></div>
+    <div class="lbx"><h4>⚠ Bottom 8 — MTD DS→DD % (min 5 DS)</h4><div id="lb-dsdd-bot"></div></div>
   </div>
-  <div class="tbl-wrap">
-    <table>
-      <thead><tr>
-        <th>Agent</th><th>TL</th>
-        <th>LM DS</th><th>LM DD</th><th>LM%</th>
-        <th>MTD DS</th><th>MTD DD</th><th>MTD%</th>
-        <th>WTD DS</th><th>WTD DD</th><th>WTD%</th>
-        <th>Trend</th>
-      </tr></thead>
-      <tbody id="dsddBody"></tbody>
-    </table>
-  </div>
+  <div class="tw"><table><thead><tr><th>Agent</th><th>TL</th><th>LM DS</th><th>LM DD</th><th>LM%</th><th>MTD DS</th><th>MTD DD</th><th>MTD%</th><th>WTD DS</th><th>WTD DD</th><th>WTD%</th><th>Trend</th></tr></thead><tbody id="dsddBody"></tbody></table></div>
 </div>
 
-<!-- ══════════ DD→ACT ══════════ -->
+<!-- DD→ACT -->
 <div class="pane" id="pane-ddta">
-  <div class="filter-bar">
+  <div class="fb">
     <label>TL:</label>
     <select id="tlFilterDta" onchange="filterDta()">
-      <option value="">All</option>
-      <option>Sagar Maheshwari</option><option>Amit Verma</option>
-      <option>Akash Tomer</option><option>Himanshu Tiwari</option><option>Anshu Sharma</option>
+      <option value="">All</option><option>Sagar Maheshwari</option><option>Amit Verma</option><option>Akash Tomer</option><option>Himanshu Tiwari</option><option>Anshu Sharma</option>
     </select>
   </div>
-  <div class="lb-container">
-    <div class="lb-card"><h4>🏆 Top 8 — MTD DD→Activation %</h4><div id="lb-dta-top"></div></div>
-    <div class="chart-card" style="margin-bottom:0"><h4>Activations by Agent — MTD</h4><canvas id="dtaBarChart"></canvas></div>
+  <div class="lbc">
+    <div class="lbx"><h4>🏆 Top 8 — MTD DD→Activation %</h4><div id="lb-dta-top"></div></div>
+    <div class="cc" style="margin-bottom:0"><h4>Activations by Agent — MTD</h4><canvas id="dtaBarChart"></canvas></div>
   </div>
-  <div class="tbl-wrap">
-    <table>
-      <thead><tr>
-        <th>Agent</th><th>TL</th>
-        <th>LM DD</th><th>LM Mat</th><th>LM DTA%</th>
-        <th>MTD DD</th><th>MTD Mat</th><th>MTD DTA%</th>
-        <th>Trend</th>
-      </tr></thead>
-      <tbody id="dtaBody"></tbody>
-    </table>
-  </div>
+  <div class="tw"><table><thead><tr><th>Agent</th><th>TL</th><th>LM DD</th><th>LM Mat</th><th>LM DTA%</th><th>MTD DD</th><th>MTD Mat</th><th>MTD DTA%</th><th>Trend</th></tr></thead><tbody id="dtaBody"></tbody></table></div>
 </div>
 
-<!-- ══════════ TL VIEW ══════════ -->
+<!-- TL VIEW -->
 <div class="pane" id="pane-tl">
   <div class="tl-grid" id="tlCards"></div>
-  <div class="chart-full"><h4>TL DS→DD % — LM vs MTD</h4><canvas id="tlConvChart"></canvas></div>
-  <div class="chart-full"><h4>TL DD→Activation % — LM vs MTD</h4><canvas id="tlDtaChart"></canvas></div>
+  <div class="cf"><h4>TL DS→DD % — LM vs MTD</h4><canvas id="tlConvChart"></canvas></div>
+  <div class="cf"><h4>TL DD→Activation % — LM vs MTD</h4><canvas id="tlDtaChart"></canvas></div>
 </div>
 
-<!-- ══════════ ADMIN UPLOAD ══════════ -->
+<!-- UPLOAD DATA -->
 <div class="pane" id="pane-admin">
-  <div class="upload-panel">
-    <h3>📤 Daily Data Upload</h3>
-    <p>Download the Excel template → fill today's numbers → upload here. The dashboard auto-calculates MTD and WTD for everyone instantly.</p>
+  <div class="up-panel">
+    <h3>📤 Upload Daily Data</h3>
+    <p>Download the template → fill the numbers → upload. One file, one click. Dashboard updates live for everyone.</p>
 
-    <!-- STEP BY STEP -->
-    <div class="steps">
-      <div class="step"><span class="step-badge">1</span><span>Download the template. It has two sheets: <strong>Daily Entry</strong> (fill every day) and <strong>Last Month</strong> (fill once at month start).</span></div>
-      <div class="step"><span class="step-badge">2</span><span>In <strong>Daily Entry</strong> sheet, change cell <strong>B2</strong> to today's date (YYYY-MM-DD format, e.g. 2026-06-17). Fill DS, DD, Activations for each agent.</span></div>
-      <div class="step"><span class="step-badge">3</span><span>Save the file and upload it below. <strong>One upload processes both sheets automatically</strong> — no need to choose a type.</span></div>
-      <div class="step"><span class="step-badge">4</span><span>Review the preview → click Confirm. Dashboard updates instantly for everyone.</span></div>
-    </div>
-
-    <button class="btn btn-green" onclick="downloadTemplate()">⬇ Download Excel Template</button>
-  </div>
-
-  <!-- UPLOAD SECTION -->
-  <div class="upload-section">
-    <h4>Upload Filled Template</h4>
-    <p>Upload the same Excel file — the dashboard <strong>automatically reads both sheets</strong> (Daily Entry + Last Month) in one go. A preview appears before anything is saved.</p>
-    <div class="upload-row">
+    <div class="up-box">
       <label class="file-label">
-        📁 Choose Excel File
+        📁 Choose Excel File to Upload
         <input type="file" class="file-input" accept=".xlsx,.xls" onchange="handleFileUpload(event)">
       </label>
-      <span style="font-size:11px;color:var(--muted)">Both sheets are processed automatically from one upload</span>
+      <p>Both sheets (Daily Entry + Last Month) are read automatically</p>
     </div>
-  </div>
 
-  <!-- VIEW DAILY LOG -->
-  <div class="upload-section">
-    <h4>View / Verify a Day's Entry</h4>
-    <p>Check what was uploaded for any specific date.</p>
-    <div class="upload-row">
-      <input type="date" class="date-input" id="logDatePicker">
-      <button class="btn btn-ghost" onclick="loadDailyLog()">Load Log</button>
-    </div>
-    <div id="logSection" style="display:none;margin-top:14px;">
-      <div class="tbl-wrap" style="margin-bottom:0">
-        <table>
-          <thead><tr><th>Agent</th><th>TL</th><th>DS</th><th>DD</th><th>Activations</th></tr></thead>
-          <tbody id="logBody"></tbody>
-        </table>
+    <button class="btn btn-green" onclick="downloadTemplate()" style="margin-bottom:16px">⬇ Download Template</button>
+
+    <div class="col-info">
+      <div class="col-box">
+        <h4>📅 Daily Entry sheet — fill every day</h4>
+        <ul>
+          <li><strong>Col D:</strong> MTD DS — running total demos scheduled this month</li>
+          <li><strong>Col E:</strong> MTD DD — running total demos done this month</li>
+          <li><strong>Col F:</strong> MTD Activations — running total activations this month</li>
+          <li><strong>Col G:</strong> WTD DS — demos scheduled this week</li>
+          <li><strong>Col H:</strong> WTD DD — demos done this week</li>
+        </ul>
+      </div>
+      <div class="col-box">
+        <h4>📆 Last Month sheet — update once per month</h4>
+        <ul>
+          <li><strong>Col D:</strong> LM DS — last month total demos scheduled</li>
+          <li><strong>Col E:</strong> LM DD — last month total demos done</li>
+          <li><strong>Col F:</strong> LM Activations — last month total activations</li>
+          <li>Update this at the start of each new month</li>
+        </ul>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ LOGIN MODAL ══════════ -->
+<!-- PREVIEW MODAL -->
+<div class="modal-bg" id="pvModal">
+  <div class="modal-box">
+    <h3 id="pvTitle">Preview</h3>
+    <p style="font-size:11px;color:var(--mut);margin-bottom:12px">Check numbers below before saving. This overwrites live data for everyone.</p>
+    <div class="tw" style="max-height:400px;overflow-y:auto;margin-bottom:0">
+      <table>
+        <thead><tr><th>Agent</th><th>LM DS</th><th>LM DD</th><th>LM Act</th><th>MTD DS</th><th>MTD DD</th><th>MTD Act</th><th>WTD DS</th><th>WTD DD</th></tr></thead>
+        <tbody id="pvBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closePreview()">Cancel</button>
+      <button class="btn btn-blue" id="pvSaveBtn" onclick="confirmSave()">✓ Confirm & Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
 <div class="modal-bg" id="loginModal">
-  <div class="modal-box login-box">
+  <div class="modal-box login-inner">
     <h3>🔐 Admin Login</h3>
-    <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="admin@ocube.com"></div>
-    <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••"
-      onkeydown="if(event.key==='Enter') doLogin()"></div>
+    <div class="field"><label>Email</label><input type="email" id="lemail" placeholder="admin@ocube.com"></div>
+    <div class="field"><label>Password</label><input type="password" id="lpass" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeLogin()">Cancel</button>
       <button class="btn btn-blue" onclick="doLogin()">Sign In</button>
@@ -1015,26 +650,6 @@ tbody tr:hover{background:rgba(21,101,192,.08);}
   </div>
 </div>
 
-<!-- ══════════ PREVIEW MODAL ══════════ -->
-<div class="modal-bg" id="previewModal">
-  <div class="modal-box">
-    <h3 id="previewTitle">Preview Upload</h3>
-    <p style="font-size:11px;color:var(--muted);margin-bottom:14px;">Review the data below before saving. This will update the live dashboard for everyone.</p>
-    <div class="tbl-wrap" style="max-height:360px;overflow-y:auto;margin-bottom:0">
-      <table>
-        <thead id="previewHead"></thead>
-        <tbody id="previewBody"></tbody>
-      </table>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closePreview()">Cancel</button>
-      <button class="btn btn-blue" onclick="confirmUpload()">✓ Confirm & Save to Firebase</button>
-    </div>
-  </div>
-</div>
-
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
-
 </body>
 </html>
