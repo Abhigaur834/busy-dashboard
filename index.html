@@ -401,18 +401,23 @@ window.handleFileUpload = function(e) {
   const file = e.target.files[0];
   if (!file) return;
   const uploadType = document.getElementById('uploadType').value;
+  showToast('Reading file…');
   const reader = new FileReader();
   reader.onload = async ev => {
     try {
-      const wb = XLSX.read(ev.target.result, {type:'binary'});
+      const data = new Uint8Array(ev.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      console.log('Workbook sheets:', wb.SheetNames);
       if (uploadType === 'daily') await processDailySheet(wb);
       else await processLastMonthSheet(wb);
     } catch(err) {
+      console.error('Upload error:', err);
       showToast('Error reading file: '+err.message, false);
     }
     e.target.value = '';
   };
-  reader.readAsBinaryString(file);
+  reader.onerror = () => showToast('Could not read file', false);
+  reader.readAsArrayBuffer(file);
 };
 
 async function processDailySheet(wb) {
@@ -448,8 +453,8 @@ async function processDailySheet(wb) {
     console.log(`Parsed: ${name} ds=${dayData[name].ds} dd=${dayData[name].dd} act=${dayData[name].act}`);
   });
 
-  if (count === 0) { showToast('No valid agent data found in file', false); return; }
-
+  if (count === 0) { showToast('No valid agent data found — check agent names in column A match exactly', false); return; }
+  showToast(`✓ Read ${count} agents for ${dateVal} — review and confirm below`);
   // Preview before save
   showUploadPreview(dateVal, dayData, 'daily');
 }
@@ -477,7 +482,8 @@ async function processLastMonthSheet(wb) {
     console.log(`LM Parsed: ${name} lm_ds=${lmData[name].lm_ds} lm_dd=${lmData[name].lm_dd}`);
   });
 
-  if (count === 0) { showToast('No valid agent data found in file', false); return; }
+  if (count === 0) { showToast('No valid agent data found — check agent names in column A match exactly', false); return; }
+  showToast(`✓ Read ${count} agents for Last Month — review and confirm below`);
   showUploadPreview(null, lmData, 'lastmonth');
 }
 
