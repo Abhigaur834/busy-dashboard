@@ -5,573 +5,723 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BUSY · Sales Funnel Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module">
-  // ─── FIREBASE CONFIG ── Replace with your project values ───────────────────
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set, get }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, get, update }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey:            "AIzaSyB58QT7Zm5AD_9I6gRhw_Z2uWCK0zOsHZc",
-    authDomain:        "busy-dashboard-cbdff.firebaseapp.com",
-    databaseURL:       "https://busy-dashboard-cbdff-default-rtdb.firebaseio.com",
-    projectId:         "busy-dashboard-cbdff",
-    storageBucket:     "busy-dashboard-cbdff.firebasestorage.app",
-    messagingSenderId: "995856024225",
-    appId:             "1:995856024225:web:6621d5dd3f66d70b1da6e0"
-  };
+const firebaseConfig = {
+  apiKey:            "AIzaSyB58QT7Zm5AD_9I6gRhw_Z2uWCK0zOsHZc",
+  authDomain:        "busy-dashboard-cbdff.firebaseapp.com",
+  databaseURL:       "https://busy-dashboard-cbdff-default-rtdb.firebaseio.com",
+  projectId:         "busy-dashboard-cbdff",
+  storageBucket:     "busy-dashboard-cbdff.firebasestorage.app",
+  messagingSenderId: "995856024225",
+  appId:             "1:995856024225:web:6621d5dd3f66d70b1da6e0"
+};
 
-  const app  = initializeApp(firebaseConfig);
-  const db   = getDatabase(app);
-  const auth = getAuth(app);
+const app  = initializeApp(firebaseConfig);
+const db   = getDatabase(app);
+const auth = getAuth(app);
 
-  // ─── DEFAULT SEED DATA ───────────────────────────────────────────────────────
-  const DEFAULT_AGENTS = [
-    {name:"AayushK",    tl:"Sagar Maheshwari",  lm_ds:80,  lm_dd:28, mtd_ds:47, mtd_dd:23, wtd_ds:5,  wtd_dd:4,  lm_mat:5,  mtd_mat:1},
-    {name:"AbhishekY",  tl:"Himanshu Tiwari",   lm_ds:42,  lm_dd:8,  mtd_ds:0,  mtd_dd:0,  wtd_ds:0,  wtd_dd:0,  lm_mat:0,  mtd_mat:0},
-    {name:"AdityaS",    tl:"Amit Verma",        lm_ds:74,  lm_dd:21, mtd_ds:35, mtd_dd:8,  wtd_ds:0,  wtd_dd:0,  lm_mat:3,  mtd_mat:1},
-    {name:"Amit",       tl:"Amit Verma",        lm_ds:0,   lm_dd:0,  mtd_ds:24, mtd_dd:9,  wtd_ds:7,  wtd_dd:2,  lm_mat:0,  mtd_mat:0},
-    {name:"Anam",       tl:"Akash Tomer",       lm_ds:29,  lm_dd:7,  mtd_ds:78, mtd_dd:27, wtd_ds:9,  wtd_dd:2,  lm_mat:0,  mtd_mat:0},
-    {name:"Ankit",      tl:"Anshu Sharma",      lm_ds:93,  lm_dd:20, mtd_ds:40, mtd_dd:12, wtd_ds:0,  wtd_dd:0,  lm_mat:0,  mtd_mat:0},
-    {name:"Anshu",      tl:"Anshu Sharma",      lm_ds:26,  lm_dd:17, mtd_ds:49, mtd_dd:16, wtd_ds:2,  wtd_dd:0,  lm_mat:0,  mtd_mat:5},
-    {name:"Areeb",      tl:"Amit Verma",        lm_ds:0,   lm_dd:0,  mtd_ds:1,  mtd_dd:0,  wtd_ds:0,  wtd_dd:0,  lm_mat:0,  mtd_mat:0},
-    {name:"Arshdeep",   tl:"Himanshu Tiwari",   lm_ds:40,  lm_dd:9,  mtd_ds:71, mtd_dd:17, wtd_ds:5,  wtd_dd:1,  lm_mat:0,  mtd_mat:0},
-    {name:"AyushS",     tl:"Amit Verma",        lm_ds:80,  lm_dd:26, mtd_ds:59, mtd_dd:24, wtd_ds:0,  wtd_dd:0,  lm_mat:5,  mtd_mat:2},
-    {name:"BhanuT",     tl:"Sagar Maheshwari",  lm_ds:59,  lm_dd:16, mtd_ds:56, mtd_dd:16, wtd_ds:0,  wtd_dd:0,  lm_mat:1,  mtd_mat:2},
-    {name:"Chanda",     tl:"Himanshu Tiwari",   lm_ds:25,  lm_dd:5,  mtd_ds:56, mtd_dd:15, wtd_ds:9,  wtd_dd:0,  lm_mat:0,  mtd_mat:2},
-    {name:"Chitvam",    tl:"Sagar Maheshwari",  lm_ds:0,   lm_dd:0,  mtd_ds:0,  mtd_dd:0,  wtd_ds:0,  wtd_dd:0,  lm_mat:0,  mtd_mat:0},
-    {name:"Divyanshu",  tl:"Akash Tomer",       lm_ds:31,  lm_dd:8,  mtd_ds:56, mtd_dd:9,  wtd_ds:9,  wtd_dd:0,  lm_mat:0,  mtd_mat:0},
-    {name:"Harshita",   tl:"Akash Tomer",       lm_ds:113, lm_dd:35, mtd_ds:56, mtd_dd:26, wtd_ds:0,  wtd_dd:0,  lm_mat:0,  mtd_mat:1},
-    {name:"HarshS",     tl:"Sagar Maheshwari",  lm_ds:0,   lm_dd:0,  mtd_ds:0,  mtd_dd:0,  wtd_ds:0,  wtd_dd:0,  lm_mat:0,  mtd_mat:0},
-    {name:"Himani",     tl:"Anshu Sharma",      lm_ds:39,  lm_dd:8,  mtd_ds:0,  mtd_dd:0,  wtd_ds:0,  wtd_dd:0,  lm_mat:0,  mtd_mat:0},
-    {name:"Himanshu",   tl:"Himanshu Tiwari",   lm_ds:66,  lm_dd:18, mtd_ds:47, mtd_dd:16, wtd_ds:0,  wtd_dd:0,  lm_mat:0,  mtd_mat:0},
-    {name:"Hitanshu",   tl:"Amit Verma",        lm_ds:57,  lm_dd:10, mtd_ds:49, mtd_dd:11, wtd_ds:0,  wtd_dd:0,  lm_mat:0,  mtd_mat:0},
-    {name:"Isha",       tl:"Akash Tomer",       lm_ds:130, lm_dd:38, mtd_ds:70, mtd_dd:26, wtd_ds:0,  wtd_dd:0,  lm_mat:0,  mtd_mat:3},
-    {name:"JaydeepS",   tl:"Amit Verma",        lm_ds:65,  lm_dd:24, mtd_ds:47, mtd_dd:14, wtd_ds:7,  wtd_dd:2,  lm_mat:2,  mtd_mat:3},
-    {name:"Jyoti",      tl:"Amit Verma",        lm_ds:14,  lm_dd:5,  mtd_ds:47, mtd_dd:15, wtd_ds:0,  wtd_dd:0,  lm_mat:0,  mtd_mat:0},
-    {name:"Kajal",      tl:"Sagar Maheshwari",  lm_ds:83,  lm_dd:28, mtd_ds:41, mtd_dd:14, wtd_ds:0,  wtd_dd:0,  lm_mat:7,  mtd_mat:5},
-    {name:"Khushi",     tl:"Sagar Maheshwari",  lm_ds:0,   lm_dd:0,  mtd_ds:0,  mtd_dd:0,  wtd_ds:0,  wtd_dd:0,  lm_mat:0,  mtd_mat:0},
-    {name:"Kumkum",     tl:"Amit Verma",        lm_ds:72,  lm_dd:16, mtd_ds:24, mtd_dd:9,  wtd_ds:6,  wtd_dd:1,  lm_mat:0,  mtd_mat:0},
-    {name:"Meenakshi",  tl:"Amit Verma",        lm_ds:69,  lm_dd:17, mtd_ds:45, mtd_dd:17, wtd_ds:0,  wtd_dd:0,  lm_mat:2,  mtd_mat:0},
-    {name:"Mohit",      tl:"Amit Verma",        lm_ds:35,  lm_dd:23, mtd_ds:51, mtd_dd:19, wtd_ds:0,  wtd_dd:0,  lm_mat:3,  mtd_mat:0},
-    {name:"Mo",         tl:"Anshu Sharma",      lm_ds:66,  lm_dd:15, mtd_ds:45, mtd_dd:23, wtd_ds:4,  wtd_dd:2,  lm_mat:0,  mtd_mat:0},
-    {name:"Neha",       tl:"Akash Tomer",       lm_ds:93,  lm_dd:33, mtd_ds:47, mtd_dd:15, wtd_ds:6,  wtd_dd:1,  lm_mat:0,  mtd_mat:2},
-    {name:"Nikita",     tl:"Sagar Maheshwari",  lm_ds:3,   lm_dd:2,  mtd_ds:39, mtd_dd:11, wtd_ds:0,  wtd_dd:0,  lm_mat:0,  mtd_mat:3},
-    {name:"Nishchals",  tl:"Sagar Maheshwari",  lm_ds:43,  lm_dd:12, mtd_ds:54, mtd_dd:21, wtd_ds:7,  wtd_dd:3,  lm_mat:9,  mtd_mat:0},
-    {name:"Prabhat",    tl:"Sagar Maheshwari",  lm_ds:98,  lm_dd:20, mtd_ds:42, mtd_dd:17, wtd_ds:2,  wtd_dd:0,  lm_mat:0,  mtd_mat:2},
-    {name:"Rakhi",      tl:"Amit Verma",        lm_ds:77,  lm_dd:17, mtd_ds:58, mtd_dd:18, wtd_ds:8,  wtd_dd:2,  lm_mat:0,  mtd_mat:0},
-    {name:"Rituraj",    tl:"Himanshu Tiwari",   lm_ds:65,  lm_dd:10, mtd_ds:78, mtd_dd:30, wtd_ds:0,  wtd_dd:0,  lm_mat:0,  mtd_mat:2},
-    {name:"Sangam",     tl:"Amit Verma",        lm_ds:80,  lm_dd:23, mtd_ds:28, mtd_dd:11, wtd_ds:0,  wtd_dd:0,  lm_mat:4,  mtd_mat:1},
-    {name:"Satish",     tl:"Himanshu Tiwari",   lm_ds:53,  lm_dd:11, mtd_ds:66, mtd_dd:20, wtd_ds:5,  wtd_dd:2,  lm_mat:0,  mtd_mat:2},
-    {name:"Shubhanjali",tl:"Sagar Maheshwari",  lm_ds:78,  lm_dd:25, mtd_ds:34, mtd_dd:20, wtd_ds:4,  wtd_dd:3,  lm_mat:4,  mtd_mat:6},
-    {name:"Shweta",     tl:"Anshu Sharma",      lm_ds:150, lm_dd:23, mtd_ds:75, mtd_dd:26, wtd_ds:10, wtd_dd:2,  lm_mat:0,  mtd_mat:3},
-    {name:"SushmitaC",  tl:"Sagar Maheshwari",  lm_ds:46,  lm_dd:25, mtd_ds:58, mtd_dd:17, wtd_ds:9,  wtd_dd:1,  lm_mat:1,  mtd_mat:1},
-    {name:"Tejal",      tl:"Akash Tomer",       lm_ds:95,  lm_dd:22, mtd_ds:89, mtd_dd:28, wtd_ds:5,  wtd_dd:0,  lm_mat:0,  mtd_mat:1},
-    {name:"Vishal",     tl:"Akash Tomer",       lm_ds:67,  lm_dd:25, mtd_ds:64, mtd_dd:31, wtd_ds:8,  wtd_dd:2,  lm_mat:0,  mtd_mat:0},
-  ];
+// ─── AGENT MASTER LIST ────────────────────────────────────────────────────────
+const AGENT_MASTER = [
+  {name:"AayushK",     tl:"Sagar Maheshwari"},
+  {name:"AbhishekY",   tl:"Himanshu Tiwari"},
+  {name:"AdityaS",     tl:"Amit Verma"},
+  {name:"Amit",        tl:"Amit Verma"},
+  {name:"Anam",        tl:"Akash Tomer"},
+  {name:"Ankit",       tl:"Anshu Sharma"},
+  {name:"Anshu",       tl:"Anshu Sharma"},
+  {name:"Areeb",       tl:"Amit Verma"},
+  {name:"Arshdeep",    tl:"Himanshu Tiwari"},
+  {name:"AyushS",      tl:"Amit Verma"},
+  {name:"BhanuT",      tl:"Sagar Maheshwari"},
+  {name:"Chanda",      tl:"Himanshu Tiwari"},
+  {name:"Chitvam",     tl:"Sagar Maheshwari"},
+  {name:"Divyanshu",   tl:"Akash Tomer"},
+  {name:"Harshita",    tl:"Akash Tomer"},
+  {name:"HarshS",      tl:"Sagar Maheshwari"},
+  {name:"Himani",      tl:"Anshu Sharma"},
+  {name:"Himanshu",    tl:"Himanshu Tiwari"},
+  {name:"Hitanshu",    tl:"Amit Verma"},
+  {name:"Isha",        tl:"Akash Tomer"},
+  {name:"JaydeepS",    tl:"Amit Verma"},
+  {name:"Jyoti",       tl:"Amit Verma"},
+  {name:"Kajal",       tl:"Sagar Maheshwari"},
+  {name:"Khushi",      tl:"Sagar Maheshwari"},
+  {name:"Kumkum",      tl:"Amit Verma"},
+  {name:"Meenakshi",   tl:"Amit Verma"},
+  {name:"Mohit",       tl:"Amit Verma"},
+  {name:"Mo",          tl:"Anshu Sharma"},
+  {name:"Neha",        tl:"Akash Tomer"},
+  {name:"Nikita",      tl:"Sagar Maheshwari"},
+  {name:"Nishchals",   tl:"Sagar Maheshwari"},
+  {name:"Prabhat",     tl:"Sagar Maheshwari"},
+  {name:"Rakhi",       tl:"Amit Verma"},
+  {name:"Rituraj",     tl:"Himanshu Tiwari"},
+  {name:"Sangam",      tl:"Amit Verma"},
+  {name:"Satish",      tl:"Himanshu Tiwari"},
+  {name:"Shubhanjali", tl:"Sagar Maheshwari"},
+  {name:"Shweta",      tl:"Anshu Sharma"},
+  {name:"SushmitaC",   tl:"Sagar Maheshwari"},
+  {name:"Tejal",       tl:"Akash Tomer"},
+  {name:"Vishal",      tl:"Akash Tomer"},
+];
 
-  // ─── HELPERS ─────────────────────────────────────────────────────────────────
-  const pct = (n,d) => d > 0 ? Math.round(n/d*1000)/10 : 0;
+// ─── DATE HELPERS ─────────────────────────────────────────────────────────────
+function toKey(d) {
+  return d.toISOString().slice(0,10); // YYYY-MM-DD
+}
+function getMonday(d) {
+  const dt = new Date(d);
+  const day = dt.getDay(); // 0=Sun
+  const diff = day === 0 ? -6 : 1 - day;
+  dt.setDate(dt.getDate() + diff);
+  return dt;
+}
+function getMTDDates() {
+  const today = new Date();
+  const dates = [];
+  const d = new Date(today.getFullYear(), today.getMonth(), 1);
+  while (d <= today) { dates.push(toKey(new Date(d))); d.setDate(d.getDate()+1); }
+  return dates;
+}
+function getWTDDates() {
+  const today = new Date();
+  const mon = getMonday(today);
+  const dates = [];
+  const d = new Date(mon);
+  while (d <= today) { dates.push(toKey(new Date(d))); d.setDate(d.getDate()+1); }
+  return dates;
+}
 
-  function pillHtml(v, hi=40, lo=25) {
-    const cls = v>=hi ? 'pill-good' : v>=lo ? 'pill-warn' : 'pill-bad';
-    return `<span class="pill ${cls}">${v}%</span>`;
-  }
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let DAILY_LOGS  = {};   // { "2025-06-17": { AayushK: {ds,dd,act}, ... } }
+let LAST_MONTH  = {};   // { AayushK: {lm_ds, lm_dd, lm_act} }
+let COMPUTED    = [];   // final array used by all render functions
 
-  function showToast(msg, ok=true) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast show ' + (ok ? 'toast-ok' : 'toast-err');
-    setTimeout(() => t.className = 'toast', 2800);
-  }
+// ─── COMPUTE TOTALS FROM DAILY LOGS ──────────────────────────────────────────
+function computeAgents() {
+  const mtdDates = getMTDDates();
+  const wtdDates = getWTDDates();
 
-  function setStatus(msg) { document.getElementById('dbStatus').textContent = msg; }
+  COMPUTED = AGENT_MASTER.map(a => {
+    let mtd_ds=0, mtd_dd=0, mtd_act=0;
+    let wtd_ds=0, wtd_dd=0;
 
-  // ─── CHARTS registry so we can destroy & redraw ───────────────────────────
-  const charts = {};
-  function mkChart(id, cfg) {
-    if (charts[id]) charts[id].destroy();
-    charts[id] = new Chart(document.getElementById(id), cfg);
-  }
-
-  // ─── MAIN RENDER ─────────────────────────────────────────────────────────────
-  let AGENTS = [];
-
-  function render(agents) {
-    AGENTS = agents;
-    renderOverview();
-    renderDsddTable();
-    renderDtaTable();
-    renderTLView();
-  }
-
-  // ── Overview ─────────────────────────────────────────────────────────────────
-  function renderOverview() {
-    const A = AGENTS;
-    const sum = k => A.reduce((s,a)=>s+a[k],0);
-    const lm_ds=sum('lm_ds'), lm_dd=sum('lm_dd'), lm_mat=sum('lm_mat');
-    const mtd_ds=sum('mtd_ds'), mtd_dd=sum('mtd_dd'), mtd_mat=sum('mtd_mat');
-    const wtd_ds=sum('wtd_ds'), wtd_dd=sum('wtd_dd');
-
-    setText('kpi-mtd-ds', mtd_ds.toLocaleString());
-    setText('kpi-mtd-dd', mtd_dd.toLocaleString());
-    const dsddPct = pct(mtd_dd,mtd_ds);
-    const lmDsddPct = pct(lm_dd,lm_ds);
-    const delta = (dsddPct - lmDsddPct).toFixed(1);
-    setText('kpi-dsdd', dsddPct+'%');
-    setText('kpi-dsdd-sub', `${delta>0?'↑':'↓'} ${Math.abs(delta)}pp vs last month (${lmDsddPct}%)`);
-    setText('kpi-act', mtd_mat);
-    setText('kpi-dta', pct(mtd_mat,mtd_dd)+'%');
-    const lmDta = pct(lm_mat,lm_dd);
-    setText('kpi-dta-sub', `↑ from ${lmDta}% last month`);
-    setText('kpi-wtd', pct(wtd_dd,wtd_ds)+'%');
-    setText('kpi-wtd-sub', `${wtd_ds} DS → ${wtd_dd} DD this week`);
-
-    // MoM bar
-    mkChart('momChart', {
-      type:'bar',
-      data:{labels:['Last Month','MTD'],datasets:[{
-        data:[lmDsddPct, dsddPct],
-        backgroundColor:['rgba(21,101,192,.45)','rgba(21,101,192,.85)'],
-        borderRadius:6, borderSkipped:false
-      }]},
-      options:chartOpts({max:60, title:'DS→DD Conversion %'})
+    mtdDates.forEach(dt => {
+      const entry = DAILY_LOGS[dt]?.[a.name];
+      if (entry) { mtd_ds += entry.ds||0; mtd_dd += entry.dd||0; mtd_act += entry.act||0; }
+    });
+    wtdDates.forEach(dt => {
+      const entry = DAILY_LOGS[dt]?.[a.name];
+      if (entry) { wtd_ds += entry.ds||0; wtd_dd += entry.dd||0; }
     });
 
-    // DTA MoM
-    const mtdDta=pct(mtd_mat,mtd_dd);
-    mkChart('dtaMomChart', {
-      type:'bar',
-      data:{labels:['Last Month','MTD'],datasets:[{
-        data:[lmDta, mtdDta],
-        backgroundColor:['rgba(255,255,255,.15)','rgba(255,255,255,.55)'],
-        borderRadius:6, borderSkipped:false
-      }]},
-      options:chartOpts({max:20, title:'DD→Activation %'})
-    });
-
-    // Funnel chart top 20
-    const top20 = [...A].filter(a=>a.mtd_ds>0).sort((a,b)=>b.mtd_ds-a.mtd_ds).slice(0,20);
-    mkChart('funnelChart', {
-      type:'bar',
-      data:{
-        labels:top20.map(a=>a.name),
-        datasets:[
-          {label:'DS',data:top20.map(a=>a.mtd_ds),backgroundColor:'rgba(21,101,192,.55)',borderRadius:4},
-          {label:'DD',data:top20.map(a=>a.mtd_dd),backgroundColor:'rgba(100,181,246,.85)',borderRadius:4},
-        ]
-      },
-      options:chartOpts({title:'MTD Funnel — Top 20 Agents by DS', legend:true})
-    });
-  }
-
-  // ── DS→DD Table ──────────────────────────────────────────────────────────────
-  function renderDsddTable() {
-    const tlF  = document.getElementById('tlFilter').value;
-    const sort = document.getElementById('dsddSort').value;
-    let data = AGENTS.filter(a => !tlF || a.tl===tlF);
-
-    const sortMap = {
-      mtd_pct: a=>pct(a.mtd_dd,a.mtd_ds),
-      mtd_dd:  a=>a.mtd_dd,
-      mtd_ds:  a=>a.mtd_ds,
-      wtd_pct: a=>pct(a.wtd_dd,a.wtd_ds)
-    };
-    data.sort((a,b)=>sortMap[sort](b)-sortMap[sort](a));
-
-    document.getElementById('dsddBody').innerHTML = data.map(a=>{
-      const lp=pct(a.lm_dd,a.lm_ds), mp=pct(a.mtd_dd,a.mtd_ds), wp=pct(a.wtd_dd,a.wtd_ds);
-      const diff = (mp-lp).toFixed(1);
-      const trend = mp>lp
-        ? `<span class="up">▲ +${diff}pp</span>`
-        : mp<lp ? `<span class="dn">▼ ${diff}pp</span>`
-        : `<span class="muted">—</span>`;
-      return `<tr>
-        <td class="fw6">${a.name}</td>
-        <td class="muted sm">${a.tl.split(' ')[0]}</td>
-        <td>${a.lm_ds}</td><td>${a.lm_dd}</td><td>${pillHtml(lp)}</td>
-        <td>${a.mtd_ds}</td><td>${a.mtd_dd}</td><td>${pillHtml(mp)}</td>
-        <td>${a.wtd_ds}</td><td>${a.wtd_dd}</td><td>${pillHtml(wp)}</td>
-        <td>${trend}</td>
-      </tr>`;
-    }).join('');
-
-    // Leaderboards
-    const active = AGENTS.filter(a=>a.mtd_ds>=5);
-    renderLb('lb-dsdd-top', [...active].sort((a,b)=>pct(b.mtd_dd,b.mtd_ds)-pct(a.mtd_dd,a.mtd_ds)).slice(0,8), a=>pct(a.mtd_dd,a.mtd_ds));
-    renderLb('lb-dsdd-bot', [...active].sort((a,b)=>pct(a.mtd_dd,a.mtd_ds)-pct(b.mtd_dd,b.mtd_ds)).slice(0,8), a=>pct(a.mtd_dd,a.mtd_ds));
-  }
-
-  // ── DD→Act Table ─────────────────────────────────────────────────────────────
-  function renderDtaTable() {
-    const tlF = document.getElementById('tlFilterDta').value;
-    let data = AGENTS.filter(a => !tlF || a.tl===tlF);
-    data.sort((a,b)=>pct(b.mtd_mat,b.mtd_dd)-pct(a.mtd_mat,a.mtd_dd));
-
-    document.getElementById('dtaBody').innerHTML = data.map(a=>{
-      const lp=pct(a.lm_mat,a.lm_dd), mp=pct(a.mtd_mat,a.mtd_dd);
-      const diff=(mp-lp).toFixed(1);
-      const trend = mp>lp?`<span class="up">▲ +${diff}pp</span>`:mp<lp?`<span class="dn">▼ ${diff}pp</span>`:`<span class="muted">—</span>`;
-      return `<tr>
-        <td class="fw6">${a.name}</td>
-        <td class="muted sm">${a.tl.split(' ')[0]}</td>
-        <td>${a.lm_dd}</td><td>${a.lm_mat}</td><td>${pillHtml(lp,25,10)}</td>
-        <td>${a.mtd_dd}</td><td>${a.mtd_mat}</td><td>${pillHtml(mp,25,10)}</td>
-        <td>${trend}</td>
-      </tr>`;
-    }).join('');
-
-    const active = AGENTS.filter(a=>a.mtd_dd>0);
-    renderLb('lb-dta-top', [...active].sort((a,b)=>pct(b.mtd_mat,b.mtd_dd)-pct(a.mtd_mat,a.mtd_dd)).slice(0,8), a=>pct(a.mtd_mat,a.mtd_dd));
-
-    const withMat = AGENTS.filter(a=>a.mtd_mat>0).sort((a,b)=>b.mtd_mat-a.mtd_mat);
-    mkChart('dtaBarChart', {
-      type:'bar',
-      data:{labels:withMat.map(a=>a.name),datasets:[{
-        label:'Activations MTD',data:withMat.map(a=>a.mtd_mat),
-        backgroundColor:'rgba(21,101,192,.75)',borderRadius:4
-      }]},
-      options:chartOpts({title:'MTD Activations by Agent'})
-    });
-  }
-
-  // ── TL View ──────────────────────────────────────────────────────────────────
-  const TLS = ['Sagar Maheshwari','Amit Verma','Akash Tomer','Himanshu Tiwari','Anshu Sharma'];
-
-  function renderTLView() {
-    const tlStat = (tl,k) => AGENTS.filter(a=>a.tl===tl).reduce((s,a)=>s+a[k],0);
-    const tlCount = tl => AGENTS.filter(a=>a.tl===tl).length;
-
-    document.getElementById('tlCards').innerHTML = TLS.map(tl=>{
-      const mtd_ds=tlStat(tl,'mtd_ds'), mtd_dd=tlStat(tl,'mtd_dd'), mtd_mat=tlStat(tl,'mtd_mat');
-      const lm_ds=tlStat(tl,'lm_ds'),   lm_dd=tlStat(tl,'lm_dd');
-      return `<div class="tl-card">
-        <div class="tl-name">${tl}</div>
-        <div class="tl-row"><span>Agents</span><strong>${tlCount(tl)}</strong></div>
-        <div class="tl-row"><span>MTD DS</span><strong>${mtd_ds}</strong></div>
-        <div class="tl-row"><span>MTD DD</span><strong>${mtd_dd}</strong></div>
-        <div class="tl-row"><span>DS→DD</span><strong>${pct(mtd_dd,mtd_ds)}%</strong></div>
-        <div class="tl-row"><span>Activations</span><strong>${mtd_mat}</strong></div>
-        <div class="tl-row"><span>DD→Act</span><strong>${pct(mtd_mat,mtd_dd)}%</strong></div>
-      </div>`;
-    }).join('');
-
-    mkChart('tlConvChart', {
-      type:'bar',
-      data:{
-        labels:TLS.map(t=>t.split(' ')[0]),
-        datasets:[
-          {label:'LM %',data:TLS.map(t=>pct(tlStat(t,'lm_dd'),tlStat(t,'lm_ds'))),backgroundColor:'rgba(21,101,192,.35)',borderRadius:4},
-          {label:'MTD %',data:TLS.map(t=>pct(tlStat(t,'mtd_dd'),tlStat(t,'mtd_ds'))),backgroundColor:'rgba(21,101,192,.85)',borderRadius:4},
-        ]
-      },
-      options:chartOpts({title:'TL DS→DD %', legend:true})
-    });
-
-    mkChart('tlDtaChart', {
-      type:'bar',
-      data:{
-        labels:TLS.map(t=>t.split(' ')[0]),
-        datasets:[
-          {label:'LM %',data:TLS.map(t=>pct(tlStat(t,'lm_mat'),tlStat(t,'lm_dd'))),backgroundColor:'rgba(255,255,255,.18)',borderRadius:4},
-          {label:'MTD %',data:TLS.map(t=>pct(tlStat(t,'mtd_mat'),tlStat(t,'mtd_dd'))),backgroundColor:'rgba(255,255,255,.55)',borderRadius:4},
-        ]
-      },
-      options:chartOpts({title:'TL DD→Activation %', legend:true})
-    });
-  }
-
-  // ── Leaderboard helper ────────────────────────────────────────────────────────
-  function renderLb(id, data, fn) {
-    const max = Math.max(...data.map(fn), 1);
-    document.getElementById(id).innerHTML = data.map((a,i)=>{
-      const v = fn(a);
-      const cls = v>=40?'up':v>=25?'warn-clr':'dn';
-      return `<div class="lb-row">
-        <div class="lb-rank ${i<3?'lb-gold':''}">${i+1}</div>
-        <div class="lb-name">${a.name}</div>
-        <div class="lb-bar-wrap"><div class="lb-bar" style="width:${Math.min(100,v/max*100)}%"></div></div>
-        <div class="lb-pct ${cls}">${v}%</div>
-      </div>`;
-    }).join('');
-  }
-
-  // ── Chart options factory ─────────────────────────────────────────────────────
-  function chartOpts({max, title, legend=false}) {
+    const lm = LAST_MONTH[a.name] || {};
     return {
-      responsive:true,
-      plugins:{
-        legend:{ display:legend, labels:{color:'#b0bec5', font:{size:11}} },
-        title:{ display:false }
-      },
-      scales:{
-        y:{max, ticks:{color:'#546e7a',font:{size:10}}, grid:{color:'rgba(255,255,255,.06)'}},
-        x:{ticks:{color:'#546e7a',font:{size:10},maxRotation:35}, grid:{display:false}}
-      }
+      name:    a.name,
+      tl:      a.tl,
+      lm_ds:   lm.lm_ds  || 0,
+      lm_dd:   lm.lm_dd  || 0,
+      lm_mat:  lm.lm_act || 0,
+      mtd_ds, mtd_dd, mtd_mat: mtd_act,
+      wtd_ds,  wtd_dd,
     };
-  }
+  });
+}
 
-  function setText(id, v) { const el=document.getElementById(id); if(el) el.textContent=v; }
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+const pct = (n,d) => d > 0 ? Math.round(n/d*1000)/10 : 0;
+function pillHtml(v, hi=40, lo=25) {
+  const cls = v>=hi?'pill-good':v>=lo?'pill-warn':'pill-bad';
+  return `<span class="pill ${cls}">${v}%</span>`;
+}
+function showToast(msg, ok=true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show '+(ok?'toast-ok':'toast-err');
+  setTimeout(()=>t.className='toast', 3000);
+}
+function setText(id,v){ const e=document.getElementById(id); if(e) e.textContent=v; }
+function setStatus(msg){ setText('dbStatus', msg); }
 
-  // ─── FIREBASE LOAD ────────────────────────────────────────────────────────────
-  async function initData() {
-    const r = ref(db, 'agents');
-    const snap = await get(r);
-    if (!snap.exists()) {
-      // Seed with default data on first run
-      await set(r, DEFAULT_AGENTS);
-      showToast('Database seeded with default data ✓');
+const charts = {};
+function mkChart(id, cfg) {
+  if (charts[id]) charts[id].destroy();
+  const el = document.getElementById(id);
+  if (el) charts[id] = new Chart(el, cfg);
+}
+function chartOpts({max,legend=false}={}) {
+  return {
+    responsive:true,
+    plugins:{ legend:{ display:legend, labels:{color:'#b0bec5',font:{size:11}} } },
+    scales:{
+      y:{ max, ticks:{color:'#546e7a',font:{size:10}}, grid:{color:'rgba(255,255,255,.06)'} },
+      x:{ ticks:{color:'#546e7a',font:{size:10},maxRotation:35}, grid:{display:false} }
     }
-    // Live listener
-    onValue(r, snap => {
-      const val = snap.val();
-      if (val) {
-        const agents = Array.isArray(val) ? val : Object.values(val);
-        setStatus('● Live');
-        render(agents);
-        document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleTimeString('en-IN');
-      }
-    }, err => {
-      setStatus('✕ Offline');
-      showToast('Firebase error — showing cached data', false);
-      render(DEFAULT_AGENTS);
-    });
+  };
+}
+
+// ─── RENDER OVERVIEW ─────────────────────────────────────────────────────────
+function renderOverview() {
+  const A = COMPUTED;
+  const sum = k => A.reduce((s,a)=>s+a[k],0);
+  const lm_ds=sum('lm_ds'), lm_dd=sum('lm_dd'), lm_mat=sum('lm_mat');
+  const mtd_ds=sum('mtd_ds'), mtd_dd=sum('mtd_dd'), mtd_mat=sum('mtd_mat');
+  const wtd_ds=sum('wtd_ds'), wtd_dd=sum('wtd_dd');
+
+  setText('kpi-mtd-ds', mtd_ds.toLocaleString());
+  setText('kpi-mtd-dd', mtd_dd.toLocaleString());
+  const dsddPct=pct(mtd_dd,mtd_ds), lmDsddPct=pct(lm_dd,lm_ds);
+  const delta=(dsddPct-lmDsddPct).toFixed(1);
+  setText('kpi-dsdd', dsddPct+'%');
+  setText('kpi-dsdd-sub', `${delta>=0?'↑':'↓'} ${Math.abs(delta)}pp vs last month (${lmDsddPct}%)`);
+  setText('kpi-act', mtd_mat);
+  const dtaPct=pct(mtd_mat,mtd_dd), lmDta=pct(lm_mat,lm_dd);
+  setText('kpi-dta', dtaPct+'%');
+  setText('kpi-dta-sub', `vs ${lmDta}% last month`);
+  setText('kpi-wtd', pct(wtd_dd,wtd_ds)+'%');
+  setText('kpi-wtd-sub', `${wtd_ds} DS → ${wtd_dd} DD this week`);
+  setText('lastUpdated', 'Updated: '+new Date().toLocaleTimeString('en-IN'));
+
+  mkChart('momChart',{type:'bar',data:{labels:['Last Month','MTD'],datasets:[{
+    data:[lmDsddPct,dsddPct],backgroundColor:['rgba(21,101,192,.4)','rgba(21,101,192,.9)'],borderRadius:6,borderSkipped:false
+  }]},options:chartOpts({max:60})});
+
+  mkChart('dtaMomChart',{type:'bar',data:{labels:['Last Month','MTD'],datasets:[{
+    data:[lmDta,dtaPct],backgroundColor:['rgba(255,255,255,.15)','rgba(255,255,255,.55)'],borderRadius:6,borderSkipped:false
+  }]},options:chartOpts({max:20})});
+
+  const top20=[...A].filter(a=>a.mtd_ds>0).sort((a,b)=>b.mtd_ds-a.mtd_ds).slice(0,20);
+  mkChart('funnelChart',{type:'bar',data:{
+    labels:top20.map(a=>a.name),
+    datasets:[
+      {label:'DS',data:top20.map(a=>a.mtd_ds),backgroundColor:'rgba(21,101,192,.55)',borderRadius:4},
+      {label:'DD',data:top20.map(a=>a.mtd_dd),backgroundColor:'rgba(100,181,246,.85)',borderRadius:4},
+    ]
+  },options:chartOpts({legend:true})});
+}
+
+// ─── RENDER DS→DD TABLE ───────────────────────────────────────────────────────
+function renderDsddTable() {
+  const tlF  = document.getElementById('tlFilter')?.value || '';
+  const sort = document.getElementById('dsddSort')?.value  || 'mtd_pct';
+  let data = COMPUTED.filter(a=>!tlF||a.tl===tlF);
+  const sortMap={mtd_pct:a=>pct(a.mtd_dd,a.mtd_ds),mtd_dd:a=>a.mtd_dd,mtd_ds:a=>a.mtd_ds,wtd_pct:a=>pct(a.wtd_dd,a.wtd_ds)};
+  data.sort((a,b)=>sortMap[sort](b)-sortMap[sort](a));
+
+  document.getElementById('dsddBody').innerHTML = data.map(a=>{
+    const lp=pct(a.lm_dd,a.lm_ds),mp=pct(a.mtd_dd,a.mtd_ds),wp=pct(a.wtd_dd,a.wtd_ds);
+    const diff=(mp-lp).toFixed(1);
+    const trend=mp>lp?`<span class="up">▲ +${diff}pp</span>`:mp<lp?`<span class="dn">▼ ${diff}pp</span>`:`<span class="muted">—</span>`;
+    return `<tr><td class="fw6">${a.name}</td><td class="muted sm">${a.tl.split(' ')[0]}</td>
+      <td>${a.lm_ds}</td><td>${a.lm_dd}</td><td>${pillHtml(lp)}</td>
+      <td>${a.mtd_ds}</td><td>${a.mtd_dd}</td><td>${pillHtml(mp)}</td>
+      <td>${a.wtd_ds}</td><td>${a.wtd_dd}</td><td>${pillHtml(wp)}</td>
+      <td>${trend}</td></tr>`;
+  }).join('');
+
+  const active=COMPUTED.filter(a=>a.mtd_ds>=5);
+  renderLb('lb-dsdd-top',[...active].sort((a,b)=>pct(b.mtd_dd,b.mtd_ds)-pct(a.mtd_dd,a.mtd_ds)).slice(0,8),a=>pct(a.mtd_dd,a.mtd_ds));
+  renderLb('lb-dsdd-bot',[...active].sort((a,b)=>pct(a.mtd_dd,a.mtd_ds)-pct(b.mtd_dd,b.mtd_ds)).slice(0,8),a=>pct(a.mtd_dd,a.mtd_ds));
+}
+
+// ─── RENDER DD→ACT TABLE ─────────────────────────────────────────────────────
+function renderDtaTable() {
+  const tlF=document.getElementById('tlFilterDta')?.value||'';
+  let data=COMPUTED.filter(a=>!tlF||a.tl===tlF);
+  data.sort((a,b)=>pct(b.mtd_mat,b.mtd_dd)-pct(a.mtd_mat,a.mtd_dd));
+
+  document.getElementById('dtaBody').innerHTML=data.map(a=>{
+    const lp=pct(a.lm_mat,a.lm_dd),mp=pct(a.mtd_mat,a.mtd_dd);
+    const diff=(mp-lp).toFixed(1);
+    const trend=mp>lp?`<span class="up">▲ +${diff}pp</span>`:mp<lp?`<span class="dn">▼ ${diff}pp</span>`:`<span class="muted">—</span>`;
+    return `<tr><td class="fw6">${a.name}</td><td class="muted sm">${a.tl.split(' ')[0]}</td>
+      <td>${a.lm_dd}</td><td>${a.lm_mat}</td><td>${pillHtml(lp,25,10)}</td>
+      <td>${a.mtd_dd}</td><td>${a.mtd_mat}</td><td>${pillHtml(mp,25,10)}</td>
+      <td>${trend}</td></tr>`;
+  }).join('');
+
+  renderLb('lb-dta-top',[...COMPUTED].filter(a=>a.mtd_dd>0).sort((a,b)=>pct(b.mtd_mat,b.mtd_dd)-pct(a.mtd_mat,a.mtd_dd)).slice(0,8),a=>pct(a.mtd_mat,a.mtd_dd));
+
+  const withMat=COMPUTED.filter(a=>a.mtd_mat>0).sort((a,b)=>b.mtd_mat-a.mtd_mat);
+  mkChart('dtaBarChart',{type:'bar',data:{
+    labels:withMat.map(a=>a.name),
+    datasets:[{label:'Activations MTD',data:withMat.map(a=>a.mtd_mat),backgroundColor:'rgba(21,101,192,.75)',borderRadius:4}]
+  },options:chartOpts()});
+}
+
+// ─── RENDER TL VIEW ───────────────────────────────────────────────────────────
+const TLS=['Sagar Maheshwari','Amit Verma','Akash Tomer','Himanshu Tiwari','Anshu Sharma'];
+function renderTLView() {
+  const tlStat=(tl,k)=>COMPUTED.filter(a=>a.tl===tl).reduce((s,a)=>s+a[k],0);
+  document.getElementById('tlCards').innerHTML=TLS.map(tl=>{
+    const mtd_ds=tlStat(tl,'mtd_ds'),mtd_dd=tlStat(tl,'mtd_dd'),mtd_mat=tlStat(tl,'mtd_mat');
+    const lm_ds=tlStat(tl,'lm_ds'),lm_dd=tlStat(tl,'lm_dd');
+    const cnt=COMPUTED.filter(a=>a.tl===tl).length;
+    return `<div class="tl-card">
+      <div class="tl-name">${tl}</div>
+      <div class="tl-row"><span>Agents</span><strong>${cnt}</strong></div>
+      <div class="tl-row"><span>MTD DS</span><strong>${mtd_ds}</strong></div>
+      <div class="tl-row"><span>MTD DD</span><strong>${mtd_dd}</strong></div>
+      <div class="tl-row"><span>DS→DD %</span><strong>${pct(mtd_dd,mtd_ds)}%</strong></div>
+      <div class="tl-row"><span>Activations</span><strong>${mtd_mat}</strong></div>
+      <div class="tl-row"><span>DD→Act %</span><strong>${pct(mtd_mat,mtd_dd)}%</strong></div>
+    </div>`;
+  }).join('');
+
+  mkChart('tlConvChart',{type:'bar',data:{
+    labels:TLS.map(t=>t.split(' ')[0]),
+    datasets:[
+      {label:'LM %',data:TLS.map(t=>pct(tlStat(t,'lm_dd'),tlStat(t,'lm_ds'))),backgroundColor:'rgba(21,101,192,.35)',borderRadius:4},
+      {label:'MTD %',data:TLS.map(t=>pct(tlStat(t,'mtd_dd'),tlStat(t,'mtd_ds'))),backgroundColor:'rgba(21,101,192,.9)',borderRadius:4},
+    ]
+  },options:chartOpts({legend:true})});
+
+  mkChart('tlDtaChart',{type:'bar',data:{
+    labels:TLS.map(t=>t.split(' ')[0]),
+    datasets:[
+      {label:'LM %',data:TLS.map(t=>pct(tlStat(t,'lm_mat'),tlStat(t,'lm_dd'))),backgroundColor:'rgba(255,255,255,.18)',borderRadius:4},
+      {label:'MTD %',data:TLS.map(t=>pct(tlStat(t,'mtd_mat'),tlStat(t,'mtd_dd'))),backgroundColor:'rgba(255,255,255,.55)',borderRadius:4},
+    ]
+  },options:chartOpts({legend:true})});
+}
+
+// ─── LEADERBOARD ──────────────────────────────────────────────────────────────
+function renderLb(id,data,fn){
+  const max=Math.max(...data.map(fn),1);
+  document.getElementById(id).innerHTML=data.map((a,i)=>{
+    const v=fn(a),cls=v>=40?'up':v>=25?'warn-clr':'dn';
+    return `<div class="lb-row">
+      <div class="lb-rank ${i<3?'lb-gold':''}">${i+1}</div>
+      <div class="lb-name">${a.name}</div>
+      <div class="lb-bar-wrap"><div class="lb-bar" style="width:${Math.min(100,v/max*100)}%"></div></div>
+      <div class="lb-pct ${cls}">${v}%</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── FULL RENDER ─────────────────────────────────────────────────────────────
+function renderAll() {
+  computeAgents();
+  renderOverview();
+  renderDsddTable();
+  renderDtaTable();
+  renderTLView();
+}
+
+// ─── FIREBASE LISTENERS ───────────────────────────────────────────────────────
+function startListeners() {
+  // Listen to daily logs
+  onValue(ref(db,'daily_logs'), snap => {
+    DAILY_LOGS = snap.val() || {};
+    renderAll();
+    setStatus('● Live');
+  }, ()=>setStatus('✕ Error'));
+
+  // Listen to last month
+  onValue(ref(db,'last_month'), snap => {
+    LAST_MONTH = snap.val() || {};
+    renderAll();
+  });
+}
+
+// ─── DOWNLOAD TEMPLATE ───────────────────────────────────────────────────────
+window.downloadTemplate = function() {
+  const wb = XLSX.utils.book_new();
+
+  // ── Sheet 1: Daily Entry ──
+  const today = toKey(new Date());
+  const dailyRows = [
+    ['DAILY ENTRY SHEET — Fill DS, DD, Activations for each agent for the selected date'],
+    ['Date (YYYY-MM-DD):', today, '', '', '', '', 'Change the date in cell B2 before filling data'],
+    [],
+    ['Agent Name', 'TL', 'DS (Demo Scheduled)', 'DD (Demo Done)', 'Activations (Matured)'],
+    ...AGENT_MASTER.map(a => [a.name, a.tl, 0, 0, 0])
+  ];
+  const ws1 = XLSX.utils.aoa_to_sheet(dailyRows);
+  ws1['!cols'] = [{wch:20},{wch:20},{wch:22},{wch:18},{wch:22}];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Daily Entry');
+
+  // ── Sheet 2: Last Month ──
+  const lmRows = [
+    ['LAST MONTH DATA — Update once at the start of each new month'],
+    [],
+    ['Agent Name', 'TL', 'LM DS (Demo Scheduled)', 'LM DD (Demo Done)', 'LM Activations (Matured)'],
+    ...AGENT_MASTER.map(a => {
+      const lm = LAST_MONTH[a.name]||{};
+      return [a.name, a.tl, lm.lm_ds||0, lm.lm_dd||0, lm.lm_act||0];
+    })
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(lmRows);
+  ws2['!cols'] = [{wch:20},{wch:20},{wch:24},{wch:20},{wch:24}];
+  XLSX.utils.book_append_sheet(wb, wb.SheetNames.length>0?wb:'', ws2, 'Last Month');
+  XLSX.utils.book_append_sheet(wb, ws2, 'Last Month');
+
+  // ── Sheet 3: Instructions ──
+  const instrRows = [
+    ['HOW TO USE THIS FILE'],
+    [],
+    ['DAILY WORKFLOW:'],
+    ['1. Open this file every day after end of business'],
+    ['2. Go to "Daily Entry" sheet'],
+    ['3. Change the date in cell B2 to today\'s date (format: YYYY-MM-DD e.g. 2025-06-17)'],
+    ['4. Fill DS, DD, Activations for each agent (leave 0 if no activity)'],
+    ['5. Save the file'],
+    ['6. Go to dashboard → Admin Login → Upload Data tab'],
+    ['7. Choose "Daily Entry" and upload this file'],
+    ['8. Dashboard updates instantly for everyone'],
+    [],
+    ['LAST MONTH WORKFLOW (do once at start of month):'],
+    ['1. Go to "Last Month" sheet'],
+    ['2. Fill LM DS, LM DD, LM Activations from previous month\'s final totals'],
+    ['3. Upload the file with "Last Month" selected in the upload tab'],
+    [],
+    ['IMPORTANT RULES:'],
+    ['- Date format must be YYYY-MM-DD (e.g. 2025-06-17)'],
+    ['- Agent names must exactly match the list (do not rename)'],
+    ['- Enter 0 for agents with no activity that day (not blank)'],
+    ['- Each day\'s data is stored separately — MTD/WTD auto-calculated'],
+  ];
+  const ws3 = XLSX.utils.aoa_to_sheet(instrRows);
+  ws3['!cols'] = [{wch:60}];
+  XLSX.utils.book_append_sheet(wb, ws3, 'Instructions');
+
+  XLSX.writeFile(wb, 'BUSY_Dashboard_Template.xlsx');
+  showToast('Template downloaded ✓');
+};
+
+// ─── UPLOAD & PROCESS FILE ───────────────────────────────────────────────────
+window.handleFileUpload = function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const uploadType = document.getElementById('uploadType').value;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      const wb = XLSX.read(ev.target.result, {type:'binary'});
+      if (uploadType === 'daily') await processDailySheet(wb);
+      else await processLastMonthSheet(wb);
+    } catch(err) {
+      showToast('Error reading file: '+err.message, false);
+    }
+    e.target.value = '';
+  };
+  reader.readAsBinaryString(file);
+};
+
+async function processDailySheet(wb) {
+  const ws = wb.Sheets['Daily Entry'];
+  if (!ws) { showToast('Sheet "Daily Entry" not found in file', false); return; }
+
+  // Read date from B2
+  const dateCell = ws['B2'];
+  if (!dateCell) { showToast('Date missing in cell B2', false); return; }
+  const dateVal = String(dateCell.v).trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
+    showToast('Date format must be YYYY-MM-DD (e.g. 2025-06-17)', false); return;
   }
 
-  // ─── AUTH ─────────────────────────────────────────────────────────────────────
-  onAuthStateChanged(auth, user => {
-    document.getElementById('adminPanel').style.display = user ? 'block' : 'none';
-    document.getElementById('loginPanel').style.display = user ? 'none' : 'none'; // hidden by default, open via btn
-    document.getElementById('adminUserBadge').textContent = user ? user.email : '';
-    if (user) populateAdminTable();
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, range:3}); // from row 4
+  const dayData = {};
+  let count = 0;
+  rows.forEach(row => {
+    const name = String(row[0]||'').trim();
+    if (!name || !AGENT_MASTER.find(a=>a.name===name)) return;
+    dayData[name] = {
+      ds:  parseInt(row[2])||0,
+      dd:  parseInt(row[3])||0,
+      act: parseInt(row[4])||0,
+    };
+    count++;
   });
 
-  window.openLogin = () => {
-    document.getElementById('loginPanel').style.display = 'flex';
-  };
-  window.closeLogin = () => {
-    document.getElementById('loginPanel').style.display = 'none';
-  };
-  window.doLogin = async () => {
-    const email = document.getElementById('loginEmail').value;
-    const pass  = document.getElementById('loginPass').value;
-    try {
-      await signInWithEmailAndPassword(auth, email, pass);
-      closeLogin();
-      showToast('Signed in ✓');
-    } catch(e) {
-      showToast('Login failed: ' + e.message, false);
-    }
-  };
-  window.doLogout = async () => {
-    await signOut(auth);
-    document.getElementById('adminPanel').style.display = 'none';
-    showToast('Signed out');
-  };
+  if (count === 0) { showToast('No valid agent data found in file', false); return; }
 
-  // ─── ADMIN TABLE ──────────────────────────────────────────────────────────────
-  function populateAdminTable() {
-    const body = document.getElementById('adminBody');
-    body.innerHTML = AGENTS.map((a,i)=>`<tr>
+  // Preview before save
+  showUploadPreview(dateVal, dayData, 'daily');
+}
+
+async function processLastMonthSheet(wb) {
+  const ws = wb.Sheets['Last Month'];
+  if (!ws) { showToast('Sheet "Last Month" not found in file', false); return; }
+
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, range:2});
+  const lmData = {};
+  let count = 0;
+  rows.forEach(row => {
+    const name = String(row[0]||'').trim();
+    if (!name || !AGENT_MASTER.find(a=>a.name===name)) return;
+    lmData[name] = {
+      lm_ds:  parseInt(row[2])||0,
+      lm_dd:  parseInt(row[3])||0,
+      lm_act: parseInt(row[4])||0,
+    };
+    count++;
+  });
+
+  if (count === 0) { showToast('No valid agent data found in file', false); return; }
+  showUploadPreview(null, lmData, 'lastmonth');
+}
+
+// ─── UPLOAD PREVIEW MODAL ────────────────────────────────────────────────────
+let _pendingUpload = null;
+
+function showUploadPreview(date, data, type) {
+  _pendingUpload = {date, data, type};
+  const modal = document.getElementById('previewModal');
+  const tbody = document.getElementById('previewBody');
+  const title = document.getElementById('previewTitle');
+
+  title.textContent = type==='daily'
+    ? `Preview — Daily Entry for ${date}`
+    : 'Preview — Last Month Data';
+
+  const agents = Object.keys(data);
+  const headers = type==='daily'
+    ? ['Agent','DS','DD','Activations']
+    : ['Agent','LM DS','LM DD','LM Activations'];
+
+  document.getElementById('previewHead').innerHTML =
+    '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+
+  tbody.innerHTML = agents.map(name => {
+    const d = data[name];
+    if (type==='daily') return `<tr><td class="fw6">${name}</td><td>${d.ds}</td><td>${d.dd}</td><td>${d.act}</td></tr>`;
+    return `<tr><td class="fw6">${name}</td><td>${d.lm_ds}</td><td>${d.lm_dd}</td><td>${d.lm_act}</td></tr>`;
+  }).join('');
+
+  modal.style.display='flex';
+}
+
+window.confirmUpload = async function() {
+  if (!_pendingUpload) return;
+  const {date, data, type} = _pendingUpload;
+  try {
+    if (type==='daily') {
+      await set(ref(db,`daily_logs/${date}`), data);
+      showToast(`✓ Daily data for ${date} saved — dashboard updated`);
+    } else {
+      await set(ref(db,'last_month'), data);
+      showToast('✓ Last month data saved — dashboard updated');
+    }
+    closePreview();
+  } catch(e) {
+    showToast('Save failed: '+e.message, false);
+  }
+};
+
+window.closePreview = function() {
+  document.getElementById('previewModal').style.display='none';
+  _pendingUpload=null;
+};
+
+// ─── VIEW DAILY LOG ───────────────────────────────────────────────────────────
+window.loadDailyLog = function() {
+  const dt = document.getElementById('logDatePicker').value;
+  if (!dt) return;
+  const log = DAILY_LOGS[dt] || {};
+  const tbody = document.getElementById('logBody');
+  tbody.innerHTML = AGENT_MASTER.map(a => {
+    const d = log[a.name] || {ds:0,dd:0,act:0};
+    const hasData = d.ds||d.dd||d.act;
+    return `<tr class="${hasData?'':'row-zero'}">
       <td class="fw6">${a.name}</td>
-      <td>${a.tl.split(' ')[0]}</td>
-      ${['lm_ds','lm_dd','mtd_ds','mtd_dd','wtd_ds','wtd_dd','lm_mat','mtd_mat'].map(k=>`
-        <td><input class="num-input" type="number" min="0" value="${a[k]}" data-idx="${i}" data-key="${k}" onchange="markDirty(${i},'${k}',this.value)"></td>
-      `).join('')}
-    </tr>`).join('');
+      <td class="muted sm">${a.tl.split(' ')[0]}</td>
+      <td>${d.ds}</td><td>${d.dd}</td><td>${d.act}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('logSection').style.display='block';
+};
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, user => {
+  const isAdmin = !!user;
+  document.getElementById('adminTabBtn').style.display = isAdmin ? 'block' : 'none';
+  document.getElementById('logoutBtn').style.display   = isAdmin ? 'inline-flex' : 'none';
+  document.getElementById('loginBtn').style.display    = isAdmin ? 'none' : 'inline-flex';
+  document.getElementById('adminUserBadge').textContent = user ? user.email : '';
+  if (!isAdmin && document.getElementById('pane-admin').classList.contains('active')) {
+    switchTab('overview', document.querySelector('.tab'));
   }
+});
 
-  const dirtyMap = {};
-  window.markDirty = (idx, key, val) => {
-    if (!dirtyMap[idx]) dirtyMap[idx] = {};
-    dirtyMap[idx][key] = parseInt(val)||0;
-  };
+window.openLogin = ()=>{ document.getElementById('loginModal').style.display='flex'; };
+window.closeLogin= ()=>{ document.getElementById('loginModal').style.display='none'; };
+window.doLogin   = async()=>{
+  try {
+    await signInWithEmailAndPassword(auth,
+      document.getElementById('loginEmail').value,
+      document.getElementById('loginPass').value);
+    closeLogin(); showToast('Signed in ✓');
+  } catch(e){ showToast('Login failed: '+e.message, false); }
+};
+window.doLogout  = async()=>{ await signOut(auth); showToast('Signed out'); };
 
-  window.saveAdmin = async () => {
-    if (!Object.keys(dirtyMap).length) { showToast('No changes to save'); return; }
-    const updated = AGENTS.map((a,i) => dirtyMap[i] ? {...a,...dirtyMap[i]} : a);
-    try {
-      await set(ref(db,'agents'), updated);
-      Object.keys(dirtyMap).forEach(k=>delete dirtyMap[k]);
-      showToast('Saved to Firebase ✓');
-    } catch(e) {
-      showToast('Save failed: ' + e.message, false);
-    }
-  };
+// ─── TAB SWITCH ───────────────────────────────────────────────────────────────
+window.switchTab = (id, el) => {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.getElementById('pane-'+id).classList.add('active');
+};
+window.filterDsdd = renderDsddTable;
+window.filterDta  = renderDtaTable;
 
-  // ─── TAB SWITCH ───────────────────────────────────────────────────────────────
-  window.switchTab = (id, el) => {
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('pane-'+id).classList.add('active');
-    // re-render charts on tab switch (canvas sizing)
-    if (id==='overview') renderOverview();
-    if (id==='dsdd') renderDsddTable();
-    if (id==='ddta') renderDtaTable();
-    if (id==='tl') renderTLView();
-    if (id==='admin') populateAdminTable();
-  };
-
-  window.filterDsdd = renderDsddTable;
-  window.filterDta  = renderDtaTable;
-
-  // ─── BOOT ─────────────────────────────────────────────────────────────────────
-  initData();
+// ─── BOOT ────────────────────────────────────────────────────────────────────
+setStatus('● Connecting…');
+startListeners();
 </script>
+
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root {
+  --bg:#0e1117; --surface:#141921; --card:#1a2130; --border:#1e2d42;
+  --blue:#1565C0; --blue-lt:#64b5f6; --text:#dce8f0; --muted:#546e7a;
+  --up:#4caf50; --dn:#ef5350; --warn:#ffa726;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:13px;min-height:100vh;}
 
-  :root {
-    --bg:      #0e1117;
-    --surface: #141921;
-    --card:    #1a2130;
-    --border:  #1e2d42;
-    --blue:    #1565C0;
-    --blue-lt: #64b5f6;
-    --text:    #dce8f0;
-    --muted:   #546e7a;
-    --up:      #4caf50;
-    --dn:      #ef5350;
-    --warn:    #ffa726;
-  }
+/* HEADER */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
+.logo{display:flex;align-items:center;gap:0;}
+.logo-box{background:#111;border-radius:6px;padding:5px 10px;font-size:20px;font-weight:800;letter-spacing:2px;color:#fff;display:flex;align-items:center;}
+.logo-box .u-letter{color:var(--blue);}
+.hdr-right{display:flex;align-items:center;gap:10px;}
+#lastUpdated{font-size:10px;color:var(--muted);}
+.db-status{font-size:11px;color:var(--muted);}
 
-  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--text); font-family:'Inter',system-ui,sans-serif; font-size:13px; min-height:100vh; }
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-ghost:hover{border-color:var(--blue-lt);color:var(--blue-lt);}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-blue:hover{background:#1976d2;}
+.btn-green{background:#1b5e20;color:#c8e6c9;border:1px solid #2e7d32;}
+.btn-green:hover{background:#2e7d32;}
+.btn-danger{background:transparent;border:1px solid var(--dn);color:var(--dn);}
+.btn-danger:hover{background:rgba(239,83,80,.1);}
 
-  /* ── HEADER ── */
-  .hdr {
-    display:flex; align-items:center; justify-content:space-between;
-    padding:14px 24px; border-bottom:1px solid var(--border);
-    background:var(--surface); position:sticky; top:0; z-index:100;
-  }
-  .logo { display:flex; align-items:center; gap:0; }
-  .logo-box {
-    background:#111; border-radius:6px; padding:5px 10px;
-    font-size:20px; font-weight:800; letter-spacing:2px; color:#fff;
-    display:flex; align-items:center;
-  }
-  .logo-box .u-letter { color:var(--blue); }
-  .hdr-right { display:flex; align-items:center; gap:12px; }
-  .db-status { font-size:11px; color:var(--muted); }
-  .db-status span { color:var(--up); }
-  #lastUpdated { font-size:10px; color:var(--muted); }
-  .btn { padding:6px 14px; border:none; border-radius:5px; font-size:12px; font-weight:600; cursor:pointer; }
-  .btn-ghost { background:transparent; border:1px solid var(--border); color:var(--muted); }
-  .btn-ghost:hover { border-color:var(--blue-lt); color:var(--blue-lt); }
-  .btn-blue { background:var(--blue); color:#fff; }
-  .btn-blue:hover { background:#1976d2; }
-  .btn-danger { background:transparent; border:1px solid var(--dn); color:var(--dn); }
+/* TABS */
+.tabs{display:flex;gap:2px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab{padding:11px 16px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .18s;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--blue-lt);border-bottom-color:var(--blue);}
 
-  /* ── TABS ── */
-  .tabs { display:flex; gap:2px; padding:0 24px; background:var(--surface); border-bottom:1px solid var(--border); overflow-x:auto; }
-  .tab { padding:11px 16px; font-size:12px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; transition:all .18s; }
-  .tab:hover { color:var(--text); }
-  .tab.active { color:var(--blue-lt); border-bottom-color:var(--blue); }
+/* PANES */
+.pane{display:none;padding:20px 24px;}
+.pane.active{display:block;}
 
-  /* ── PANES ── */
-  .pane { display:none; padding:20px 24px; }
-  .pane.active { display:block; }
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:20px;}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+.kpi .klabel{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:5px;}
+.kpi .kval{font-size:24px;font-weight:800;}
+.kpi .ksub{font-size:10px;color:var(--muted);margin-top:3px;}
+.kpi.accent{border-left:3px solid var(--blue);}
+.kpi.ok{border-left:3px solid var(--up);}
+.kpi.warn-b{border-left:3px solid var(--warn);}
+.kpi.err{border-left:3px solid var(--dn);}
 
-  /* ── KPI GRID ── */
-  .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); gap:10px; margin-bottom:20px; }
-  .kpi { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:14px 16px; }
-  .kpi .klabel { font-size:9px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:5px; }
-  .kpi .kval { font-size:24px; font-weight:800; }
-  .kpi .ksub { font-size:10px; color:var(--muted); margin-top:3px; }
-  .kpi.accent { border-left:3px solid var(--blue); }
-  .kpi.ok { border-left:3px solid var(--up); }
-  .kpi.warn-b { border-left:3px solid var(--warn); }
-  .kpi.err { border-left:3px solid var(--dn); }
+/* CHARTS */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.chart-card,.chart-full{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:18px;}
+.chart-card h4,.chart-full h4{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:12px;}
+.chart-card canvas{max-height:200px;}
+.chart-full canvas{max-height:260px;}
 
-  /* ── CHARTS ── */
-  .chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
-  .chart-card, .chart-full { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:18px; }
-  .chart-card h4, .chart-full h4 { font-size:10px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); margin-bottom:12px; }
-  .chart-card canvas { max-height:200px; }
-  .chart-full canvas { max-height:260px; }
+/* TABLE */
+.filter-bar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.filter-bar label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+select{background:var(--card);border:1px solid var(--border);color:var(--text);padding:5px 9px;border-radius:5px;font-size:12px;outline:none;}
+select:focus{border-color:var(--blue);}
+.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:auto;margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{padding:9px 11px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody td{padding:8px 11px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:rgba(21,101,192,.08);}
+.row-zero td{color:var(--muted);}
 
-  /* ── TABLE ── */
-  .filter-bar { display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
-  .filter-bar label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; }
-  select { background:var(--card); border:1px solid var(--border); color:var(--text); padding:5px 9px; border-radius:5px; font-size:12px; outline:none; }
-  select:focus { border-color:var(--blue); }
-  .tbl-wrap { background:var(--card); border:1px solid var(--border); border-radius:8px; overflow:auto; margin-bottom:20px; }
-  table { width:100%; border-collapse:collapse; font-size:12px; }
-  thead th { padding:9px 11px; text-align:left; font-size:9px; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); background:var(--surface); border-bottom:1px solid var(--border); white-space:nowrap; }
-  tbody td { padding:8px 11px; border-bottom:1px solid rgba(255,255,255,.04); white-space:nowrap; }
-  tbody tr:last-child td { border-bottom:none; }
-  tbody tr:hover { background:rgba(21,101,192,.08); }
+/* PILLS */
+.pill{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700;}
+.pill-good{background:rgba(76,175,80,.18);color:#81c784;}
+.pill-warn{background:rgba(255,167,38,.18);color:#ffb74d;}
+.pill-bad{background:rgba(239,83,80,.18);color:#ef9a9a;}
 
-  /* ── PILLS ── */
-  .pill { display:inline-block; padding:2px 7px; border-radius:10px; font-size:11px; font-weight:700; }
-  .pill-good { background:rgba(76,175,80,.18); color:#81c784; }
-  .pill-warn { background:rgba(255,167,38,.18); color:#ffb74d; }
-  .pill-bad  { background:rgba(239,83,80,.18);  color:#ef9a9a; }
+/* LEADERBOARD */
+.lb-container{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.lb-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;}
+.lb-card h4{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:10px;}
+.lb-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.lb-row:last-child{border-bottom:none;}
+.lb-rank{font-size:10px;font-weight:800;color:var(--muted);width:18px;}
+.lb-gold{color:var(--warn)!important;}
+.lb-name{flex:1;font-size:11px;font-weight:600;}
+.lb-bar-wrap{width:90px;height:5px;background:var(--border);border-radius:3px;}
+.lb-bar{height:5px;border-radius:3px;background:var(--blue);}
+.lb-pct{font-size:11px;font-weight:700;width:38px;text-align:right;}
 
-  /* ── LEADERBOARD ── */
-  .lb-container { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
-  .lb-card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:14px; }
-  .lb-card h4 { font-size:10px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); margin-bottom:10px; }
-  .lb-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,.04); }
-  .lb-row:last-child { border-bottom:none; }
-  .lb-rank { font-size:10px; font-weight:800; color:var(--muted); width:18px; }
-  .lb-gold { color:var(--warn) !important; }
-  .lb-name { flex:1; font-size:11px; font-weight:600; }
-  .lb-bar-wrap { width:90px; height:5px; background:var(--border); border-radius:3px; }
-  .lb-bar { height:5px; border-radius:3px; background:var(--blue); }
-  .lb-pct { font-size:11px; font-weight:700; width:38px; text-align:right; }
+/* TL CARDS */
+.tl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;}
+.tl-card{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:14px 16px;}
+.tl-name{font-size:13px;font-weight:700;color:var(--blue-lt);margin-bottom:10px;}
+.tl-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:3px;}
+.tl-row strong{color:var(--text);font-weight:700;}
 
-  /* ── TL CARDS ── */
-  .tl-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:20px; }
-  .tl-card { background:var(--card); border:1px solid var(--border); border-left:3px solid var(--blue); border-radius:8px; padding:14px 16px; }
-  .tl-name { font-size:13px; font-weight:700; color:var(--blue-lt); margin-bottom:10px; }
-  .tl-row { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:3px; }
-  .tl-row strong { color:var(--text); font-weight:700; }
+/* ADMIN UPLOAD PANEL */
+.upload-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:20px;}
+.upload-panel h3{font-size:14px;font-weight:700;margin-bottom:6px;}
+.upload-panel p{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+.upload-section{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;margin-bottom:14px;}
+.upload-section h4{font-size:12px;font-weight:700;margin-bottom:4px;}
+.upload-section p{font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5;}
+.upload-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.file-label{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:var(--blue);color:#fff;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;}
+.file-label:hover{background:#1976d2;}
+.file-input{display:none;}
+.step-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:var(--blue);color:#fff;border-radius:50%;font-size:11px;font-weight:700;flex-shrink:0;}
+.steps{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.step{display:flex;align-items:flex-start;gap:10px;font-size:12px;line-height:1.5;}
+.log-viewer{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:16px;}
+.log-viewer h4{font-size:12px;font-weight:700;margin-bottom:12px;}
+.date-input{background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:5px;font-size:12px;outline:none;}
+.date-input:focus{border-color:var(--blue);}
 
-  /* ── ADMIN PANEL ── */
-  .admin-intro { background:var(--card); border:1px solid var(--border); border-left:3px solid var(--blue); border-radius:8px; padding:14px 18px; margin-bottom:18px; font-size:12px; color:var(--muted); }
-  .admin-intro strong { color:var(--text); }
-  .num-input { background:var(--surface); border:1px solid var(--border); color:var(--text); width:56px; padding:3px 6px; border-radius:4px; font-size:11px; text-align:center; }
-  .num-input:focus { border-color:var(--blue); outline:none; }
-  .save-bar { position:sticky; bottom:0; background:var(--surface); border-top:1px solid var(--border); padding:12px 24px; display:flex; gap:10px; align-items:center; }
+/* MODALS */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;align-items:center;justify-content:center;}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:28px 32px;width:min(560px,95vw);max-height:85vh;overflow-y:auto;}
+.modal-box h3{font-size:15px;font-weight:700;margin-bottom:16px;}
+.modal-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;}
+.login-box{width:320px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:6px;}
+.field input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:5px;font-size:13px;outline:none;}
+.field input:focus{border-color:var(--blue);}
 
-  /* ── LOGIN MODAL ── */
-  #loginPanel {
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,.7);
-    z-index:999; align-items:center; justify-content:center;
-  }
-  .login-box { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:28px 32px; width:320px; }
-  .login-box h3 { font-size:15px; font-weight:700; margin-bottom:18px; }
-  .field { margin-bottom:14px; }
-  .field label { display:block; font-size:10px; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); margin-bottom:6px; }
-  .field input { width:100%; background:var(--surface); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:5px; font-size:13px; outline:none; }
-  .field input:focus { border-color:var(--blue); }
-  .login-actions { display:flex; gap:8px; margin-top:6px; }
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:10px 18px;border-radius:7px;font-size:12px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9999;}
+.toast.show{opacity:1;}
+.toast-ok{background:#1b5e20;color:#c8e6c9;}
+.toast-err{background:#b71c1c;color:#ffcdd2;}
 
-  /* ── TOAST ── */
-  .toast { position:fixed; bottom:24px; right:24px; padding:10px 18px; border-radius:7px; font-size:12px; font-weight:600; opacity:0; pointer-events:none; transition:opacity .25s; z-index:9999; }
-  .toast.show { opacity:1; }
-  .toast-ok  { background:#1b5e20; color:#c8e6c9; }
-  .toast-err { background:#b71c1c; color:#ffcdd2; }
+/* MISC */
+.fw6{font-weight:600;}.sm{font-size:11px;}.muted{color:var(--muted);}.up{color:var(--up);}.dn{color:var(--dn);}.warn-clr{color:var(--warn);}
+.divider{width:1px;height:32px;background:var(--border);margin:0 12px;}
+.badge-pill{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:10px;color:var(--muted);}
 
-  /* ── MISC ── */
-  .fw6 { font-weight:600; }
-  .sm  { font-size:11px; }
-  .muted { color:var(--muted); }
-  .up   { color:var(--up); }
-  .dn   { color:var(--dn); }
-  .warn-clr { color:var(--warn); }
-  .sec-title { font-size:9px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:14px; }
-
-  @media(max-width:680px) {
-    .chart-grid, .lb-container { grid-template-columns:1fr; }
-    .kpi-grid { grid-template-columns:repeat(2,1fr); }
-    .hdr .hdr-right { gap:8px; }
-    #lastUpdated { display:none; }
-  }
+@media(max-width:680px){
+  .chart-grid,.lb-container{grid-template-columns:1fr;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  #lastUpdated{display:none;}
+  .logo-box{font-size:16px;}
+}
 </style>
 </head>
 <body>
@@ -579,72 +729,37 @@
 <!-- HEADER -->
 <header class="hdr">
   <div class="logo">
-    <!-- BUSY wordmark -->
     <div class="logo-box">B<span class="u-letter">U</span>SY</div>
-
-    <!-- divider -->
-    <div style="width:1px;height:32px;background:var(--border);margin:0 12px;"></div>
-
-    <!-- OCube SVG logo (dotted-circle + wordmark, white on transparent) -->
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 72" height="36" aria-label="OCube Services">
-      <!-- dotted ring -->
+    <div class="divider"></div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 72" height="34" aria-label="OCube">
       <g fill="#fff" opacity=".9">
-        <!-- top arc -->
-        <circle cx="36" cy="6"  r="2.8"/>
-        <circle cx="46" cy="8"  r="2.4"/>
-        <circle cx="55" cy="13" r="2.1"/>
-        <circle cx="62" cy="20" r="1.8"/>
-        <circle cx="67" cy="28" r="1.5"/>
-        <circle cx="68" cy="37" r="1.4"/>
-        <!-- bottom arc -->
-        <circle cx="65" cy="46" r="1.5"/>
-        <circle cx="59" cy="54" r="1.8"/>
-        <circle cx="51" cy="60" r="2.1"/>
-        <circle cx="42" cy="64" r="2.4"/>
-        <circle cx="32" cy="65" r="2.8"/>
-        <!-- left arc -->
-        <circle cx="22" cy="63" r="2.4"/>
-        <circle cx="13" cy="57" r="2.1"/>
-        <circle cx="7"  cy="49" r="1.8"/>
-        <circle cx="4"  cy="40" r="1.5"/>
-        <circle cx="4"  cy="31" r="1.4"/>
-        <circle cx="7"  cy="22" r="1.5"/>
-        <circle cx="13" cy="14" r="1.8"/>
-        <circle cx="22" cy="8"  r="2.1"/>
-        <circle cx="30" cy="5"  r="2.5"/>
-        <!-- inner smaller ring -->
-        <circle cx="36" cy="13" r="1.8"/>
-        <circle cx="44" cy="16" r="1.5"/>
-        <circle cx="51" cy="22" r="1.3"/>
-        <circle cx="55" cy="30" r="1.1"/>
-        <circle cx="55" cy="39" r="1.1"/>
-        <circle cx="51" cy="47" r="1.3"/>
-        <circle cx="44" cy="53" r="1.5"/>
-        <circle cx="36" cy="56" r="1.8"/>
-        <circle cx="27" cy="54" r="1.5"/>
-        <circle cx="20" cy="48" r="1.3"/>
-        <circle cx="16" cy="40" r="1.1"/>
-        <circle cx="16" cy="31" r="1.1"/>
-        <circle cx="20" cy="23" r="1.3"/>
-        <circle cx="27" cy="17" r="1.5"/>
+        <circle cx="36" cy="6"  r="2.8"/><circle cx="46" cy="8"  r="2.4"/><circle cx="55" cy="13" r="2.1"/>
+        <circle cx="62" cy="20" r="1.8"/><circle cx="67" cy="28" r="1.5"/><circle cx="68" cy="37" r="1.4"/>
+        <circle cx="65" cy="46" r="1.5"/><circle cx="59" cy="54" r="1.8"/><circle cx="51" cy="60" r="2.1"/>
+        <circle cx="42" cy="64" r="2.4"/><circle cx="32" cy="65" r="2.8"/><circle cx="22" cy="63" r="2.4"/>
+        <circle cx="13" cy="57" r="2.1"/><circle cx="7"  cy="49" r="1.8"/><circle cx="4"  cy="40" r="1.5"/>
+        <circle cx="4"  cy="31" r="1.4"/><circle cx="7"  cy="22" r="1.5"/><circle cx="13" cy="14" r="1.8"/>
+        <circle cx="22" cy="8"  r="2.1"/><circle cx="30" cy="5"  r="2.5"/>
+        <circle cx="36" cy="13" r="1.8"/><circle cx="44" cy="16" r="1.5"/><circle cx="51" cy="22" r="1.3"/>
+        <circle cx="55" cy="30" r="1.1"/><circle cx="55" cy="39" r="1.1"/><circle cx="51" cy="47" r="1.3"/>
+        <circle cx="44" cy="53" r="1.5"/><circle cx="36" cy="56" r="1.8"/><circle cx="27" cy="54" r="1.5"/>
+        <circle cx="20" cy="48" r="1.3"/><circle cx="16" cy="40" r="1.1"/><circle cx="16" cy="31" r="1.1"/>
+        <circle cx="20" cy="23" r="1.3"/><circle cx="27" cy="17" r="1.5"/>
       </g>
-      <!-- "cube" wordmark -->
-      <text x="84" y="48" font-family="'Inter',Arial,sans-serif" font-size="30" font-weight="700" fill="#ffffff" letter-spacing="1">cube</text>
-      <!-- small "O" prefix aligned -->
-      <text x="78" y="30" font-family="'Inter',Arial,sans-serif" font-size="13" font-weight="400" fill="rgba(255,255,255,.55)" letter-spacing="1">O</text>
+      <text x="84" y="48" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700" fill="#ffffff" letter-spacing="1">cube</text>
+      <text x="78" y="30" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="400" fill="rgba(255,255,255,.5)">O</text>
     </svg>
-
     <div style="margin-left:12px;">
       <div style="font-size:13px;font-weight:700;">Sales Funnel Dashboard</div>
       <div style="font-size:10px;color:var(--muted);">OcubeServices · Live Performance</div>
     </div>
   </div>
   <div class="hdr-right">
-    <div class="db-status"><span id="dbStatus">● Connecting…</span></div>
-    <div id="lastUpdated"></div>
-    <span id="adminUserBadge" style="font-size:10px;color:var(--muted)"></span>
-    <button class="btn btn-ghost" onclick="openLogin()">Admin Login</button>
-    <button class="btn btn-danger" onclick="doLogout()" style="display:none" id="logoutBtn">Sign out</button>
+    <span class="db-status" id="dbStatus">● Connecting…</span>
+    <span id="lastUpdated"></span>
+    <span id="adminUserBadge" class="badge-pill"></span>
+    <button class="btn btn-ghost" id="loginBtn" onclick="openLogin()">🔐 Admin Login</button>
+    <button class="btn btn-danger" id="logoutBtn" style="display:none" onclick="doLogout()">Sign out</button>
   </div>
 </header>
 
@@ -654,10 +769,10 @@
   <div class="tab" onclick="switchTab('dsdd',this)">DS → DD</div>
   <div class="tab" onclick="switchTab('ddta',this)">DD → Activation</div>
   <div class="tab" onclick="switchTab('tl',this)">TL View</div>
-  <div class="tab" onclick="switchTab('admin',this)" id="adminTab" style="display:none">⚙ Update Data</div>
+  <div class="tab" id="adminTabBtn" style="display:none" onclick="switchTab('admin',this)">⚙ Upload Data</div>
 </nav>
 
-<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<!-- ══════════ OVERVIEW ══════════ -->
 <div class="pane active" id="pane-overview">
   <div class="kpi-grid">
     <div class="kpi accent"><div class="klabel">DS — MTD</div><div class="kval" id="kpi-mtd-ds">—</div><div class="ksub">Demo Scheduled this month</div></div>
@@ -667,15 +782,14 @@
     <div class="kpi warn-b"><div class="klabel">DD → Act %</div><div class="kval" id="kpi-dta" style="color:var(--warn)">—</div><div class="ksub" id="kpi-dta-sub"></div></div>
     <div class="kpi err"><div class="klabel">WTD DS→DD</div><div class="kval" id="kpi-wtd" style="color:var(--dn)">—</div><div class="ksub" id="kpi-wtd-sub"></div></div>
   </div>
-
   <div class="chart-grid">
-    <div class="chart-card"><h4>DS → DD Conversion — MoM</h4><canvas id="momChart"></canvas></div>
-    <div class="chart-card"><h4>DD → Activation — MoM</h4><canvas id="dtaMomChart"></canvas></div>
+    <div class="chart-card"><h4>DS→DD Conversion — MoM</h4><canvas id="momChart"></canvas></div>
+    <div class="chart-card"><h4>DD→Activation — MoM</h4><canvas id="dtaMomChart"></canvas></div>
   </div>
   <div class="chart-full"><h4>Full Funnel — Top 20 Agents by MTD DS</h4><canvas id="funnelChart"></canvas></div>
 </div>
 
-<!-- ═══════════════════ DS→DD ═══════════════════ -->
+<!-- ══════════ DS→DD ══════════ -->
 <div class="pane" id="pane-dsdd">
   <div class="filter-bar">
     <label>TL:</label>
@@ -689,15 +803,13 @@
       <option value="mtd_pct">MTD Conv %</option>
       <option value="mtd_dd">MTD DD</option>
       <option value="mtd_ds">MTD DS</option>
-      <option value="wtd_pct">WTD Conv %</option>
+      <option value="wtd_pct">WTD %</option>
     </select>
   </div>
-
   <div class="lb-container">
     <div class="lb-card"><h4>🏆 Top 8 — MTD DS→DD %</h4><div id="lb-dsdd-top"></div></div>
     <div class="lb-card"><h4>⚠ Bottom 8 — MTD DS→DD % (min 5 DS)</h4><div id="lb-dsdd-bot"></div></div>
   </div>
-
   <div class="tbl-wrap">
     <table>
       <thead><tr>
@@ -712,7 +824,7 @@
   </div>
 </div>
 
-<!-- ═══════════════════ DD→ACT ═══════════════════ -->
+<!-- ══════════ DD→ACT ══════════ -->
 <div class="pane" id="pane-ddta">
   <div class="filter-bar">
     <label>TL:</label>
@@ -722,12 +834,10 @@
       <option>Akash Tomer</option><option>Himanshu Tiwari</option><option>Anshu Sharma</option>
     </select>
   </div>
-
   <div class="lb-container">
     <div class="lb-card"><h4>🏆 Top 8 — MTD DD→Activation %</h4><div id="lb-dta-top"></div></div>
     <div class="chart-card" style="margin-bottom:0"><h4>Activations by Agent — MTD</h4><canvas id="dtaBarChart"></canvas></div>
   </div>
-
   <div class="tbl-wrap">
     <table>
       <thead><tr>
@@ -741,46 +851,94 @@
   </div>
 </div>
 
-<!-- ═══════════════════ TL VIEW ═══════════════════ -->
+<!-- ══════════ TL VIEW ══════════ -->
 <div class="pane" id="pane-tl">
   <div class="tl-grid" id="tlCards"></div>
-  <div class="chart-full"><h4>TL-wise DS→DD % — LM vs MTD</h4><canvas id="tlConvChart"></canvas></div>
-  <div class="chart-full"><h4>TL-wise DD→Activation % — LM vs MTD</h4><canvas id="tlDtaChart"></canvas></div>
+  <div class="chart-full"><h4>TL DS→DD % — LM vs MTD</h4><canvas id="tlConvChart"></canvas></div>
+  <div class="chart-full"><h4>TL DD→Activation % — LM vs MTD</h4><canvas id="tlDtaChart"></canvas></div>
 </div>
 
-<!-- ═══════════════════ ADMIN ═══════════════════ -->
+<!-- ══════════ ADMIN UPLOAD ══════════ -->
 <div class="pane" id="pane-admin">
-  <div class="admin-intro">
-    <strong>Live Data Editor</strong> — Changes here save instantly to Firebase and update the dashboard for everyone in real time.
-    Edit the numbers below and click <strong>Save All Changes</strong>.
+  <div class="upload-panel">
+    <h3>📤 Daily Data Upload</h3>
+    <p>Download the Excel template → fill today's numbers → upload here. The dashboard auto-calculates MTD and WTD for everyone instantly.</p>
+
+    <!-- STEP BY STEP -->
+    <div class="steps">
+      <div class="step"><span class="step-badge">1</span><span>Download the template below. It has two sheets: <strong>Daily Entry</strong> (use every day) and <strong>Last Month</strong> (update once at the start of each month).</span></div>
+      <div class="step"><span class="step-badge">2</span><span>In the <strong>Daily Entry</strong> sheet, update the date in cell <strong>B2</strong> to today's date (format: YYYY-MM-DD). Fill DS, DD, and Activations for each agent.</span></div>
+      <div class="step"><span class="step-badge">3</span><span>Save the file, then upload it below. Choose the correct upload type before uploading.</span></div>
+      <div class="step"><span class="step-badge">4</span><span>Dashboard updates live for everyone — no refresh needed.</span></div>
+    </div>
+
+    <button class="btn btn-green" onclick="downloadTemplate()">⬇ Download Excel Template</button>
   </div>
-  <div class="tbl-wrap">
-    <table>
-      <thead><tr>
-        <th>Agent</th><th>TL</th>
-        <th>LM DS</th><th>LM DD</th>
-        <th>MTD DS</th><th>MTD DD</th>
-        <th>WTD DS</th><th>WTD DD</th>
-        <th>LM Mat</th><th>MTD Mat</th>
-      </tr></thead>
-      <tbody id="adminBody"></tbody>
-    </table>
+
+  <!-- UPLOAD SECTION -->
+  <div class="upload-section">
+    <h4>Upload Filled Template</h4>
+    <p>Select what you are uploading, then choose your file. A preview will appear before anything is saved.</p>
+    <div class="upload-row">
+      <label>Upload type:</label>
+      <select id="uploadType">
+        <option value="daily">Daily Entry (DS, DD, Activations for a specific date)</option>
+        <option value="lastmonth">Last Month Data (LM totals — update once per month)</option>
+      </select>
+      <label class="file-label">
+        📁 Choose File
+        <input type="file" class="file-input" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)">
+      </label>
+    </div>
   </div>
-  <div class="save-bar">
-    <button class="btn btn-blue" onclick="saveAdmin()">💾 Save All Changes</button>
-    <span style="font-size:11px;color:var(--muted)">Changes are pushed live to Firebase immediately.</span>
+
+  <!-- VIEW DAILY LOG -->
+  <div class="upload-section">
+    <h4>View / Verify a Day's Entry</h4>
+    <p>Check what was uploaded for any specific date.</p>
+    <div class="upload-row">
+      <input type="date" class="date-input" id="logDatePicker">
+      <button class="btn btn-ghost" onclick="loadDailyLog()">Load Log</button>
+    </div>
+    <div id="logSection" style="display:none;margin-top:14px;">
+      <div class="tbl-wrap" style="margin-bottom:0">
+        <table>
+          <thead><tr><th>Agent</th><th>TL</th><th>DS</th><th>DD</th><th>Activations</th></tr></thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- LOGIN MODAL -->
-<div id="loginPanel">
-  <div class="login-box">
-    <h3>Admin Login</h3>
-    <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="admin@busy.com"></div>
-    <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••"></div>
-    <div class="login-actions">
-      <button class="btn btn-blue" onclick="doLogin()" style="flex:1">Sign In</button>
+<!-- ══════════ LOGIN MODAL ══════════ -->
+<div class="modal-bg" id="loginModal">
+  <div class="modal-box login-box">
+    <h3>🔐 Admin Login</h3>
+    <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="admin@ocube.com"></div>
+    <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter') doLogin()"></div>
+    <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeLogin()">Cancel</button>
+      <button class="btn btn-blue" onclick="doLogin()">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PREVIEW MODAL ══════════ -->
+<div class="modal-bg" id="previewModal">
+  <div class="modal-box">
+    <h3 id="previewTitle">Preview Upload</h3>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:14px;">Review the data below before saving. This will update the live dashboard for everyone.</p>
+    <div class="tbl-wrap" style="max-height:360px;overflow-y:auto;margin-bottom:0">
+      <table>
+        <thead id="previewHead"></thead>
+        <tbody id="previewBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closePreview()">Cancel</button>
+      <button class="btn btn-blue" onclick="confirmUpload()">✓ Confirm & Save to Firebase</button>
     </div>
   </div>
 </div>
@@ -788,18 +946,5 @@
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<script>
-  // Show admin tab + logout button only when logged in
-  // (this runs after module script because module is deferred)
-  document.addEventListener('DOMContentLoaded', () => {
-    // Watch adminUserBadge to toggle admin UI
-    const obs = new MutationObserver(() => {
-      const isAdmin = document.getElementById('adminUserBadge').textContent.trim() !== '';
-      document.getElementById('adminTab').style.display = isAdmin ? 'block' : 'none';
-      document.getElementById('logoutBtn').style.display = isAdmin ? 'inline-block' : 'none';
-    });
-    obs.observe(document.getElementById('adminUserBadge'), {childList:true, characterData:true, subtree:true});
-  });
-</script>
 </body>
 </html>
