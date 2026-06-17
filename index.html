@@ -400,19 +400,81 @@ window.downloadTemplate = function() {
 window.handleFileUpload = function(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const uploadType = document.getElementById('uploadType').value;
   showToast('Reading file…');
   const reader = new FileReader();
   reader.onload = async ev => {
     try {
       const data = new Uint8Array(ev.target.result);
       const wb = XLSX.read(data, {type:'array'});
-      console.log('Workbook sheets:', wb.SheetNames);
-      if (uploadType === 'daily') await processDailySheet(wb);
-      else await processLastMonthSheet(wb);
+      console.log('Workbook sheets found:', wb.SheetNames);
+
+      let dailyOk = false, lmOk = false;
+      let dailyDate = '', dailyData = {}, lmData = {};
+
+      // ── Try Daily Entry sheet ──
+      if (wb.SheetNames.includes('Daily Entry')) {
+        const ws = wb.Sheets['Daily Entry'];
+        const allRows = XLSX.utils.sheet_to_json(ws, {header:1});
+        console.log('Daily Entry first 5 rows:', JSON.stringify(allRows.slice(0,5)));
+        const dateRow = allRows[1];
+        if (dateRow) {
+          const rawDate = String(dateRow[1]||'').trim();
+          // Accept YYYY-MM-DD or auto-convert serial number
+          let dateVal = rawDate;
+          if (/^\d{5}$/.test(rawDate)) {
+            // Excel serial date — convert
+            const d = new Date((parseInt(rawDate)-25569)*86400*1000);
+            dateVal = d.toISOString().slice(0,10);
+          }
+          console.log('Date value:', dateVal);
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
+            dailyDate = dateVal;
+            const dataRows = allRows.slice(4);
+            dataRows.forEach(row => {
+              const name = String(row[0]||'').trim();
+              if (!name || !AGENT_MASTER.find(a=>a.name===name)) return;
+              dailyData[name] = {
+                ds:  parseInt(row[3])||0,
+                dd:  parseInt(row[4])||0,
+                act: parseInt(row[5])||0,
+              };
+            });
+            dailyOk = Object.keys(dailyData).length > 0;
+            console.log('Daily parsed:', Object.keys(dailyData).length, 'agents');
+          }
+        }
+      }
+
+      // ── Try Last Month sheet ──
+      if (wb.SheetNames.includes('Last Month')) {
+        const ws = wb.Sheets['Last Month'];
+        const allRows = XLSX.utils.sheet_to_json(ws, {header:1});
+        console.log('Last Month first 4 rows:', JSON.stringify(allRows.slice(0,4)));
+        const dataRows = allRows.slice(3);
+        dataRows.forEach(row => {
+          const name = String(row[0]||'').trim();
+          if (!name || !AGENT_MASTER.find(a=>a.name===name)) return;
+          lmData[name] = {
+            lm_ds:  parseInt(row[3])||0,
+            lm_dd:  parseInt(row[4])||0,
+            lm_act: parseInt(row[5])||0,
+          };
+        });
+        lmOk = Object.keys(lmData).length > 0;
+        console.log('LM parsed:', Object.keys(lmData).length, 'agents');
+      }
+
+      if (!dailyOk && !lmOk) {
+        showToast('Could not read any data — check sheet names match exactly', false);
+        return;
+      }
+
+      // Show combined preview
+      showCombinedPreview(dailyOk, dailyDate, dailyData, lmOk, lmData);
+
     } catch(err) {
       console.error('Upload error:', err);
-      showToast('Error reading file: '+err.message, false);
+      showToast('Error: '+err.message, false);
     }
     e.target.value = '';
   };
@@ -487,56 +549,70 @@ async function processLastMonthSheet(wb) {
   showUploadPreview(null, lmData, 'lastmonth');
 }
 
-// ─── UPLOAD PREVIEW MODAL ────────────────────────────────────────────────────
+// ─── COMBINED PREVIEW & SAVE ──────────────────────────────────────────────────
 let _pendingUpload = null;
 
-function showUploadPreview(date, data, type) {
-  _pendingUpload = {date, data, type};
+function showCombinedPreview(dailyOk, dailyDate, dailyData, lmOk, lmData) {
+  _pendingUpload = {dailyOk, dailyDate, dailyData, lmOk, lmData};
+
   const modal = document.getElementById('previewModal');
-  const tbody = document.getElementById('previewBody');
   const title = document.getElementById('previewTitle');
+  const head  = document.getElementById('previewHead');
+  const tbody = document.getElementById('previewBody');
 
-  title.textContent = type==='daily'
-    ? `Preview — Daily Entry for ${date}`
-    : 'Preview — Last Month Data';
+  const parts = [];
+  if (dailyOk) parts.push(`Daily Entry (${dailyDate}) — ${Object.keys(dailyData).length} agents`);
+  if (lmOk)    parts.push(`Last Month — ${Object.keys(lmData).length} agents`);
+  title.textContent = '✓ Ready to save: ' + parts.join(' + ');
 
-  const agents = Object.keys(data);
-  const headers = type==='daily'
-    ? ['Agent','DS','DD','Activations']
-    : ['Agent','LM DS','LM DD','LM Activations'];
+  head.innerHTML = '<tr><th>Agent</th><th>Type</th><th>DS / LM DS</th><th>DD / LM DD</th><th>Act / LM Act</th></tr>';
 
-  document.getElementById('previewHead').innerHTML =
-    '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
-
-  tbody.innerHTML = agents.map(name => {
-    const d = data[name];
-    if (type==='daily') return `<tr><td class="fw6">${name}</td><td>${d.ds}</td><td>${d.dd}</td><td>${d.act}</td></tr>`;
-    return `<tr><td class="fw6">${name}</td><td>${d.lm_ds}</td><td>${d.lm_dd}</td><td>${d.lm_act}</td></tr>`;
-  }).join('');
-
-  modal.style.display='flex';
+  const rows = [];
+  if (dailyOk) {
+    Object.entries(dailyData).forEach(([name, d]) => {
+      const ag = AGENT_MASTER.find(a=>a.name===name);
+      rows.push(`<tr><td class="fw6">${ag?ag.short:name}</td><td style="color:var(--blue-lt)">Daily ${dailyDate}</td><td>${d.ds}</td><td>${d.dd}</td><td>${d.act}</td></tr>`);
+    });
+  }
+  if (lmOk) {
+    Object.entries(lmData).forEach(([name, d]) => {
+      const ag = AGENT_MASTER.find(a=>a.name===name);
+      rows.push(`<tr><td class="fw6">${ag?ag.short:name}</td><td style="color:var(--muted)">Last Month</td><td>${d.lm_ds}</td><td>${d.lm_dd}</td><td>${d.lm_act}</td></tr>`);
+    });
+  }
+  tbody.innerHTML = rows.join('');
+  modal.style.display = 'flex';
 }
 
 window.confirmUpload = async function() {
   if (!_pendingUpload) return;
-  const {date, data, type} = _pendingUpload;
+  const {dailyOk, dailyDate, dailyData, lmOk, lmData} = _pendingUpload;
+  const btn = document.querySelector('#previewModal .btn-blue');
+  btn.textContent = 'Saving…'; btn.disabled = true;
   try {
-    if (type==='daily') {
-      await set(ref(db,`daily_logs/${date}`), data);
-      showToast(`✓ Daily data for ${date} saved — dashboard updated`);
-    } else {
-      await set(ref(db,'last_month'), data);
-      showToast('✓ Last month data saved — dashboard updated');
+    if (dailyOk) {
+      await set(ref(db, `daily_logs/${dailyDate}`), dailyData);
+      console.log('Daily saved:', dailyDate);
     }
+    if (lmOk) {
+      await set(ref(db, 'last_month'), lmData);
+      console.log('LM saved');
+    }
+    const saved = [dailyOk && `Daily (${dailyDate})`, lmOk && 'Last Month'].filter(Boolean).join(' + ');
+    showToast(`✓ Saved ${saved} — dashboard updating…`);
     closePreview();
   } catch(e) {
+    console.error('Save error:', e);
     showToast('Save failed: '+e.message, false);
+    btn.textContent = '✓ Confirm & Save to Firebase'; btn.disabled = false;
   }
 };
 
 window.closePreview = function() {
-  document.getElementById('previewModal').style.display='none';
-  _pendingUpload=null;
+  document.getElementById('previewModal').style.display = 'none';
+  const btn = document.querySelector('#previewModal .btn-blue');
+  if (btn) { btn.textContent = '✓ Confirm & Save to Firebase'; btn.disabled = false; }
+  _pendingUpload = null;
 };
 
 // ─── VIEW DAILY LOG ───────────────────────────────────────────────────────────
@@ -884,10 +960,10 @@ tbody tr:hover{background:rgba(21,101,192,.08);}
 
     <!-- STEP BY STEP -->
     <div class="steps">
-      <div class="step"><span class="step-badge">1</span><span>Download the template below. It has two sheets: <strong>Daily Entry</strong> (use every day) and <strong>Last Month</strong> (update once at the start of each month).</span></div>
-      <div class="step"><span class="step-badge">2</span><span>In the <strong>Daily Entry</strong> sheet, update the date in cell <strong>B2</strong> to today's date (format: YYYY-MM-DD). Fill DS, DD, and Activations for each agent.</span></div>
-      <div class="step"><span class="step-badge">3</span><span>Save the file, then upload it below. Choose the correct upload type before uploading.</span></div>
-      <div class="step"><span class="step-badge">4</span><span>Dashboard updates live for everyone — no refresh needed.</span></div>
+      <div class="step"><span class="step-badge">1</span><span>Download the template. It has two sheets: <strong>Daily Entry</strong> (fill every day) and <strong>Last Month</strong> (fill once at month start).</span></div>
+      <div class="step"><span class="step-badge">2</span><span>In <strong>Daily Entry</strong> sheet, change cell <strong>B2</strong> to today's date (YYYY-MM-DD format, e.g. 2026-06-17). Fill DS, DD, Activations for each agent.</span></div>
+      <div class="step"><span class="step-badge">3</span><span>Save the file and upload it below. <strong>One upload processes both sheets automatically</strong> — no need to choose a type.</span></div>
+      <div class="step"><span class="step-badge">4</span><span>Review the preview → click Confirm. Dashboard updates instantly for everyone.</span></div>
     </div>
 
     <button class="btn btn-green" onclick="downloadTemplate()">⬇ Download Excel Template</button>
@@ -896,17 +972,13 @@ tbody tr:hover{background:rgba(21,101,192,.08);}
   <!-- UPLOAD SECTION -->
   <div class="upload-section">
     <h4>Upload Filled Template</h4>
-    <p>Select what you are uploading, then choose your file. A preview will appear before anything is saved.</p>
+    <p>Upload the same Excel file — the dashboard <strong>automatically reads both sheets</strong> (Daily Entry + Last Month) in one go. A preview appears before anything is saved.</p>
     <div class="upload-row">
-      <label>Upload type:</label>
-      <select id="uploadType">
-        <option value="daily">Daily Entry (DS, DD, Activations for a specific date)</option>
-        <option value="lastmonth">Last Month Data (LM totals — update once per month)</option>
-      </select>
       <label class="file-label">
-        📁 Choose File
-        <input type="file" class="file-input" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)">
+        📁 Choose Excel File
+        <input type="file" class="file-input" accept=".xlsx,.xls" onchange="handleFileUpload(event)">
       </label>
+      <span style="font-size:11px;color:var(--muted)">Both sheets are processed automatically from one upload</span>
     </div>
   </div>
 
