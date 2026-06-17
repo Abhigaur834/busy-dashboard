@@ -201,7 +201,8 @@ tfoot td{padding:8px 12px;font-weight:700;background:var(--n100);border-top:2px 
   </div>
   <div class="tb-r">
     <span class="live-badge"><span class="live-dot"></span><span id="updBadge">Connecting…</span></span>
-    <button class="btn-upd" onclick="openLogin()">✏️ Update Data</button>
+    <button class="btn-upd" onclick="openLogin()" style="background:var(--bblue)">✏️ Update Data</button>
+    <button class="btn-upd" onclick="forcePush()" style="background:#16a34a;margin-left:6px" id="forceBtn">⚡ Load Excel Data</button>
   </div>
 </div>
 
@@ -556,16 +557,46 @@ function renderAgents(){
 // ── FIREBASE ──────────────────────────────────────────────────────────────────
 function connectFirebase(){
   const r=db.ref(DB_KEY);
-  r.once('value').then(s=>{if(!s.exists())r.set(PREFILLED);});
+
   r.on('value',snap=>{
     if(snap.exists()){
-      D=snap.val();
-      if(!D.agents) D.agents={};
-      renderAll();
-      setSyncOk();
+      const val=snap.val();
+      const hasData=val.agents&&Object.values(val.agents).some(a=>(a.mtd_ds||0)>0||(a.lm_ds||0)>0);
+      if(hasData){
+        D=val;
+        if(!D.agents)D.agents={};
+      } else {
+        // Firebase has empty data — overwrite with PREFILLED
+        r.set(PREFILLED).catch(()=>{});
+      }
+    } else {
+      r.set(PREFILLED).catch(()=>{});
     }
-  },err=>setSyncErr(err.message));
+    renderAll();
+    setSyncOk();
+  },err=>{
+    setSyncErr('Offline — showing pre-loaded data');
+    renderAll();
+  });
 }
+
+// ── FORCE PUSH EXCEL DATA TO FIREBASE ────────────────────────────────────────
+function forcePush(){
+  const btn=document.getElementById('forceBtn');
+  btn.textContent='⏳ Pushing…';btn.disabled=true;
+  db.ref(DB_KEY).set(PREFILLED)
+    .then(()=>{
+      toast('✅ All Excel data loaded to Firebase!');
+      btn.textContent='✅ Done!';
+      setTimeout(()=>{btn.textContent='⚡ Load Excel Data';btn.disabled=false;},3000);
+    })
+    .catch(e=>{
+      toast('❌ Failed: '+e.message);
+      btn.textContent='⚡ Load Excel Data';btn.disabled=false;
+    });
+}
+window.forcePush=forcePush;
+window.forceReset=forcePush;
 
 function setSyncOk(){
   const dot=document.getElementById('syncDot'),bar=document.getElementById('syncBar');
@@ -674,6 +705,9 @@ function saveData(){
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
+// Render immediately with pre-filled data — don't wait for Firebase
+renderAll();
+// Then connect Firebase for live sync
 connectFirebase();
 </script>
 </body>
