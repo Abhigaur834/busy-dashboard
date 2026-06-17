@@ -419,18 +419,24 @@ async function processDailySheet(wb) {
   const ws = wb.Sheets['Daily Entry'];
   if (!ws) { showToast('Sheet "Daily Entry" not found in file', false); return; }
 
-  // Read date from B2
-  const dateCell = ws['B2'];
-  if (!dateCell) { showToast('Date missing in cell B2', false); return; }
-  const dateVal = String(dateCell.v).trim();
+  // Read date from B2 (row index 1, col index 1)
+  const allRows = XLSX.utils.sheet_to_json(ws, {header:1});
+  console.log('All rows:', JSON.stringify(allRows.slice(0,6)));
+
+  const dateRow = allRows[1]; // row 2
+  if (!dateRow) { showToast('Date row missing', false); return; }
+  const dateVal = String(dateRow[1]||'').trim();
+  console.log('Date found:', dateVal);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
-    showToast('Date format must be YYYY-MM-DD (e.g. 2025-06-17)', false); return;
+    showToast(`Date format must be YYYY-MM-DD — found: "${dateVal}"`, false); return;
   }
 
-  const rows = XLSX.utils.sheet_to_json(ws, {header:1, range:3}); // from row 4 (header row)
+  // Data starts at row 5 (index 4) — row1=title, row2=date, row3=blank, row4=header, row5+=data
+  const dataRows = allRows.slice(4);
+  console.log('Data rows count:', dataRows.length, 'First row:', JSON.stringify(dataRows[0]));
   const dayData = {};
   let count = 0;
-  rows.forEach(row => {
+  dataRows.forEach(row => {
     const name = String(row[0]||'').trim();
     if (!name || !AGENT_MASTER.find(a=>a.name===name)) return;
     dayData[name] = {
@@ -439,6 +445,7 @@ async function processDailySheet(wb) {
       act: parseInt(row[5])||0,   // col F
     };
     count++;
+    console.log(`Parsed: ${name} ds=${dayData[name].ds} dd=${dayData[name].dd} act=${dayData[name].act}`);
   });
 
   if (count === 0) { showToast('No valid agent data found in file', false); return; }
@@ -451,10 +458,14 @@ async function processLastMonthSheet(wb) {
   const ws = wb.Sheets['Last Month'];
   if (!ws) { showToast('Sheet "Last Month" not found in file', false); return; }
 
-  const rows = XLSX.utils.sheet_to_json(ws, {header:1, range:2}); // from row 3 (header row)
+  const allRowsLM = XLSX.utils.sheet_to_json(ws, {header:1});
+  console.log('LM rows:', JSON.stringify(allRowsLM.slice(0,4)));
+
+  // Data starts at row 4 (index 3) — row1=title, row2=blank, row3=header, row4+=data
+  const dataRowsLM = allRowsLM.slice(3);
   const lmData = {};
   let count = 0;
-  rows.forEach(row => {
+  dataRowsLM.forEach(row => {
     const name = String(row[0]||'').trim();
     if (!name || !AGENT_MASTER.find(a=>a.name===name)) return;
     lmData[name] = {
@@ -463,6 +474,7 @@ async function processLastMonthSheet(wb) {
       lm_act: parseInt(row[5])||0,   // col F
     };
     count++;
+    console.log(`LM Parsed: ${name} lm_ds=${lmData[name].lm_ds} lm_dd=${lmData[name].lm_dd}`);
   });
 
   if (count === 0) { showToast('No valid agent data found in file', false); return; }
