@@ -29,47 +29,47 @@ const auth = getAuth(app);
 
 // ─── AGENT MASTER LIST ────────────────────────────────────────────────────────
 const AGENT_MASTER = [
-  {name:"AayushK",     tl:"Sagar Maheshwari"},
-  {name:"AbhishekY",   tl:"Himanshu Tiwari"},
-  {name:"AdityaS",     tl:"Amit Verma"},
-  {name:"Amit",        tl:"Amit Verma"},
-  {name:"Anam",        tl:"Akash Tomer"},
-  {name:"Ankit",       tl:"Anshu Sharma"},
-  {name:"Anshu",       tl:"Anshu Sharma"},
-  {name:"Areeb",       tl:"Amit Verma"},
-  {name:"Arshdeep",    tl:"Himanshu Tiwari"},
-  {name:"AyushS",      tl:"Amit Verma"},
-  {name:"BhanuT",      tl:"Sagar Maheshwari"},
-  {name:"Chanda",      tl:"Himanshu Tiwari"},
-  {name:"Chitvam",     tl:"Sagar Maheshwari"},
-  {name:"Divyanshu",   tl:"Akash Tomer"},
-  {name:"Harshita",    tl:"Akash Tomer"},
-  {name:"HarshS",      tl:"Sagar Maheshwari"},
-  {name:"Himani",      tl:"Anshu Sharma"},
-  {name:"Himanshu",    tl:"Himanshu Tiwari"},
-  {name:"Hitanshu",    tl:"Amit Verma"},
-  {name:"Isha",        tl:"Akash Tomer"},
-  {name:"JaydeepS",    tl:"Amit Verma"},
-  {name:"Jyoti",       tl:"Amit Verma"},
-  {name:"Kajal",       tl:"Sagar Maheshwari"},
-  {name:"Khushi",      tl:"Sagar Maheshwari"},
-  {name:"Kumkum",      tl:"Amit Verma"},
-  {name:"Meenakshi",   tl:"Amit Verma"},
-  {name:"Mohit",       tl:"Amit Verma"},
-  {name:"Mo",          tl:"Anshu Sharma"},
-  {name:"Neha",        tl:"Akash Tomer"},
-  {name:"Nikita",      tl:"Sagar Maheshwari"},
-  {name:"Nishchals",   tl:"Sagar Maheshwari"},
-  {name:"Prabhat",     tl:"Sagar Maheshwari"},
-  {name:"Rakhi",       tl:"Amit Verma"},
-  {name:"Rituraj",     tl:"Himanshu Tiwari"},
-  {name:"Sangam",      tl:"Amit Verma"},
-  {name:"Satish",      tl:"Himanshu Tiwari"},
-  {name:"Shubhanjali", tl:"Sagar Maheshwari"},
-  {name:"Shweta",      tl:"Anshu Sharma"},
-  {name:"SushmitaC",   tl:"Sagar Maheshwari"},
-  {name:"Tejal",       tl:"Akash Tomer"},
-  {name:"Vishal",      tl:"Akash Tomer"},
+  {name:"AayushKOcube_TSE02_0426",     tl:"Sagar Maheshwari",  short:"AayushK"},
+  {name:"AbhishekYOcube_TSE05_0626",   tl:"Himanshu Tiwari",   short:"AbhishekY"},
+  {name:"AdityaSOcube_TSE02_0426",     tl:"Amit Verma",        short:"AdityaS"},
+  {name:"AmitOcube_TSE04_0526",        tl:"Amit Verma",        short:"Amit"},
+  {name:"AnamOcube_Mov_0526",          tl:"Akash Tomer",       short:"Anam"},
+  {name:"AnkitOcube_Mov_0326",         tl:"Anshu Sharma",      short:"Ankit"},
+  {name:"AnshuOcube_Mov_0925",         tl:"Anshu Sharma",      short:"Anshu"},
+  {name:"AreebOcube_TSE05_0626",       tl:"Amit Verma",        short:"Areeb"},
+  {name:"ArshdeepOcube_Mov_0526",      tl:"Himanshu Tiwari",   short:"Arshdeep"},
+  {name:"AyushSOcube_TSE02_0426",      tl:"Amit Verma",        short:"AyushS"},
+  {name:"BhanuTOcube_TSE02_0426",      tl:"Sagar Maheshwari",  short:"BhanuT"},
+  {name:"ChandaOcube_Mov_0526",        tl:"Himanshu Tiwari",   short:"Chanda"},
+  {name:"ChitvanOcube_TSE05_0626",     tl:"Sagar Maheshwari",  short:"Chitvan"},
+  {name:"DivyanshuOcube_Mov_0526",     tl:"Akash Tomer",       short:"Divyanshu"},
+  {name:"HarshitaOcube_Mov_0326",      tl:"Akash Tomer",       short:"Harshita"},
+  {name:"HarshSOcube_TSE05_0626",      tl:"Sagar Maheshwari",  short:"HarshS"},
+  {name:"HimaniOcube_TSE05_0626",      tl:"Anshu Sharma",      short:"Himani"},
+  {name:"HimanshuOcube_Mov_0925",      tl:"Himanshu Tiwari",   short:"Himanshu"},
+  {name:"HitanshuOcube_Mov_0326",      tl:"Amit Verma",        short:"Hitanshu"},
+  {name:"IshaOcube_Mov_0925",          tl:"Akash Tomer",       short:"Isha"},
+  {name:"JaydeepSOcube_TSE02_0426",    tl:"Amit Verma",        short:"JaydeepS"},
+  {name:"JyotiOcube_Mov_0925",         tl:"Amit Verma",        short:"Jyoti"},
+  {name:"KajalOcube_TSE01_0426",       tl:"Sagar Maheshwari",  short:"Kajal"},
+  {name:"KhushiOcube_TSE05_0626",      tl:"Sagar Maheshwari",  short:"Khushi"},
+  {name:"KumkumOcube_TSE04_0526",      tl:"Amit Verma",        short:"Kumkum"},
+  {name:"Meenakshi_TSE03_0426",        tl:"Amit Verma",        short:"Meenakshi"},
+  {name:"MohitOcube_TSE01_0426",       tl:"Amit Verma",        short:"Mohit"},
+  {name:"MoOcube_Mov_0426",            tl:"Anshu Sharma",      short:"Mo"},
+  {name:"NehaOcube_Mov_0326",          tl:"Akash Tomer",       short:"Neha"},
+  {name:"NikitaOcube_Mov_1225",        tl:"Sagar Maheshwari",  short:"Nikita"},
+  {name:"Nishchals_TSE03_0426",        tl:"Sagar Maheshwari",  short:"Nishchals"},
+  {name:"PrabhatOcube_Mov_0725",       tl:"Sagar Maheshwari",  short:"Prabhat"},
+  {name:"RakhiOcube_Mov_0925",         tl:"Amit Verma",        short:"Rakhi"},
+  {name:"RiturajOcube_Mov_0426",       tl:"Himanshu Tiwari",   short:"Rituraj"},
+  {name:"SangamOcube_TSE01_0426",      tl:"Amit Verma",        short:"Sangam"},
+  {name:"SatishOcube_Mov_0426",        tl:"Himanshu Tiwari",   short:"Satish"},
+  {name:"ShubhanjaliOcube_TSE01_0426", tl:"Sagar Maheshwari",  short:"Shubhanjali"},
+  {name:"ShwetaOcube_Mov_0326",        tl:"Anshu Sharma",      short:"Shweta"},
+  {name:"SushmitaCOcube_TSE02_0426",   tl:"Sagar Maheshwari",  short:"SushmitaC"},
+  {name:"TejalOcube_Mov_0925",         tl:"Akash Tomer",       short:"Tejal"},
+  {name:"VishalOcube_Mov_0326",        tl:"Akash Tomer",       short:"Vishal"},
 ];
 
 // ─── DATE HELPERS ─────────────────────────────────────────────────────────────
@@ -125,6 +125,7 @@ function computeAgents() {
     const lm = LAST_MONTH[a.name] || {};
     return {
       name:    a.name,
+      short:   a.short,
       tl:      a.tl,
       lm_ds:   lm.lm_ds  || 0,
       lm_dd:   lm.lm_dd  || 0,
@@ -199,7 +200,7 @@ function renderOverview() {
 
   const top20=[...A].filter(a=>a.mtd_ds>0).sort((a,b)=>b.mtd_ds-a.mtd_ds).slice(0,20);
   mkChart('funnelChart',{type:'bar',data:{
-    labels:top20.map(a=>a.name),
+    labels:top20.map(a=>a.short),
     datasets:[
       {label:'DS',data:top20.map(a=>a.mtd_ds),backgroundColor:'rgba(21,101,192,.55)',borderRadius:4},
       {label:'DD',data:top20.map(a=>a.mtd_dd),backgroundColor:'rgba(100,181,246,.85)',borderRadius:4},
@@ -219,7 +220,7 @@ function renderDsddTable() {
     const lp=pct(a.lm_dd,a.lm_ds),mp=pct(a.mtd_dd,a.mtd_ds),wp=pct(a.wtd_dd,a.wtd_ds);
     const diff=(mp-lp).toFixed(1);
     const trend=mp>lp?`<span class="up">▲ +${diff}pp</span>`:mp<lp?`<span class="dn">▼ ${diff}pp</span>`:`<span class="muted">—</span>`;
-    return `<tr><td class="fw6">${a.name}</td><td class="muted sm">${a.tl.split(' ')[0]}</td>
+    return `<tr><td class="fw6" title="${a.name}">${a.short}</td><td class="muted sm">${a.tl.split(' ')[0]}</td>
       <td>${a.lm_ds}</td><td>${a.lm_dd}</td><td>${pillHtml(lp)}</td>
       <td>${a.mtd_ds}</td><td>${a.mtd_dd}</td><td>${pillHtml(mp)}</td>
       <td>${a.wtd_ds}</td><td>${a.wtd_dd}</td><td>${pillHtml(wp)}</td>
@@ -241,7 +242,7 @@ function renderDtaTable() {
     const lp=pct(a.lm_mat,a.lm_dd),mp=pct(a.mtd_mat,a.mtd_dd);
     const diff=(mp-lp).toFixed(1);
     const trend=mp>lp?`<span class="up">▲ +${diff}pp</span>`:mp<lp?`<span class="dn">▼ ${diff}pp</span>`:`<span class="muted">—</span>`;
-    return `<tr><td class="fw6">${a.name}</td><td class="muted sm">${a.tl.split(' ')[0]}</td>
+    return `<tr><td class="fw6" title="${a.name}">${a.short}</td><td class="muted sm">${a.tl.split(' ')[0]}</td>
       <td>${a.lm_dd}</td><td>${a.lm_mat}</td><td>${pillHtml(lp,25,10)}</td>
       <td>${a.mtd_dd}</td><td>${a.mtd_mat}</td><td>${pillHtml(mp,25,10)}</td>
       <td>${trend}</td></tr>`;
@@ -251,7 +252,7 @@ function renderDtaTable() {
 
   const withMat=COMPUTED.filter(a=>a.mtd_mat>0).sort((a,b)=>b.mtd_mat-a.mtd_mat);
   mkChart('dtaBarChart',{type:'bar',data:{
-    labels:withMat.map(a=>a.name),
+    labels:withMat.map(a=>a.short),
     datasets:[{label:'Activations MTD',data:withMat.map(a=>a.mtd_mat),backgroundColor:'rgba(21,101,192,.75)',borderRadius:4}]
   },options:chartOpts()});
 }
@@ -299,7 +300,7 @@ function renderLb(id,data,fn){
     const v=fn(a),cls=v>=40?'up':v>=25?'warn-clr':'dn';
     return `<div class="lb-row">
       <div class="lb-rank ${i<3?'lb-gold':''}">${i+1}</div>
-      <div class="lb-name">${a.name}</div>
+      <div class="lb-name" title="${a.name}">${a.short}</div>
       <div class="lb-bar-wrap"><div class="lb-bar" style="width:${Math.min(100,v/max*100)}%"></div></div>
       <div class="lb-pct ${cls}">${v}%</div>
     </div>`;
@@ -341,25 +342,25 @@ window.downloadTemplate = function() {
     ['DAILY ENTRY SHEET — Fill DS, DD, Activations for each agent for the selected date'],
     ['Date (YYYY-MM-DD):', today, '', '', '', '', 'Change the date in cell B2 before filling data'],
     [],
-    ['Agent Name', 'TL', 'DS (Demo Scheduled)', 'DD (Demo Done)', 'Activations (Matured)'],
-    ...AGENT_MASTER.map(a => [a.name, a.tl, 0, 0, 0])
+    ['Agent Name (do not edit)', 'Short Name', 'TL', 'DS (Demo Scheduled)', 'DD (Demo Done)', 'Activations (Matured)'],
+    ...AGENT_MASTER.map(a => [a.name, a.short, a.tl, 0, 0, 0])
   ];
   const ws1 = XLSX.utils.aoa_to_sheet(dailyRows);
-  ws1['!cols'] = [{wch:20},{wch:20},{wch:22},{wch:18},{wch:22}];
+  ws1['!cols'] = [{wch:36},{wch:16},{wch:20},{wch:22},{wch:18},{wch:22}];
   XLSX.utils.book_append_sheet(wb, ws1, 'Daily Entry');
 
   // ── Sheet 2: Last Month ──
   const lmRows = [
     ['LAST MONTH DATA — Update once at the start of each new month'],
     [],
-    ['Agent Name', 'TL', 'LM DS (Demo Scheduled)', 'LM DD (Demo Done)', 'LM Activations (Matured)'],
+    ['Agent Name (do not edit)', 'Short Name', 'TL', 'LM DS (Demo Scheduled)', 'LM DD (Demo Done)', 'LM Activations (Matured)'],
     ...AGENT_MASTER.map(a => {
       const lm = LAST_MONTH[a.name]||{};
-      return [a.name, a.tl, lm.lm_ds||0, lm.lm_dd||0, lm.lm_act||0];
+      return [a.name, a.short, a.tl, lm.lm_ds||0, lm.lm_dd||0, lm.lm_act||0];
     })
   ];
   const ws2 = XLSX.utils.aoa_to_sheet(lmRows);
-  ws2['!cols'] = [{wch:20},{wch:20},{wch:24},{wch:20},{wch:24}];
+  ws2['!cols'] = [{wch:36},{wch:16},{wch:20},{wch:24},{wch:20},{wch:24}];
   XLSX.utils.book_append_sheet(wb, ws2, 'Last Month');
 
   // ── Sheet 3: Instructions ──
@@ -426,16 +427,16 @@ async function processDailySheet(wb) {
     showToast('Date format must be YYYY-MM-DD (e.g. 2025-06-17)', false); return;
   }
 
-  const rows = XLSX.utils.sheet_to_json(ws, {header:1, range:3}); // from row 4
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, range:3}); // from row 4 (header row)
   const dayData = {};
   let count = 0;
   rows.forEach(row => {
     const name = String(row[0]||'').trim();
     if (!name || !AGENT_MASTER.find(a=>a.name===name)) return;
     dayData[name] = {
-      ds:  parseInt(row[2])||0,
-      dd:  parseInt(row[3])||0,
-      act: parseInt(row[4])||0,
+      ds:  parseInt(row[3])||0,   // col D
+      dd:  parseInt(row[4])||0,   // col E
+      act: parseInt(row[5])||0,   // col F
     };
     count++;
   });
@@ -450,16 +451,16 @@ async function processLastMonthSheet(wb) {
   const ws = wb.Sheets['Last Month'];
   if (!ws) { showToast('Sheet "Last Month" not found in file', false); return; }
 
-  const rows = XLSX.utils.sheet_to_json(ws, {header:1, range:2});
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, range:2}); // from row 3 (header row)
   const lmData = {};
   let count = 0;
   rows.forEach(row => {
     const name = String(row[0]||'').trim();
     if (!name || !AGENT_MASTER.find(a=>a.name===name)) return;
     lmData[name] = {
-      lm_ds:  parseInt(row[2])||0,
-      lm_dd:  parseInt(row[3])||0,
-      lm_act: parseInt(row[4])||0,
+      lm_ds:  parseInt(row[3])||0,   // col D
+      lm_dd:  parseInt(row[4])||0,   // col E
+      lm_act: parseInt(row[5])||0,   // col F
     };
     count++;
   });
@@ -530,7 +531,7 @@ window.loadDailyLog = function() {
     const d = log[a.name] || {ds:0,dd:0,act:0};
     const hasData = d.ds||d.dd||d.act;
     return `<tr class="${hasData?'':'row-zero'}">
-      <td class="fw6">${a.name}</td>
+      <td class="fw6" title="${a.name}">${a.short}</td>
       <td class="muted sm">${a.tl.split(' ')[0]}</td>
       <td>${d.ds}</td><td>${d.dd}</td><td>${d.act}</td>
     </tr>`;
