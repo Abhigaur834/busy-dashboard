@@ -6,6 +6,7 @@
 <title>BUSY · Sales Funnel Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
@@ -242,24 +243,46 @@ tfoot td{padding:10px 13px;font-weight:700;background:rgba(30,111,217,.08);borde
   <div class="logo">
     <div class="logo-box">B<span class="ul">U</span>SY</div>
     <div class="hdr-div"></div>
-    <!-- OCube dotted ring SVG -->
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 72" height="36" aria-label="OCube">
-      <g fill="#fff" opacity=".85">
-        <circle cx="36" cy="6"  r="2.8"/><circle cx="46" cy="8"  r="2.4"/><circle cx="55" cy="13" r="2.1"/>
-        <circle cx="62" cy="20" r="1.8"/><circle cx="67" cy="28" r="1.5"/><circle cx="68" cy="37" r="1.4"/>
-        <circle cx="65" cy="46" r="1.5"/><circle cx="59" cy="54" r="1.8"/><circle cx="51" cy="60" r="2.1"/>
-        <circle cx="42" cy="64" r="2.4"/><circle cx="32" cy="65" r="2.8"/><circle cx="22" cy="63" r="2.4"/>
-        <circle cx="13" cy="57" r="2.1"/><circle cx="7"  cy="49" r="1.8"/><circle cx="4"  cy="40" r="1.5"/>
-        <circle cx="4"  cy="31" r="1.4"/><circle cx="7"  cy="22" r="1.5"/><circle cx="13" cy="14" r="1.8"/>
-        <circle cx="22" cy="8"  r="2.1"/><circle cx="30" cy="5"  r="2.5"/>
-        <circle cx="36" cy="13" r="1.8"/><circle cx="44" cy="16" r="1.5"/><circle cx="51" cy="22" r="1.3"/>
-        <circle cx="55" cy="30" r="1.1"/><circle cx="55" cy="39" r="1.1"/><circle cx="51" cy="47" r="1.3"/>
-        <circle cx="44" cy="53" r="1.5"/><circle cx="36" cy="56" r="1.8"/><circle cx="27" cy="54" r="1.5"/>
-        <circle cx="20" cy="48" r="1.3"/><circle cx="16" cy="40" r="1.1"/><circle cx="16" cy="31" r="1.1"/>
-        <circle cx="20" cy="23" r="1.3"/><circle cx="27" cy="17" r="1.5"/>
-      </g>
-      <text x="84" y="48" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700" fill="#fff" letter-spacing="1">cube</text>
-      <text x="78" y="30" font-family="Inter,Arial,sans-serif" font-size="13" fill="rgba(255,255,255,.45)">O</text>
+    <!-- OCube logo: dotted ring + "cube" wordmark matching actual logo -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 56" height="38" aria-label="OCube Services" style="flex-shrink:0">
+      <!-- Outer ring dots - large -->
+      <circle cx="28" cy="4"  r="2.6" fill="white" opacity="1"/>
+      <circle cx="37" cy="5.5" r="2.3" fill="white" opacity=".95"/>
+      <circle cx="45" cy="10" r="2.0" fill="white" opacity=".9"/>
+      <circle cx="51" cy="17" r="1.8" fill="white" opacity=".85"/>
+      <circle cx="54" cy="25" r="1.6" fill="white" opacity=".8"/>
+      <circle cx="53" cy="33" r="1.5" fill="white" opacity=".75"/>
+      <circle cx="49" cy="41" r="1.6" fill="white" opacity=".7"/>
+      <circle cx="42" cy="47" r="1.8" fill="white" opacity=".7"/>
+      <circle cx="34" cy="51" r="2.0" fill="white" opacity=".75"/>
+      <circle cx="25" cy="52" r="2.3" fill="white" opacity=".8"/>
+      <circle cx="16" cy="50" r="2.0" fill="white" opacity=".75"/>
+      <circle cx="9"  cy="44" r="1.8" fill="white" opacity=".7"/>
+      <circle cx="4"  cy="37" r="1.6" fill="white" opacity=".65"/>
+      <circle cx="2"  cy="28" r="1.5" fill="white" opacity=".6"/>
+      <circle cx="4"  cy="20" r="1.6" fill="white" opacity=".65"/>
+      <circle cx="9"  cy="13" r="1.8" fill="white" opacity=".7"/>
+      <circle cx="16" cy="7"  r="2.0" fill="white" opacity=".8"/>
+      <circle cx="22" cy="4.5" r="2.3" fill="white" opacity=".9"/>
+      <!-- Inner ring dots - medium -->
+      <circle cx="28" cy="10" r="1.5" fill="white" opacity=".7"/>
+      <circle cx="34" cy="11" r="1.4" fill="white" opacity=".65"/>
+      <circle cx="40" cy="15" r="1.3" fill="white" opacity=".6"/>
+      <circle cx="44" cy="21" r="1.2" fill="white" opacity=".55"/>
+      <circle cx="45" cy="28" r="1.1" fill="white" opacity=".5"/>
+      <circle cx="43" cy="35" r="1.2" fill="white" opacity=".5"/>
+      <circle cx="39" cy="41" r="1.3" fill="white" opacity=".55"/>
+      <circle cx="33" cy="44" r="1.4" fill="white" opacity=".6"/>
+      <circle cx="26" cy="45" r="1.5" fill="white" opacity=".65"/>
+      <circle cx="19" cy="43" r="1.4" fill="white" opacity=".6"/>
+      <circle cx="14" cy="38" r="1.3" fill="white" opacity=".55"/>
+      <circle cx="11" cy="32" r="1.2" fill="white" opacity=".5"/>
+      <circle cx="11" cy="25" r="1.1" fill="white" opacity=".5"/>
+      <circle cx="14" cy="18" r="1.2" fill="white" opacity=".55"/>
+      <circle cx="18" cy="13" r="1.3" fill="white" opacity=".6"/>
+      <circle cx="23" cy="10" r="1.4" fill="white" opacity=".65"/>
+      <!-- "cube" wordmark -->
+      <text x="64" y="38" font-family="Inter,system-ui,sans-serif" font-size="26" font-weight="700" fill="#ffffff" letter-spacing="0.5">cube</text>
     </svg>
     <div style="margin-left:12px;" class="logo-sub">
       <div class="t1">Sales Funnel Dashboard</div>
@@ -453,6 +476,7 @@ tfoot td{padding:10px 13px;font-weight:700;background:rgba(30,111,217,.08);borde
     <div class="m-tabs">
       <button class="m-tab on" onclick="swTab('tpMTD',0)">MTD / WTD Totals</button>
       <button class="m-tab"    onclick="swTab('tpLM',1)">Last Month</button>
+      <button class="m-tab"    onclick="swTab('tpXL',2)">📤 Upload Excel</button>
     </div>
     <div class="tp on" id="tpMTD">
       <div class="info-box">💡 Enter <strong>running totals</strong> for this month (MTD) and this week (WTD) — cumulative from day 1 to today. Expand any agent to edit.</div>
@@ -461,6 +485,36 @@ tfoot td{padding:10px 13px;font-weight:700;background:rgba(30,111,217,.08);borde
     <div class="tp" id="tpLM">
       <div class="info-box">📅 Update <strong>Last Month</strong> totals once at the start of each new month.</div>
       <div id="agLMWrap"></div>
+    </div>
+    <div class="tp" id="tpXL">
+      <div class="info-box">📊 Upload your Excel file. Both <strong>DS TO DD</strong> and <strong>DD To Activation</strong> sheets are read automatically. Data is previewed before saving.</div>
+
+      <!-- Download template -->
+      <div style="background:rgba(30,111,217,.07);border:1px solid rgba(106,176,255,.15);border-radius:10px;padding:16px 18px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--blue-lt);margin-bottom:4px;">Step 1 — Download Template</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Download the Excel template, fill in your data (same format as your existing sheet), and upload below.</div>
+        <button class="btn btn-ghost" onclick="downloadTemplate()" style="font-size:11px">⬇ Download Excel Template</button>
+      </div>
+
+      <!-- Upload -->
+      <div style="background:rgba(255,255,255,.02);border:2px dashed var(--border2);border-radius:10px;padding:24px;text-align:center;margin-bottom:14px;transition:border-color .2s;cursor:pointer;" id="dropZone" onclick="document.getElementById('xlFile').click()" ondragover="event.preventDefault();this.style.borderColor='var(--blue)'" ondragleave="this.style.borderColor=''" ondrop="handleDrop(event)">
+        <div style="font-size:28px;margin-bottom:8px">📁</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Click to choose Excel file or drag & drop</div>
+        <div style="font-size:11px;color:var(--muted)">.xlsx or .xls files · Both sheets processed automatically</div>
+        <input type="file" id="xlFile" accept=".xlsx,.xls" style="display:none" onchange="handleXLUpload(event)">
+      </div>
+
+      <!-- Preview -->
+      <div id="xlPreview" style="display:none">
+        <div style="font-size:11px;font-weight:700;color:var(--blue-lt);margin-bottom:8px" id="xlPreviewTitle"></div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:280px;margin-bottom:12px;">
+          <table style="width:100%;font-size:11px;border-collapse:collapse;">
+            <thead id="xlPreviewHead"></thead>
+            <tbody id="xlPreviewBody"></tbody>
+          </table>
+        </div>
+        <button class="btn-primary" onclick="confirmXLSave()" style="width:100%;justify-content:center;padding:11px">✓ Confirm & Save to Firebase</button>
+      </div>
     </div>
     <div class="m-act">
       <button class="btn-sec" onclick="closeEdit()">Cancel</button>
@@ -849,7 +903,13 @@ function closeLogin(){document.getElementById("loginOvl").classList.remove("on")
 function doLogin(){if(btoa(document.getElementById("loginPw").value)===ADMIN_PW){closeLogin();openEdit();}else document.getElementById("loginErr").style.display="block";}
 function openEdit(){populateEdit();document.getElementById("editOvl").classList.add("on");}
 function closeEdit(){document.getElementById("editOvl").classList.remove("on");}
-function swTab(id,idx){document.querySelectorAll(".tp").forEach(p=>p.classList.remove("on"));document.querySelectorAll(".m-tab").forEach(t=>t.classList.remove("on"));document.getElementById(id).classList.add("on");document.querySelectorAll(".m-tab")[idx].classList.add("on");}
+function swTab(id,idx){
+  document.querySelectorAll(".tp").forEach(p=>p.classList.remove("on"));
+  document.querySelectorAll(".m-tab").forEach(t=>t.classList.remove("on"));
+  document.getElementById(id).classList.add("on");
+  document.querySelectorAll(".m-tab")[idx].classList.add("on");
+  if(id!=='tpXL'){ document.getElementById('xlPreview').style.display='none'; _xlPending=null; }
+}
 function switchTab(id,el){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll(".pane").forEach(p=>p.classList.remove("active"));el.classList.add("active");document.getElementById("pane-"+id).classList.add("active");renderAll();}
 
 function populateEdit(){
@@ -903,6 +963,160 @@ function saveData(){
   db.ref(DB_KEY).set(newD)
     .then(()=>{document.getElementById("savOvl").classList.remove("on");toast("☁️ Saved & synced to all viewers!");})
     .catch(e=>{document.getElementById("savOvl").classList.remove("on");toast("❌ "+e.message,false);});
+}
+
+// ── EXCEL UPLOAD ─────────────────────────────────────────────────────────────
+let _xlPending = null;
+
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('dropZone').style.borderColor='';
+  const file = e.dataTransfer.files[0];
+  if(file) processXLFile(file);
+}
+function handleXLUpload(e){
+  const file = e.target.files[0];
+  if(file) processXLFile(file);
+  e.target.value='';
+}
+
+function processXLFile(file){
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
+      const result = {};
+
+      // ── Sheet: DS TO DD ──
+      const dsToDd = wb.Sheets['DS TO DD'] || wb.Sheets['DS to DD'] || wb.Sheets[wb.SheetNames[0]];
+      if(dsToDd){
+        const rows = XLSX.utils.sheet_to_json(dsToDd, {header:1});
+        // Find data rows — skip until we see an agent name
+        let start = 0;
+        for(let i=0;i<rows.length;i++){
+          const cell = String(rows[i][0]||'').trim();
+          if(AGENTS.find(a=>a.name===cell)){start=i;break;}
+        }
+        // Detect columns from header row above data
+        const hdr = rows[start-1]||[];
+        const colIdx = (keywords) => hdr.findIndex(h=>keywords.some(k=>String(h||'').toLowerCase().includes(k)));
+
+        // Try to detect column positions from header
+        // Expected: AgentName | Status | Tenure | TL | LM_DS | LM_DD | LM% | MTD_DS | MTD_DD | MTD% | WTD_DS | WTD_DD | WTD%
+        rows.slice(start).forEach(row=>{
+          const name = String(row[0]||'').trim();
+          if(!name || !AGENTS.find(a=>a.name===name)) return;
+          if(!result[name]) result[name]={};
+          // Columns 4,5 = LM DS,DD | 7,8 = MTD DS,DD | 10,11 = WTD DS,DD
+          result[name].lm_ds  = parseInt(row[4])||0;
+          result[name].lm_dd  = parseInt(row[5])||0;
+          result[name].mtd_ds = parseInt(row[7])||0;
+          result[name].mtd_dd = parseInt(row[8])||0;
+          result[name].wtd_ds = parseInt(row[10])||0;
+          result[name].wtd_dd = parseInt(row[11])||0;
+        });
+      }
+
+      // ── Sheet: DD To Activation ──
+      const ddAct = wb.Sheets['DD To Activation '] || wb.Sheets['DD To Activation'] || wb.Sheets['DD to Activation'] || wb.Sheets[wb.SheetNames[1]];
+      if(ddAct){
+        const rows = XLSX.utils.sheet_to_json(ddAct, {header:1});
+        let start = 0;
+        for(let i=0;i<rows.length;i++){
+          const cell = String(rows[i][0]||'').trim();
+          if(AGENTS.find(a=>a.name===cell)){start=i;break;}
+        }
+        rows.slice(start).forEach(row=>{
+          const name = String(row[0]||'').trim();
+          if(!name || !AGENTS.find(a=>a.name===name)) return;
+          if(!result[name]) result[name]={};
+          // Columns: Agent|Status|Tenure|TL | LM_DD | LM_Mat | LM% | MTD_DD | MTD_Mat | MTD%
+          result[name].lm_act  = parseInt(row[5])||0;
+          result[name].mtd_act = parseInt(row[8])||0;
+        });
+      }
+
+      const count = Object.keys(result).length;
+      if(count === 0){ toast('No matching agent data found in file',false); return; }
+
+      // Merge with existing
+      const merged = {};
+      AGENTS.forEach(a=>{
+        const ex = ag(a.name);
+        merged[a.name] = {...ex, ...(result[a.name]||{})};
+      });
+
+      _xlPending = merged;
+      showXLPreview(merged, count);
+
+    } catch(err){
+      toast('Error reading file: '+err.message, false);
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function showXLPreview(merged, count){
+  document.getElementById('xlPreview').style.display='block';
+  document.getElementById('xlPreviewTitle').textContent=`✓ Read ${count} agents — review before saving`;
+
+  document.getElementById('xlPreviewHead').innerHTML=`<tr>
+    ${['Agent','LM DS','LM DD','LM Act','MTD DS','MTD DD','MTD Act','WTD DS','WTD DD'].map(h=>`<th style="padding:8px 10px;font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--border);white-space:nowrap">${h}</th>`).join('')}
+  </tr>`;
+
+  document.getElementById('xlPreviewBody').innerHTML = AGENTS.map(a=>{
+    const d = merged[a.name]||{};
+    const anyData = (d.mtd_ds||0)+(d.lm_ds||0)>0;
+    return`<tr style="border-bottom:1px solid rgba(255,255,255,.04);${!anyData?'opacity:.4':''}">
+      <td style="padding:7px 10px;font-weight:600;font-size:11px">${a.short}</td>
+      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px">${d.lm_ds||0}</td>
+      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px">${d.lm_dd||0}</td>
+      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px">${d.lm_act||0}</td>
+      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700">${d.mtd_ds||0}</td>
+      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700">${d.mtd_dd||0}</td>
+      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px">${d.mtd_act||0}</td>
+      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px">${d.wtd_ds||0}</td>
+      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px">${d.wtd_dd||0}</td>
+    </tr>`;
+  }).join('');
+}
+
+function confirmXLSave(){
+  if(!_xlPending){ toast('No data to save',false); return; }
+  const now = new Date();
+  const ds = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  const newD = {lastUpdated:ds, agents:_xlPending};
+  closeEdit();
+  document.getElementById('savOvl').classList.add('on');
+  db.ref(DB_KEY).set(newD)
+    .then(()=>{ document.getElementById('savOvl').classList.remove('on'); toast('✅ Excel data saved & synced!'); _xlPending=null; })
+    .catch(e=>{ document.getElementById('savOvl').classList.remove('on'); toast('❌ Save failed: '+e.message,false); });
+}
+
+function downloadTemplate(){
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: DS TO DD
+  const dsRows = [
+    ['Agent Name','Status','Tenure','TL','Demo Scheduled (LM)','Demo Done (LM)','DS-DD % LM','Demo Scheduled (MTD)','Demo Done (MTD)','DS-DD % MTD','Demo Scheduled (WTD)','Demo Done (WTD)','DS-DD % WTD'],
+    ...AGENTS.map(a=>{const d=ag(a.name);return[a.name,'Active','0-3 M',a.tl,d.lm_ds||0,d.lm_dd||0,'',d.mtd_ds||0,d.mtd_dd||0,'',d.wtd_ds||0,d.wtd_dd||0,''];})
+  ];
+  const ws1 = XLSX.utils.aoa_to_sheet(dsRows);
+  ws1['!cols']=[{wch:36},{wch:8},{wch:7},{wch:20},{wch:18},{wch:15},{wch:12},{wch:18},{wch:15},{wch:12},{wch:18},{wch:15},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws1, 'DS TO DD');
+
+  // Sheet 2: DD To Activation
+  const actRows = [
+    ['Agent Name','Status','Tenure','TL','Demo Done (LM)','Matured (LM)','DTA % LM','Demo Done (MTD)','Matured (MTD)','DTA % MTD'],
+    ...AGENTS.map(a=>{const d=ag(a.name);return[a.name,'Active','0-3 M',a.tl,d.lm_dd||0,d.lm_act||0,'',d.mtd_dd||0,d.mtd_act||0,''];})
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(actRows);
+  ws2['!cols']=[{wch:36},{wch:8},{wch:7},{wch:20},{wch:15},{wch:13},{wch:10},{wch:15},{wch:13},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'DD To Activation');
+
+  XLSX.writeFile(wb, 'BUSY_Dashboard_Template.xlsx');
+  toast('Template downloaded ✓');
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
