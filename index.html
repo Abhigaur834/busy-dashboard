@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BUSY · Sales Funnel Dashboard</title>
+<title>Ocube Command Centre — Jun 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -11,224 +11,243 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
 :root{
-  --bg:#080c12;--surface:#0f1520;--card:#131d2e;--card2:#162035;
-  --border:#1a2640;--border2:#213050;
-  --blue:#1e6fd9;--blue-lt:#6ab0ff;--blue-d:#1450a3;--blue-glow:rgba(30,111,217,.25);
-  --text:#e2eaf8;--muted:#4a6080;--muted2:#6b88a8;
+  --bg:#080c12;--s1:#0f1520;--card:#131d2e;--b:#1a2640;--b2:#213050;
+  --blue:#1e6fd9;--blt:#6ab0ff;--bd:#1450a3;--bglow:rgba(30,111,217,.22);
+  --acc:#7c5cfc;--teal:#00d4aa;--orange:#ff6b35;
+  --txt:#e2eaf8;--mu:#4a6080;--mu2:#6b88a8;
   --up:#22c55e;--dn:#f43f5e;--warn:#f59e0b;
-  --up-l:rgba(34,197,94,.12);--dn-l:rgba(244,63,94,.12);--warn-l:rgba(245,158,11,.12);
-  --up-b:rgba(34,197,94,.5);--dn-b:rgba(244,63,94,.5);--warn-b:rgba(245,158,11,.5);
-  --gradient:linear-gradient(135deg,#0f1520 0%,#131d2e 100%);
-  --glow-blue:0 0 20px rgba(30,111,217,.15);
+  --upl:rgba(34,197,94,.12);--dnl:rgba(244,63,94,.12);--warnl:rgba(245,158,11,.12);
+  --grad:linear-gradient(135deg,#0f1520 0%,#131d2e 100%);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html{scroll-behavior:smooth;}
-body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:13px;min-height:100vh;-webkit-font-smoothing:antialiased;background-image:radial-gradient(ellipse at 20% 0%,rgba(30,111,217,.08) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(30,111,217,.05) 0%,transparent 50%);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sans-serif;font-size:13px;min-height:100vh;-webkit-font-smoothing:antialiased;background-image:radial-gradient(ellipse at 20% 0%,rgba(30,111,217,.07) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(124,92,252,.05) 0%,transparent 50%)}
 
-/* ── SYNC BAR ── */
-.sync-bar{background:linear-gradient(90deg,#030d05,#061510);border-bottom:1px solid rgba(34,197,94,.1);padding:0 24px;height:26px;display:flex;align-items:center;gap:8px;font-size:10px;color:rgba(255,255,255,.4);position:sticky;top:0;z-index:400;}
-.sync-bar.err{background:linear-gradient(90deg,#0d0306,#1a0509);}
-.sync-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0;box-shadow:0 0 6px #22c55e;}
-.sync-dot.conn{background:#fbbf24;box-shadow:0 0 6px #fbbf24;animation:blink .8s infinite;}
-.sync-dot.error{background:#f43f5e;box-shadow:0 0 6px #f43f5e;}
-@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
-.sync-r{margin-left:auto;display:flex;align-items:center;gap:12px;font-size:10px;color:rgba(255,255,255,.25);}
-.sync-date{background:rgba(106,176,255,.08);border:1px solid rgba(106,176,255,.18);padding:2px 10px;border-radius:12px;font-size:9px;font-weight:700;color:var(--blue-lt);letter-spacing:.3px;}
+/* SYNC BAR */
+.sync-bar{background:linear-gradient(90deg,#030d05,#061510);border-bottom:1px solid rgba(34,197,94,.1);padding:0 24px;height:26px;display:flex;align-items:center;gap:8px;font-size:10px;color:rgba(255,255,255,.4);position:sticky;top:0;z-index:400}
+.sync-bar.err{background:linear-gradient(90deg,#0d0306,#1a0509)}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0;box-shadow:0 0 6px #22c55e}
+.sync-dot.conn{background:#fbbf24;box-shadow:0 0 6px #fbbf24;animation:blink .8s infinite}
+.sync-dot.error{background:#f43f5e;box-shadow:0 0 6px #f43f5e}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.sync-r{margin-left:auto;display:flex;align-items:center;gap:12px;font-size:10px;color:rgba(255,255,255,.25)}
+.sync-date{background:rgba(106,176,255,.08);border:1px solid rgba(106,176,255,.18);padding:2px 10px;border-radius:12px;font-size:9px;font-weight:700;color:var(--blt);letter-spacing:.3px}
 
-/* ── HEADER ── */
-.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:58px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#0f1823 0%,#0d1620 100%);position:sticky;top:26px;z-index:300;box-shadow:0 1px 0 var(--blue-d),0 4px 24px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.03);}
-.logo{display:flex;align-items:center;}
-.logo-box{background:linear-gradient(135deg,#0d1520,#162035);border:1px solid rgba(106,176,255,.15);border-radius:8px;padding:6px 14px;font-size:20px;font-weight:900;letter-spacing:2.5px;color:#fff;display:flex;align-items:center;box-shadow:0 0 14px rgba(30,111,217,.15);}
-.logo-box .ul{color:var(--blue-lt);text-shadow:0 0 12px rgba(106,176,255,.6);}
-.hdr-div{width:1px;height:30px;background:linear-gradient(180deg,transparent,var(--border),transparent);margin:0 16px;}
-.logo-sub{margin-left:12px;}
-.logo-sub .t1{font-size:13px;font-weight:700;color:var(--text);}
-.logo-sub .t2{font-size:10px;color:var(--muted);margin-top:1px;}
-.hdr-right{display:flex;align-items:center;gap:8px;}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.2px;}
-.btn-ghost{background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--muted2);}
-.btn-ghost:hover{background:rgba(255,255,255,.07);border-color:var(--blue-lt);color:var(--blue-lt);}
-.btn-blue{background:linear-gradient(135deg,var(--blue),var(--blue-d));color:#fff;box-shadow:0 2px 12px var(--blue-glow),inset 0 1px 0 rgba(255,255,255,.1);}
-.btn-blue:hover{box-shadow:0 4px 20px rgba(30,111,217,.4);transform:translateY(-1px);}
-.btn-green{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.3);}
-.btn-green:hover{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.5);}
-.live-pill{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.04);padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.06);}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--up);box-shadow:0 0 6px var(--up);animation:pulse 2s ease-in-out infinite;}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.7);}}
+/* HEADER */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;border-bottom:1px solid var(--b);background:linear-gradient(180deg,#0f1823 0%,#0d1620 100%);position:sticky;top:26px;z-index:300;box-shadow:0 1px 0 var(--bd),0 4px 24px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.03)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-chip{background:linear-gradient(135deg,#0d1520,#162035);border:1px solid rgba(106,176,255,.15);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:800;letter-spacing:2px;color:#fff}
+.logo-chip .ul{color:var(--blt)}
+.hdr-div{width:1px;height:28px;background:linear-gradient(180deg,transparent,var(--b),transparent)}
+.logo-info .t1{font-size:13px;font-weight:700}
+.logo-info .t2{font-size:10px;color:var(--mu)}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s}
+.btn-ghost{background:rgba(255,255,255,.04);border:1px solid var(--b2);color:var(--mu2)}
+.btn-ghost:hover{border-color:var(--blt);color:var(--blt)}
+.btn-blue{background:linear-gradient(135deg,var(--blue),var(--bd));color:#fff;box-shadow:0 2px 10px var(--bglow)}
+.btn-blue:hover{box-shadow:0 4px 18px rgba(30,111,217,.4);transform:translateY(-1px)}
+.btn-green{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+.live-pill{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.04);padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.06)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--up);box-shadow:0 0 6px var(--up);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
 
-/* ── TABS ── */
-.tabs{display:flex;gap:0;padding:0 24px;background:linear-gradient(180deg,#0d1620,#0b1319);border-bottom:1px solid var(--border);overflow-x:auto;position:sticky;top:84px;z-index:200;}
-.tabs::-webkit-scrollbar{height:0;}
-.tab{padding:13px 20px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;position:relative;}
-.tab:hover{color:var(--muted2);}
-.tab.active{color:var(--blue-lt);border-bottom-color:var(--blue);}
-.tab.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--blue-lt),transparent);opacity:.4;}
+/* MODULE TABS */
+.mod-tabs{display:flex;background:rgba(0,0,0,.4);border-bottom:1px solid var(--b);position:sticky;top:80px;z-index:200}
+.mod-tab{padding:0 20px;height:38px;display:flex;align-items:center;font-size:11px;font-weight:700;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;gap:6px;transition:all .2s;letter-spacing:.3px}
+.mod-tab:hover{color:var(--mu2)}
+.mod-tab.on{color:#fff;border-bottom-color:var(--acc)}
+.mod-tab .dot{width:7px;height:7px;border-radius:50%;background:var(--mu);flex-shrink:0}
+.mod-tab.on .dot{background:var(--acc);box-shadow:0 0 6px var(--acc)}
 
-/* ── PANES ── */
-.pane{display:none;padding:22px 24px;animation:fadeIn .25s ease;}
-.pane.active{display:block;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+/* MODULE PANES */
+.mod-pane{display:none}
+.mod-pane.on{display:block}
 
-/* ── SECTION HEADER ── */
-.sec{font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;display:flex;align-items:center;gap:10px;margin-bottom:14px;margin-top:4px;}
-.sec::before{content:'';width:3px;height:11px;background:linear-gradient(180deg,var(--blue-lt),var(--blue));border-radius:2px;box-shadow:0 0 8px var(--blue-glow);}
-.sec::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+/* ===== BUSY MODULE ===== */
+.sub-tabs{display:flex;gap:0;padding:0 24px;background:linear-gradient(180deg,#0d1620,#0b1319);border-bottom:1px solid var(--b);overflow-x:auto;position:sticky;top:118px;z-index:100}
+.sub-tabs::-webkit-scrollbar{height:0}
+.sub-tab{padding:11px 18px;font-size:11px;font-weight:600;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s}
+.sub-tab:hover{color:var(--mu2)}
+.sub-tab.on{color:var(--blt);border-bottom-color:var(--blue)}
 
-/* ── KPI GRID ── */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(162px,1fr));gap:10px;margin-bottom:22px;}
-.kpi{background:var(--gradient);border:1px solid var(--border);border-radius:12px;padding:16px 18px 14px;position:relative;overflow:hidden;transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s,border-color .22s;cursor:default;}
-.kpi:hover{transform:translateY(-3px);box-shadow:var(--glow-blue),0 8px 24px rgba(0,0,0,.4);border-color:var(--border2);}
-.kpi::before{content:'';position:absolute;top:0;right:0;width:100px;height:100px;background:radial-gradient(circle at top right,var(--kpi-glow,transparent),transparent 70%);opacity:.6;pointer-events:none;transition:opacity .3s;}
-.kpi:hover::before{opacity:1;}
-.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--kpi-line,transparent),transparent);opacity:.5;}
-.kpi.ac{border-left:2px solid var(--blue);--kpi-glow:rgba(30,111,217,.15);--kpi-line:var(--blue-lt);}
-.kpi.ok{border-left:2px solid var(--up);--kpi-glow:rgba(34,197,94,.12);--kpi-line:var(--up);}
-.kpi.wb{border-left:2px solid var(--warn);--kpi-glow:rgba(245,158,11,.12);--kpi-line:var(--warn);}
-.kpi.er{border-left:2px solid var(--dn);--kpi-glow:rgba(244,63,94,.12);--kpi-line:var(--dn);}
-.kpi-icon{font-size:18px;margin-bottom:9px;display:block;filter:drop-shadow(0 0 6px currentColor);}
-.kpi-lbl{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;margin-bottom:6px;}
-.kpi-val{font-size:23px;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1.15;letter-spacing:-.5px;}
-.kpi-sub{font-size:10px;color:var(--muted2);margin-top:4px;line-height:1.45;}
-.kpi-bar{height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:12px;overflow:hidden;}
-.kpi-fill{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.34,1.56,.64,1);}
-.kpi-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:7px;letter-spacing:.2px;}
-.tag-up{background:var(--up-l);color:#4ade80;border:1px solid rgba(34,197,94,.2);}
-.tag-dn{background:var(--dn-l);color:#fb7185;border:1px solid rgba(244,63,94,.2);}
+.pane{display:none;padding:20px 24px;animation:fi .22s ease}
+.pane.on{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 
-/* ── CHART CARDS ── */
-.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
-.chart-card,.chart-full{background:var(--gradient);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 2px 12px rgba(0,0,0,.2);}
-.chart-card:hover,.chart-full:hover{border-color:var(--border2);box-shadow:0 4px 20px rgba(0,0,0,.3);}
-.chart-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.04);}
-.chart-hdr h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--muted2);display:flex;align-items:center;gap:7px;}
-.chart-hdr h4::before{content:'';width:3px;height:11px;border-radius:2px;background:linear-gradient(180deg,var(--blue-lt),var(--blue));flex-shrink:0;}
-.chart-card canvas{max-height:210px;}
-.chart-full canvas{max-height:260px;}
+/* SEC */
+.sec{font-size:9px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:1.4px;display:flex;align-items:center;gap:10px;margin-bottom:14px;margin-top:4px}
+.sec::before{content:'';width:3px;height:11px;background:linear-gradient(180deg,var(--blt),var(--blue));border-radius:2px}
+.sec::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--b),transparent)}
+.sec.acc::before{background:linear-gradient(180deg,var(--acc),#5b3fd4)}
+.sec.teal::before{background:linear-gradient(180deg,var(--teal),#007a62)}
 
-/* ── FILTER BAR ── */
-.filter-bar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;}
-.filter-bar label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-weight:700;}
-select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:6px;font-size:12px;outline:none;font-family:'Inter',sans-serif;transition:border .15s;}
-select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,111,217,.12);}
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:20px}
+.kpi{background:var(--grad);border:1px solid var(--b);border-radius:11px;padding:14px 16px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.kpi::before{content:'';position:absolute;top:0;right:0;width:80px;height:80px;background:radial-gradient(circle,var(--kglow,transparent),transparent 70%);opacity:.6}
+.kpi.ac{border-left:2px solid var(--blue);--kglow:rgba(30,111,217,.15)}
+.kpi.ok{border-left:2px solid var(--up);--kglow:rgba(34,197,94,.12)}
+.kpi.wb{border-left:2px solid var(--warn);--kglow:rgba(245,158,11,.12)}
+.kpi.er{border-left:2px solid var(--dn);--kglow:rgba(244,63,94,.12)}
+.kpi.pu{border-left:2px solid var(--acc);--kglow:rgba(124,92,252,.15)}
+.kpi.tl{border-left:2px solid var(--teal);--kglow:rgba(0,212,170,.12)}
+.kpi-lbl{font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.9px;margin-bottom:5px}
+.kpi-val{font-size:21px;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1.15;letter-spacing:-.5px}
+.kpi-sub{font-size:10px;color:var(--mu2);margin-top:3px}
+.kpi-bar{height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:10px;overflow:hidden}
+.kpi-fill{height:100%;border-radius:2px;transition:width 1s ease}
 
-/* ── TABLE ── */
-.tbl-wrap{background:var(--gradient);border:1px solid var(--border);border-radius:12px;overflow:auto;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,.2);}
-table{width:100%;border-collapse:collapse;font-size:12px;}
-thead th{padding:10px 13px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);background:rgba(255,255,255,.025);border-bottom:1px solid var(--border);white-space:nowrap;font-weight:700;}
-thead th:first-child{border-radius:12px 0 0 0;}
-thead th:last-child{border-radius:0 12px 0 0;}
-tbody td{padding:9px 13px;border-bottom:1px solid rgba(255,255,255,.03);white-space:nowrap;transition:background .1s;}
-tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover td{background:rgba(30,111,217,.06);}
-tfoot td{padding:10px 13px;font-weight:700;background:rgba(30,111,217,.08);border-top:1px solid rgba(30,111,217,.2);}
-.mono{font-family:'JetBrains Mono',monospace;font-size:11px;}
+/* CARDS */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.chart-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.chart-card,.chart-full{background:var(--grad);border:1px solid var(--b);border-radius:11px;padding:16px;margin-bottom:16px}
+.chart-card:hover,.chart-full:hover{border-color:var(--b2)}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.04)}
+.ch h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--mu2);display:flex;align-items:center;gap:7px}
+.ch h4::before{content:'';width:3px;height:10px;border-radius:2px;background:linear-gradient(180deg,var(--blt),var(--blue));flex-shrink:0}
+.chart-card canvas{max-height:200px}
+.chart-full canvas{max-height:250px}
 
-/* ── PILLS ── */
-.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.2px;}
-.pill-g{background:var(--up-l);color:#4ade80;border:1px solid rgba(34,197,94,.2);}
-.pill-w{background:var(--warn-l);color:#fbbf24;border:1px solid rgba(245,158,11,.2);}
-.pill-r{background:var(--dn-l);color:#fb7185;border:1px solid rgba(244,63,94,.2);}
-.up{color:var(--up);font-weight:700;}
-.dn{color:var(--dn);font-weight:700;}
+/* TABLE */
+.tbl{background:var(--grad);border:1px solid var(--b);border-radius:11px;overflow:auto;margin-bottom:18px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{padding:9px 12px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--mu);background:rgba(255,255,255,.025);border-bottom:1px solid var(--b);white-space:nowrap;font-weight:700;cursor:pointer;user-select:none}
+thead th:hover{color:var(--mu2)}
+tbody td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.03);white-space:nowrap;transition:background .1s}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(30,111,217,.06)}
+tfoot td{padding:9px 12px;font-weight:700;background:rgba(30,111,217,.07);border-top:1px solid rgba(30,111,217,.18)}
+.mono{font-family:'JetBrains Mono',monospace;font-size:11px}
 
-/* ── LEADERBOARD ── */
-.lb-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
-.lb-card{background:var(--gradient);border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:0 2px 12px rgba(0,0,0,.2);}
-.lb-card h4{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.04);font-weight:700;}
-.lb-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.03);transition:all .15s;}
-.lb-row:last-child{border-bottom:none;}
-.lb-row:hover{transform:translateX(3px);}
-.lb-rank{font-size:12px;font-weight:900;color:var(--muted);width:22px;flex-shrink:0;font-family:'JetBrains Mono',monospace;}
-.lb-gold{color:var(--warn)!important;text-shadow:0 0 8px rgba(245,158,11,.5);}
-.lb-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3);}
-.lb-info{flex:1;min-width:0;}
-.lb-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
-.lb-tl{font-size:9px;color:var(--muted);margin-top:1px;}
-.lb-bar-t{width:80px;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;flex-shrink:0;}
-.lb-bar-f{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--blue-lt));transition:width .9s cubic-bezier(.34,1.56,.64,1);}
-.lb-pct{font-size:11px;font-weight:800;width:40px;text-align:right;flex-shrink:0;font-family:'JetBrains Mono',monospace;}
+/* PILLS */
+.pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700}
+.pill-g{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
+.pill-w{background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
+.pill-r{background:rgba(244,63,94,.12);color:#fb7185;border:1px solid rgba(244,63,94,.2)}
+.pill-b{background:rgba(30,111,217,.12);color:#6ab0ff;border:1px solid rgba(30,111,217,.2)}
+.up{color:var(--up);font-weight:700}.dn{color:var(--dn);font-weight:700}.mu{color:var(--mu)}
 
-/* ── TL CARDS ── */
-.tl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:20px;}
-.tl-card{background:var(--gradient);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;transition:all .22s;}
-.tl-card:hover{transform:translateY(-2px);box-shadow:var(--glow-blue);border-color:var(--border2);}
-.tl-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--blue-lt));opacity:.6;}
-.tl-name{font-size:13px;font-weight:800;background:linear-gradient(135deg,var(--text),var(--blue-lt));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;}
-.tl-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.02);}
-.tl-row:last-child{border-bottom:none;}
-.tl-row strong{color:var(--text);font-weight:700;font-family:'JetBrains Mono',monospace;font-size:11px;}
+/* FILTER BAR */
+.fb{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid var(--b);border-radius:9px}
+.fb label{font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:.7px;font-weight:700}
+select,input[type=text]{background:var(--s1);border:1px solid var(--b);color:var(--txt);padding:5px 9px;border-radius:6px;font-size:11px;outline:none;font-family:inherit}
+select:focus,input[type=text]:focus{border-color:var(--blue)}
 
-/* ── MODAL ── */
-.ovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
-.ovl.on{display:flex;}
-.modal{background:linear-gradient(135deg,#101928,#0e1622);border:1px solid var(--border2);border-radius:14px;padding:28px 30px;width:min(560px,96vw);max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.03);animation:mi .3s cubic-bezier(.34,1.56,.64,1) both;}
-.modal.wide{width:min(1020px,96vw);}
-@keyframes mi{from{transform:scale(.9) translateY(20px);opacity:0;}to{transform:none;opacity:1;}}
-.modal h2{font-size:17px;font-weight:800;margin-bottom:5px;background:linear-gradient(135deg,var(--text),var(--blue-lt));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.modal>p{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
-.m-tabs{display:flex;border-radius:9px;overflow:hidden;border:1px solid var(--border);margin-bottom:18px;background:var(--surface);}
-.m-tab{flex:1;text-align:center;padding:9px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .2s;}
-.m-tab.on{background:linear-gradient(135deg,var(--blue),var(--blue-d));color:#fff;box-shadow:0 2px 10px var(--blue-glow);}
-.tp{display:none;}.tp.on{display:block;}
-.fg{margin-bottom:10px;}
-.fg label{display:block;font-size:9px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
-.fg input{width:100%;padding:7px 11px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);outline:none;transition:border .15s,box-shadow .15s;}
-.fg input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,111,217,.12);}
-.two-inp{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.m-act{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
-.btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue-d));color:#fff;border:none;padding:10px 24px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 12px var(--blue-glow);transition:all .2s;}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(30,111,217,.4);}
-.btn-sec{background:rgba(255,255,255,.04);color:var(--muted2);border:1px solid var(--border);padding:10px 24px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
-.btn-sec:hover{background:rgba(255,255,255,.07);border-color:var(--border2);}
-.info-box{background:rgba(30,111,217,.08);border:1px solid rgba(106,176,255,.15);border-radius:9px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:var(--blue-lt);line-height:1.6;}
-.ag-wrap{border:1px solid var(--border);border-radius:9px;margin-bottom:6px;overflow:hidden;transition:border-color .15s;}
-.ag-wrap:hover{border-color:var(--border2);}
-.ag-hdr{background:rgba(255,255,255,.02);padding:10px 15px;display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none;transition:background .15s;}
-.ag-hdr:hover{background:rgba(30,111,217,.06);}
-.ag-hdr strong{font-size:12px;flex:1;color:var(--text);}
-.ag-body{display:none;padding:14px 15px;border-top:1px solid var(--border);background:rgba(255,255,255,.01);}
-.err-msg{color:var(--dn);font-size:11px;margin-top:4px;display:none;}
+/* LB */
+.lb-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.lb-card{background:var(--grad);border:1px solid var(--b);border-radius:11px;padding:14px 16px}
+.lb-card h4{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--mu);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.04);font-weight:700}
+.lb-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.lb-row:last-child{border-bottom:none}
+.lb-rank{font-size:11px;font-weight:900;color:var(--mu);width:20px;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.lb-gold{color:var(--warn)!important}
+.lb-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0}
+.lb-name{font-size:11px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-tl{font-size:9px;color:var(--mu);margin-top:1px}
+.lb-bar-t{width:70px;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;flex-shrink:0}
+.lb-bar-f{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--blue),var(--blt))}
+.lb-pct{font-size:11px;font-weight:800;width:38px;text-align:right;font-family:'JetBrains Mono',monospace}
 
-/* ── SAVING ── */
-.sov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
-.sov.on{display:flex;}
-.sov-box{background:linear-gradient(135deg,#101928,#0e1622);border:1px solid var(--border2);border-radius:14px;padding:24px 32px;display:flex;align-items:center;gap:14px;font-size:13px;font-weight:600;box-shadow:0 20px 50px rgba(0,0,0,.6);}
-.spin{width:20px;height:20px;border:2.5px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite;}
-@keyframes sp{to{transform:rotate(360deg);}}
+/* TL CARDS */
+.tl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px;margin-bottom:18px}
+.tl-card{background:var(--grad);border:1px solid var(--b);border-radius:11px;padding:14px 16px;position:relative;overflow:hidden;transition:all .2s}
+.tl-card:hover{transform:translateY(-2px);border-color:var(--b2)}
+.tl-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--blt));opacity:.6}
+.tl-name{font-size:12px;font-weight:800;background:linear-gradient(135deg,var(--txt),var(--blt));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px}
+.tl-row{display:flex;justify-content:space-between;font-size:11px;color:var(--mu);margin-bottom:4px;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.02)}
+.tl-row strong{color:var(--txt);font-weight:700;font-family:'JetBrains Mono',monospace;font-size:11px}
 
-/* ── TOAST ── */
-.toast{position:fixed;bottom:24px;right:24px;z-index:9999;padding:12px 20px;border-radius:10px;font-size:12px;font-weight:600;opacity:0;pointer-events:none;transition:all .3s cubic-bezier(.34,1.56,.64,1);max-width:320px;transform:translateY(16px);}
-.toast.show{opacity:1;transform:translateY(0);}
-.toast-ok{background:linear-gradient(135deg,#052e16,#0a3d1e);color:#4ade80;border:1px solid rgba(34,197,94,.3);box-shadow:0 8px 24px rgba(0,0,0,.4);}
-.toast-err{background:linear-gradient(135deg,#2d0a0a,#3d1010);color:#fb7185;border:1px solid rgba(244,63,94,.3);box-shadow:0 8px 24px rgba(0,0,0,.4);}
+/* ===== AMS MODULE ===== */
+.ams-pane{padding:20px 24px}
 
-/* ── MISC ── */
-.fw6{font-weight:600;}.sm{font-size:11px;}.muted{color:var(--muted);}
-.warn-clr{color:var(--warn);}
+/* Week Selector */
+.wk-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
+.wk-tab{padding:6px 16px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--b);color:var(--mu);transition:all .2s}
+.wk-tab:hover{border-color:var(--acc);color:var(--acc)}
+.wk-tab.on{background:rgba(124,92,252,.15);border-color:var(--acc);color:var(--acc)}
+.wk-tab.all.on{background:rgba(30,111,217,.15);border-color:var(--blue);color:var(--blt)}
 
-/* ── SCROLLBAR ── */
-::-webkit-scrollbar{width:6px;height:6px;}
-::-webkit-scrollbar-track{background:var(--surface);}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
-::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+/* Stacked bar */
+.stk-bar{display:flex;height:32px;border-radius:6px;overflow:hidden;margin-bottom:10px}
+.stk-seg{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(255,255,255,.95);overflow:hidden;white-space:nowrap}
+.seg-talk{background:#4f7cff}.seg-idle{background:#ef4444}.seg-break{background:#f59e0b}.seg-wrap{background:#00d4aa}
 
-@media(max-width:680px){
-  .chart-grid,.lb-grid{grid-template-columns:1fr;}
-  .kpi-grid{grid-template-columns:repeat(2,1fr);}
-  .hdr-right .btn-ghost,.live-pill{display:none;}
-  .pane{padding:14px 12px;}
-  .filter-bar{padding:10px 12px;}
-}
-@media print{
-  .sync-bar,.hdr,.tabs,.btn,.ovl,.sov,.toast{display:none!important;}
-  .pane{display:block!important;padding:0;}
-  body{background:#fff;color:#000;}
+/* Week summary cards */
+.wk-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.wk-card{background:var(--grad);border:1px solid var(--b);border-radius:11px;padding:14px 16px;cursor:pointer;transition:all .2s}
+.wk-card:hover{border-color:var(--acc);transform:translateY(-1px)}
+.wk-card.sel{border-color:var(--acc);background:rgba(124,92,252,.06)}
+.wk-card .wl{font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.wk-card .wv{font-size:19px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--acc)}
+.wk-card .ws{font-size:10px;color:var(--mu2);margin-top:3px}
+.wk-card .wbar{height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:10px;overflow:hidden}
+.wk-card .wfill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--acc),#a78bfa);transition:width .8s ease}
+
+/* Agent table bar */
+.bar-wrap{display:flex;align-items:center;gap:6px}
+.bar{flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;min-width:55px}
+.bar-fill{height:100%;border-radius:3px}
+
+/* MODAL */
+.ovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.ovl.on{display:flex}
+.modal{background:linear-gradient(135deg,#101928,#0e1622);border:1px solid var(--b2);border-radius:13px;padding:26px 28px;width:min(540px,96vw);max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.7);animation:mi .28s cubic-bezier(.34,1.56,.64,1) both}
+.modal.wide{width:min(1000px,96vw)}
+@keyframes mi{from{transform:scale(.9) translateY(20px);opacity:0}to{transform:none;opacity:1}}
+.modal h2{font-size:16px;font-weight:800;margin-bottom:4px;background:linear-gradient(135deg,var(--txt),var(--blt));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.modal>p{font-size:11px;color:var(--mu);margin-bottom:18px}
+.m-tabs{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--b);margin-bottom:16px;background:var(--s1)}
+.m-tab{flex:1;text-align:center;padding:8px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--mu);transition:all .2s}
+.m-tab.on{background:linear-gradient(135deg,var(--blue),var(--bd));color:#fff}
+.tp{display:none}.tp.on{display:block}
+.fg{margin-bottom:9px}
+.fg label{display:block;font-size:9px;font-weight:700;color:var(--mu);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+.fg input{width:100%;padding:6px 10px;border:1.5px solid var(--b);border-radius:6px;font-size:11px;font-family:inherit;color:var(--txt);background:var(--s1);outline:none}
+.fg input:focus{border-color:var(--blue)}
+.two-inp{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.m-act{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--b)}
+.btn-primary{background:linear-gradient(135deg,var(--blue),var(--bd));color:#fff;border:none;padding:9px 22px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 10px var(--bglow)}
+.btn-sec{background:rgba(255,255,255,.04);color:var(--mu2);border:1px solid var(--b);padding:9px 22px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer}
+.info-box{background:rgba(30,111,217,.07);border:1px solid rgba(106,176,255,.15);border-radius:8px;padding:9px 13px;margin-bottom:12px;font-size:11px;color:var(--blt);line-height:1.6}
+.ag-wrap{border:1px solid var(--b);border-radius:8px;margin-bottom:5px;overflow:hidden;transition:border-color .15s}
+.ag-wrap:hover{border-color:var(--b2)}
+.ag-hdr{background:rgba(255,255,255,.02);padding:9px 13px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.ag-hdr:hover{background:rgba(30,111,217,.05)}
+.ag-hdr strong{font-size:11px;flex:1;color:var(--txt)}
+.ag-body{display:none;padding:12px 13px;border-top:1px solid var(--b);background:rgba(255,255,255,.01)}
+.err-msg{color:var(--dn);font-size:11px;margin-top:4px;display:none}
+
+/* SAVING */
+.sov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.sov.on{display:flex}
+.sov-box{background:linear-gradient(135deg,#101928,#0e1622);border:1px solid var(--b2);border-radius:13px;padding:22px 30px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:600;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+.spin{width:18px;height:18px;border:2.5px solid var(--b);border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;z-index:9999;padding:11px 18px;border-radius:9px;font-size:12px;font-weight:600;opacity:0;pointer-events:none;transition:all .3s cubic-bezier(.34,1.56,.64,1);max-width:300px;transform:translateY(14px)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast-ok{background:linear-gradient(135deg,#052e16,#0a3d1e);color:#4ade80;border:1px solid rgba(34,197,94,.3);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.toast-err{background:linear-gradient(135deg,#2d0a0a,#3d1010);color:#fb7185;border:1px solid rgba(244,63,94,.3)}
+
+/* MISC */
+.fw6{font-weight:600}.sm{font-size:11px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--s1)}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--mu)}
+@media(max-width:720px){
+  .chart-grid,.lb-grid,.chart-grid-3{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .wk-cards{grid-template-columns:1fr}
+  .ams-pane,.pane{padding:14px 12px}
 }
 </style>
 </head>
 <body>
 
-<!-- SYNC BAR -->
 <div class="sync-bar" id="syncBar">
   <div class="sync-dot conn" id="syncDot"></div>
   <span id="syncMsg">Connecting to Firebase…</span>
@@ -238,219 +257,237 @@ tfoot td{padding:10px 13px;font-weight:700;background:rgba(30,111,217,.08);borde
   </div>
 </div>
 
-<!-- HEADER -->
 <header class="hdr">
   <div class="logo">
-    <div class="logo-box">B<span class="ul">U</span>SY</div>
+    <div class="logo-chip">O<span class="ul">CU</span>BE</div>
     <div class="hdr-div"></div>
-    <!-- OCube logo: dotted ring + "cube" wordmark matching actual logo -->
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 56" height="38" aria-label="OCube Services" style="flex-shrink:0">
-      <!-- Outer ring dots - large -->
-      <circle cx="28" cy="4"  r="2.6" fill="white" opacity="1"/>
-      <circle cx="37" cy="5.5" r="2.3" fill="white" opacity=".95"/>
-      <circle cx="45" cy="10" r="2.0" fill="white" opacity=".9"/>
-      <circle cx="51" cy="17" r="1.8" fill="white" opacity=".85"/>
-      <circle cx="54" cy="25" r="1.6" fill="white" opacity=".8"/>
-      <circle cx="53" cy="33" r="1.5" fill="white" opacity=".75"/>
-      <circle cx="49" cy="41" r="1.6" fill="white" opacity=".7"/>
-      <circle cx="42" cy="47" r="1.8" fill="white" opacity=".7"/>
-      <circle cx="34" cy="51" r="2.0" fill="white" opacity=".75"/>
-      <circle cx="25" cy="52" r="2.3" fill="white" opacity=".8"/>
-      <circle cx="16" cy="50" r="2.0" fill="white" opacity=".75"/>
-      <circle cx="9"  cy="44" r="1.8" fill="white" opacity=".7"/>
-      <circle cx="4"  cy="37" r="1.6" fill="white" opacity=".65"/>
-      <circle cx="2"  cy="28" r="1.5" fill="white" opacity=".6"/>
-      <circle cx="4"  cy="20" r="1.6" fill="white" opacity=".65"/>
-      <circle cx="9"  cy="13" r="1.8" fill="white" opacity=".7"/>
-      <circle cx="16" cy="7"  r="2.0" fill="white" opacity=".8"/>
-      <circle cx="22" cy="4.5" r="2.3" fill="white" opacity=".9"/>
-      <!-- Inner ring dots - medium -->
-      <circle cx="28" cy="10" r="1.5" fill="white" opacity=".7"/>
-      <circle cx="34" cy="11" r="1.4" fill="white" opacity=".65"/>
-      <circle cx="40" cy="15" r="1.3" fill="white" opacity=".6"/>
-      <circle cx="44" cy="21" r="1.2" fill="white" opacity=".55"/>
-      <circle cx="45" cy="28" r="1.1" fill="white" opacity=".5"/>
-      <circle cx="43" cy="35" r="1.2" fill="white" opacity=".5"/>
-      <circle cx="39" cy="41" r="1.3" fill="white" opacity=".55"/>
-      <circle cx="33" cy="44" r="1.4" fill="white" opacity=".6"/>
-      <circle cx="26" cy="45" r="1.5" fill="white" opacity=".65"/>
-      <circle cx="19" cy="43" r="1.4" fill="white" opacity=".6"/>
-      <circle cx="14" cy="38" r="1.3" fill="white" opacity=".55"/>
-      <circle cx="11" cy="32" r="1.2" fill="white" opacity=".5"/>
-      <circle cx="11" cy="25" r="1.1" fill="white" opacity=".5"/>
-      <circle cx="14" cy="18" r="1.2" fill="white" opacity=".55"/>
-      <circle cx="18" cy="13" r="1.3" fill="white" opacity=".6"/>
-      <circle cx="23" cy="10" r="1.4" fill="white" opacity=".65"/>
-      <!-- "cube" wordmark -->
-      <text x="64" y="38" font-family="Inter,system-ui,sans-serif" font-size="26" font-weight="700" fill="#ffffff" letter-spacing="0.5">cube</text>
-    </svg>
-    <div style="margin-left:12px;" class="logo-sub">
-      <div class="t1">Sales Funnel Dashboard</div>
-      <div class="t2">OcubeServices · Live Performance</div>
+    <div class="logo-info">
+      <div class="t1">Command Centre — Jun 2026</div>
+      <div class="t2">Noida Operations · BUSY Funnel + AMS Talk Time</div>
     </div>
   </div>
   <div class="hdr-right">
     <span class="live-pill"><span class="live-dot"></span><span id="syncLbl">Connecting…</span></span>
     <button class="btn btn-ghost" onclick="window.print()">🖨</button>
-    <button class="btn btn-green" onclick="forcePush()" id="forceBtn">⚡ Load Data</button>
-    <button class="btn btn-blue" onclick="openLogin()">✏️ Update Data</button>
+    <button class="btn btn-green" onclick="forcePush()" id="forceBtn">⚡ Sync Data</button>
+    <button class="btn btn-blue" onclick="openLogin()">✏️ Update</button>
   </div>
 </header>
 
-<!-- TABS -->
-<nav class="tabs">
-  <div class="tab active" onclick="switchTab('overview',this)">Overview</div>
-  <div class="tab" onclick="switchTab('dsdd',this)">DS → DD</div>
-  <div class="tab" onclick="switchTab('ddta',this)">DD → Activation</div>
-  <div class="tab" onclick="switchTab('tl',this)">TL View</div>
-</nav>
+<!-- MODULE TABS -->
+<div class="mod-tabs">
+  <div class="mod-tab on" onclick="switchMod('busy',this)">
+    <div class="dot"></div>BUSY · Sales Funnel
+  </div>
+  <div class="mod-tab" onclick="switchMod('ams',this)">
+    <div class="dot" style="background:var(--teal)"></div>AMS · Talk Time Analysis
+  </div>
+</div>
 
-<!-- ══════════ OVERVIEW ══════════ -->
-<div class="pane active" id="pane-overview">
-  <div class="sec">June 2026 — Funnel Snapshot</div>
-  <div class="kpi-grid" id="kpiGrid"></div>
+<!-- ══════════ BUSY MODULE ══════════ -->
+<div class="mod-pane on" id="mod-busy">
+  <nav class="sub-tabs">
+    <div class="sub-tab on" onclick="switchTab('overview',this)">Overview</div>
+    <div class="sub-tab" onclick="switchTab('dsdd',this)">DS → DD</div>
+    <div class="sub-tab" onclick="switchTab('ddta',this)">DD → Activation</div>
+    <div class="sub-tab" onclick="switchTab('tl',this)">TL View</div>
+  </nav>
 
-  <div class="sec">Conversion Trends</div>
-  <div class="chart-grid">
-    <div class="chart-card">
-      <div class="chart-hdr"><h4>DS→DD Conversion — MoM</h4></div>
-      <canvas id="momChart"></canvas>
+  <!-- OVERVIEW -->
+  <div class="pane on" id="pane-overview">
+    <div class="sec">June 2026 — Funnel Snapshot</div>
+    <div class="kpi-row" id="kpiGrid"></div>
+    <div class="sec">Conversion Trends</div>
+    <div class="chart-grid">
+      <div class="chart-card"><div class="ch"><h4>DS→DD Conversion — LM vs MTD</h4></div><canvas id="momChart"></canvas></div>
+      <div class="chart-card"><div class="ch"><h4>DD→Activation — LM vs MTD</h4></div><canvas id="dtaMomChart"></canvas></div>
     </div>
-    <div class="chart-card">
-      <div class="chart-hdr"><h4>DD→Activation — MoM</h4></div>
-      <canvas id="dtaMomChart"></canvas>
+    <div class="sec">Full Funnel — Top 20 Agents</div>
+    <div class="chart-full"><div class="ch"><h4>MTD DS vs DD — Top 20 by DS</h4></div><canvas id="funnelChart"></canvas></div>
+    <div class="chart-grid">
+      <div class="chart-card"><div class="ch"><h4>WTD DS vs MTD DS — Top 15</h4></div><canvas id="wtdChart"></canvas></div>
+      <div class="chart-card"><div class="ch"><h4>Activations MTD by Agent</h4></div><canvas id="actChart"></canvas></div>
     </div>
   </div>
 
-  <div class="sec">Full Funnel — Top 20 Agents</div>
-  <div class="chart-full">
-    <div class="chart-hdr"><h4>MTD DS vs DD — Top 20 by DS</h4></div>
-    <canvas id="funnelChart"></canvas>
+  <!-- DS→DD -->
+  <div class="pane" id="pane-dsdd">
+    <div class="fb">
+      <label>TL:</label>
+      <select id="tlFilter" onchange="renderDsdd()">
+        <option value="">All TLs</option>
+        <option>Sagar Maheshwari</option><option>Amit Verma</option>
+        <option>Akash Tomer</option><option>Himanshu Tiwari</option><option>Anshu Sharma</option>
+      </select>
+      <label>Sort:</label>
+      <select id="dsddSort" onchange="renderDsdd()">
+        <option value="mtd_pct">MTD Conv %</option>
+        <option value="mtd_dd">MTD DD</option>
+        <option value="mtd_ds">MTD DS</option>
+        <option value="wtd_pct">WTD %</option>
+      </select>
+    </div>
+    <div class="lb-grid">
+      <div class="lb-card"><h4>🏆 Top 8 — MTD DS→DD %</h4><div id="lb-dsdd-top"></div></div>
+      <div class="lb-card"><h4>⚠ Bottom 8 — MTD DS→DD % (min 5 DS)</h4><div id="lb-dsdd-bot"></div></div>
+    </div>
+    <div class="tbl">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Agent</th><th>TL</th>
+          <th>LM DS</th><th>LM DD</th><th>LM%</th>
+          <th>MTD DS</th><th>MTD DD</th><th>MTD%</th>
+          <th>WTD DS</th><th>WTD DD</th><th>WTD%</th>
+          <th>Trend</th>
+        </tr></thead>
+        <tbody id="dsddBody"></tbody>
+        <tfoot id="dsddFoot"></tfoot>
+      </table>
+    </div>
   </div>
 
-  <div class="sec">WTD vs MTD Comparison</div>
-  <div class="chart-grid">
-    <div class="chart-card">
-      <div class="chart-hdr"><h4>WTD DS vs MTD DS — Top 15</h4></div>
-      <canvas id="wtdChart"></canvas>
+  <!-- DD→ACT -->
+  <div class="pane" id="pane-ddta">
+    <div class="fb">
+      <label>TL:</label>
+      <select id="tlFilterDta" onchange="renderDta()">
+        <option value="">All TLs</option>
+        <option>Sagar Maheshwari</option><option>Amit Verma</option>
+        <option>Akash Tomer</option><option>Himanshu Tiwari</option><option>Anshu Sharma</option>
+      </select>
     </div>
-    <div class="chart-card">
-      <div class="chart-hdr"><h4>Activations MTD by Agent</h4></div>
-      <canvas id="actChart"></canvas>
+    <div class="lb-grid">
+      <div class="lb-card"><h4>🏆 Top 8 — MTD DD→Activation %</h4><div id="lb-dta-top"></div></div>
+      <div class="chart-card" style="margin-bottom:0">
+        <div class="ch"><h4>Activations MTD by Agent</h4></div>
+        <canvas id="dtaBarChart"></canvas>
+      </div>
+    </div>
+    <div class="tbl">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Agent</th><th>TL</th>
+          <th>LM DD</th><th>LM Mat</th><th>LM DTA%</th>
+          <th>MTD DD</th><th>MTD Mat</th><th>MTD DTA%</th>
+          <th>Trend</th>
+        </tr></thead>
+        <tbody id="dtaBody"></tbody>
+        <tfoot id="dtaFoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- TL -->
+  <div class="pane" id="pane-tl">
+    <div class="sec">Team Lead Summary</div>
+    <div class="tl-grid" id="tlCards"></div>
+    <div class="chart-grid">
+      <div class="chart-card"><div class="ch"><h4>TL DS→DD % — LM vs MTD</h4></div><canvas id="tlConvChart"></canvas></div>
+      <div class="chart-card"><div class="ch"><h4>TL DD→Activation % — LM vs MTD</h4></div><canvas id="tlDtaChart"></canvas></div>
+    </div>
+    <div class="sec">Agent Detail by TL</div>
+    <div class="fb">
+      <label>Filter TL:</label>
+      <select id="tlAgFilter" onchange="renderTLAgents()">
+        <option value="">All TLs</option>
+        <option>Sagar Maheshwari</option><option>Amit Verma</option>
+        <option>Akash Tomer</option><option>Himanshu Tiwari</option><option>Anshu Sharma</option>
+      </select>
+    </div>
+    <div class="tbl">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Agent</th><th>TL</th>
+          <th>LM DS</th><th>LM DD</th><th>LM%</th>
+          <th>MTD DS</th><th>MTD DD</th><th>MTD%</th>
+          <th>MTD Act</th><th>DD→Act%</th>
+          <th>WTD DS</th><th>WTD DD</th><th>WTD%</th>
+          <th>Status</th>
+        </tr></thead>
+        <tbody id="tlAgBody"></tbody>
+        <tfoot id="tlAgFoot"></tfoot>
+      </table>
     </div>
   </div>
 </div>
 
-<!-- ══════════ DS→DD ══════════ -->
-<div class="pane" id="pane-dsdd">
-  <div class="filter-bar">
-    <label>TL:</label>
-    <select id="tlFilter" onchange="renderDsdd()">
-      <option value="">All TLs</option>
-      <option>Sagar Maheshwari</option><option>Amit Verma</option>
-      <option>Akash Tomer</option><option>Himanshu Tiwari</option><option>Anshu Sharma</option>
-    </select>
-    <label>Sort:</label>
-    <select id="dsddSort" onchange="renderDsdd()">
-      <option value="mtd_pct">MTD Conv %</option>
-      <option value="mtd_dd">MTD DD</option>
-      <option value="mtd_ds">MTD DS</option>
-      <option value="wtd_pct">WTD %</option>
-    </select>
-  </div>
+<!-- ══════════ AMS MODULE ══════════ -->
+<div class="mod-pane" id="mod-ams">
+  <div class="ams-pane">
 
-  <div class="lb-grid">
-    <div class="lb-card"><h4>🏆 Top 8 — MTD DS→DD %</h4><div id="lb-dsdd-top"></div></div>
-    <div class="lb-card"><h4>⚠ Bottom 8 — MTD DS→DD % (min 5 DS)</h4><div id="lb-dsdd-bot"></div></div>
-  </div>
-
-  <div class="tbl-wrap">
-    <table>
-      <thead><tr>
-        <th>#</th><th>Agent</th><th>TL</th>
-        <th>LM DS</th><th>LM DD</th><th>LM %</th>
-        <th>MTD DS</th><th>MTD DD</th><th>MTD %</th>
-        <th>WTD DS</th><th>WTD DD</th><th>WTD %</th>
-        <th>Trend</th>
-      </tr></thead>
-      <tbody id="dsddBody"></tbody>
-      <tfoot id="dsddFoot"></tfoot>
-    </table>
-  </div>
-</div>
-
-<!-- ══════════ DD→ACT ══════════ -->
-<div class="pane" id="pane-ddta">
-  <div class="filter-bar">
-    <label>TL:</label>
-    <select id="tlFilterDta" onchange="renderDta()">
-      <option value="">All TLs</option>
-      <option>Sagar Maheshwari</option><option>Amit Verma</option>
-      <option>Akash Tomer</option><option>Himanshu Tiwari</option><option>Anshu Sharma</option>
-    </select>
-  </div>
-
-  <div class="lb-grid">
-    <div class="lb-card"><h4>🏆 Top 8 — MTD DD→Activation %</h4><div id="lb-dta-top"></div></div>
-    <div class="chart-card" style="margin-bottom:0">
-      <div class="chart-hdr"><h4>Activations MTD by Agent</h4></div>
-      <canvas id="dtaBarChart"></canvas>
+    <!-- Week selector -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div class="sec teal" style="margin:0">AMS Talk Time — June 2026 · 55 Agents</div>
+      <div class="wk-tabs">
+        <div class="wk-tab all on" onclick="setWk('all',this)">📅 MTD (All)</div>
+        <div class="wk-tab" onclick="setWk('W1',this)">Wk 1 · 1-7 Jun</div>
+        <div class="wk-tab" onclick="setWk('W2',this)">Wk 2 · 8-14 Jun</div>
+        <div class="wk-tab" onclick="setWk('W3',this)">Wk 3 · 15-20 Jun</div>
+      </div>
     </div>
-  </div>
 
-  <div class="tbl-wrap">
-    <table>
-      <thead><tr>
-        <th>#</th><th>Agent</th><th>TL</th>
-        <th>LM DD</th><th>LM Mat</th><th>LM DTA%</th>
-        <th>MTD DD</th><th>MTD Mat</th><th>MTD DTA%</th>
-        <th>Trend</th>
-      </tr></thead>
-      <tbody id="dtaBody"></tbody>
-      <tfoot id="dtaFoot"></tfoot>
-    </table>
-  </div>
-</div>
+    <!-- Week summary cards -->
+    <div class="wk-cards" id="wkCards"></div>
 
-<!-- ══════════ TL VIEW ══════════ -->
-<div class="pane" id="pane-tl">
-  <div class="sec">Team Lead Summary</div>
-  <div class="tl-grid" id="tlCards"></div>
+    <!-- AMS KPIs -->
+    <div class="kpi-row" id="amsKpis"></div>
 
-  <div class="sec">TL-wise Charts</div>
-  <div class="chart-grid">
-    <div class="chart-card">
-      <div class="chart-hdr"><h4>TL DS→DD % — LM vs MTD</h4></div>
-      <canvas id="tlConvChart"></canvas>
+    <!-- Time dist + daily charts -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="ch"><h4 id="dailyChartTitle">Daily Talk Hours — MTD</h4></div>
+        <canvas id="amsDailyChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="ch"><h4>Week-wise Talk Hours</h4></div>
+        <canvas id="amsWkChart"></canvas>
+      </div>
     </div>
-    <div class="chart-card">
-      <div class="chart-hdr"><h4>TL DD→Activation % — LM vs MTD</h4></div>
-      <canvas id="tlDtaChart"></canvas>
-    </div>
-  </div>
 
-  <div class="sec">Agent Detail by TL</div>
-  <div class="filter-bar">
-    <label>Filter TL:</label>
-    <select id="tlAgFilter" onchange="renderTLAgents()">
-      <option value="">All TLs</option>
-      <option>Sagar Maheshwari</option><option>Amit Verma</option>
-      <option>Akash Tomer</option><option>Himanshu Tiwari</option><option>Anshu Sharma</option>
-    </select>
-  </div>
-  <div class="tbl-wrap">
-    <table>
-      <thead><tr>
-        <th>#</th><th>Agent</th><th>TL</th>
-        <th>LM DS</th><th>LM DD</th><th>LM %</th>
-        <th>MTD DS</th><th>MTD DD</th><th>MTD %</th>
-        <th>MTD Act</th><th>DD→Act %</th>
-        <th>WTD DS</th><th>WTD DD</th><th>WTD %</th>
-        <th>Status</th>
-      </tr></thead>
-      <tbody id="tlAgBody"></tbody>
-      <tfoot id="tlAgFoot"></tfoot>
-    </table>
+    <!-- Time breakdown stacked bar -->
+    <div class="chart-full" style="margin-bottom:16px">
+      <div class="ch">
+        <h4 id="distTitle">Team Staffed Time Distribution — MTD</h4>
+        <div style="display:flex;gap:12px;font-size:10px">
+          <span style="color:#4f7cff">■ Talk</span>
+          <span style="color:#ef4444">■ Idle</span>
+          <span style="color:#f59e0b">■ Break</span>
+          <span style="color:#00d4aa">■ Wrapup</span>
+        </div>
+      </div>
+      <div id="stkBarsWrap"></div>
+    </div>
+
+    <!-- Agent table -->
+    <div class="sec teal">Agent-Level Talk Time <span id="wkLabel" style="font-size:9px;color:var(--mu);font-weight:400;text-transform:none;letter-spacing:0"> — MTD</span></div>
+    <div class="fb">
+      <input type="text" id="amsSearch" placeholder="Search agent…" oninput="renderAmsTable()" style="max-width:200px">
+      <label>Util:</label>
+      <select id="amsUtilFilter" onchange="renderAmsTable()">
+        <option value="">All</option>
+        <option value="high">High ≥ 50%</option>
+        <option value="mid">Mid 30-50%</option>
+        <option value="low">Low &lt; 30%</option>
+      </select>
+      <label>Sort:</label>
+      <select id="amsSortKey" onchange="renderAmsTable()">
+        <option value="talk_min">Talk Min</option>
+        <option value="talk_pct">Talk%</option>
+        <option value="util">Utilization</option>
+        <option value="idle_pct">Idle%</option>
+        <option value="connected">Connected</option>
+      </select>
+    </div>
+    <div class="tbl">
+      <table>
+        <thead>
+          <tr id="amsTableHead"></tr>
+        </thead>
+        <tbody id="amsTableBody"></tbody>
+      </table>
+    </div>
+    <div id="amsFooter" style="padding:8px 12px;font-size:10px;color:var(--mu);border-top:1px solid var(--b);background:var(--grad);border-radius:0 0 11px 11px"></div>
+
   </div>
 </div>
 
@@ -471,50 +508,19 @@ tfoot td{padding:10px 13px;font-weight:700;background:rgba(30,111,217,.08);borde
 <!-- EDIT MODAL -->
 <div class="ovl" id="editOvl">
   <div class="modal wide">
-    <h2>✏️ Update Dashboard Data</h2>
-    <p>All KPIs, charts and rankings update automatically on save — synced live to all viewers.</p>
+    <h2>✏️ Update BUSY Dashboard Data</h2>
+    <p>All KPIs and rankings update automatically on save — synced live to all viewers.</p>
     <div class="m-tabs">
       <button class="m-tab on" onclick="swTab('tpMTD',0)">MTD / WTD Totals</button>
-      <button class="m-tab"    onclick="swTab('tpLM',1)">Last Month</button>
-      <button class="m-tab"    onclick="swTab('tpXL',2)">📤 Upload Excel</button>
+      <button class="m-tab" onclick="swTab('tpLM',1)">Last Month</button>
     </div>
     <div class="tp on" id="tpMTD">
-      <div class="info-box">💡 Enter <strong>running totals</strong> for this month (MTD) and this week (WTD) — cumulative from day 1 to today. Expand any agent to edit.</div>
+      <div class="info-box">💡 Enter <strong>running totals</strong> for this month (MTD) and this week (WTD) — cumulative from day 1 to today.</div>
       <div id="agMTDWrap"></div>
     </div>
     <div class="tp" id="tpLM">
       <div class="info-box">📅 Update <strong>Last Month</strong> totals once at the start of each new month.</div>
       <div id="agLMWrap"></div>
-    </div>
-    <div class="tp" id="tpXL">
-      <div class="info-box">📊 Upload your Excel file. Both <strong>DS TO DD</strong> and <strong>DD To Activation</strong> sheets are read automatically. Data is previewed before saving.</div>
-
-      <!-- Download template -->
-      <div style="background:rgba(30,111,217,.07);border:1px solid rgba(106,176,255,.15);border-radius:10px;padding:16px 18px;margin-bottom:14px;">
-        <div style="font-size:11px;font-weight:700;color:var(--blue-lt);margin-bottom:4px;">Step 1 — Download Template</div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Download the Excel template, fill in your data (same format as your existing sheet), and upload below.</div>
-        <button class="btn btn-ghost" onclick="downloadTemplate()" style="font-size:11px">⬇ Download Excel Template</button>
-      </div>
-
-      <!-- Upload -->
-      <div style="background:rgba(255,255,255,.02);border:2px dashed var(--border2);border-radius:10px;padding:24px;text-align:center;margin-bottom:14px;transition:border-color .2s;cursor:pointer;" id="dropZone" onclick="document.getElementById('xlFile').click()" ondragover="event.preventDefault();this.style.borderColor='var(--blue)'" ondragleave="this.style.borderColor=''" ondrop="handleDrop(event)">
-        <div style="font-size:28px;margin-bottom:8px">📁</div>
-        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Click to choose Excel file or drag & drop</div>
-        <div style="font-size:11px;color:var(--muted)">.xlsx or .xls files · Both sheets processed automatically</div>
-        <input type="file" id="xlFile" accept=".xlsx,.xls" style="display:none" onchange="handleXLUpload(event)">
-      </div>
-
-      <!-- Preview -->
-      <div id="xlPreview" style="display:none">
-        <div style="font-size:11px;font-weight:700;color:var(--blue-lt);margin-bottom:8px" id="xlPreviewTitle"></div>
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:280px;margin-bottom:12px;">
-          <table style="width:100%;font-size:11px;border-collapse:collapse;">
-            <thead id="xlPreviewHead"></thead>
-            <tbody id="xlPreviewBody"></tbody>
-          </table>
-        </div>
-        <button class="btn-primary" onclick="confirmXLSave()" style="width:100%;justify-content:center;padding:11px">✓ Confirm & Save to Firebase</button>
-      </div>
     </div>
     <div class="m-act">
       <button class="btn-sec" onclick="closeEdit()">Cancel</button>
@@ -541,326 +547,435 @@ const db=firebase.database();
 const DB_KEY="busy_funnel_v3";
 const ADMIN_PW=btoa("busy2026");
 
-// ── AGENT MASTER ──────────────────────────────────────────────────────────────
+// ── BUSY AGENTS ───────────────────────────────────────────────────────────────
 const AGENTS=[
-  {name:"AayushKOcube_TSE02_0426",     tl:"Sagar Maheshwari", short:"AayushK"},
-  {name:"AbhishekYOcube_TSE05_0626",   tl:"Himanshu Tiwari",  short:"AbhishekY"},
-  {name:"AdityaSOcube_TSE02_0426",     tl:"Amit Verma",       short:"AdityaS"},
-  {name:"AmitOcube_TSE04_0526",        tl:"Amit Verma",       short:"Amit"},
-  {name:"AnamOcube_Mov_0526",          tl:"Akash Tomer",      short:"Anam"},
-  {name:"AnkitOcube_Mov_0326",         tl:"Anshu Sharma",     short:"Ankit"},
-  {name:"AnshuOcube_Mov_0925",         tl:"Anshu Sharma",     short:"Anshu"},
-  {name:"AreebOcube_TSE05_0626",       tl:"Amit Verma",       short:"Areeb"},
-  {name:"ArshdeepOcube_Mov_0526",      tl:"Himanshu Tiwari",  short:"Arshdeep"},
-  {name:"AyushSOcube_TSE02_0426",      tl:"Amit Verma",       short:"AyushS"},
-  {name:"BhanuTOcube_TSE02_0426",      tl:"Sagar Maheshwari", short:"BhanuT"},
-  {name:"ChandaOcube_Mov_0526",        tl:"Himanshu Tiwari",  short:"Chanda"},
-  {name:"ChitvanOcube_TSE05_0626",     tl:"Sagar Maheshwari", short:"Chitvan"},
-  {name:"DivyanshuOcube_Mov_0526",     tl:"Akash Tomer",      short:"Divyanshu"},
-  {name:"HarshitaOcube_Mov_0326",      tl:"Akash Tomer",      short:"Harshita"},
-  {name:"HarshSOcube_TSE05_0626",      tl:"Sagar Maheshwari", short:"HarshS"},
-  {name:"HimaniOcube_TSE05_0626",      tl:"Anshu Sharma",     short:"Himani"},
-  {name:"HimanshuOcube_Mov_0925",      tl:"Himanshu Tiwari",  short:"Himanshu"},
-  {name:"HitanshuOcube_Mov_0326",      tl:"Amit Verma",       short:"Hitanshu"},
-  {name:"IshaOcube_Mov_0925",          tl:"Akash Tomer",      short:"Isha"},
-  {name:"JaydeepSOcube_TSE02_0426",    tl:"Amit Verma",       short:"JaydeepS"},
-  {name:"JyotiOcube_Mov_0925",         tl:"Amit Verma",       short:"Jyoti"},
-  {name:"KajalOcube_TSE01_0426",       tl:"Sagar Maheshwari", short:"Kajal"},
-  {name:"KhushiOcube_TSE05_0626",      tl:"Sagar Maheshwari", short:"Khushi"},
-  {name:"KumkumOcube_TSE04_0526",      tl:"Amit Verma",       short:"Kumkum"},
-  {name:"Meenakshi_TSE03_0426",        tl:"Amit Verma",       short:"Meenakshi"},
-  {name:"MohitOcube_TSE01_0426",       tl:"Amit Verma",       short:"Mohit"},
-  {name:"MoOcube_Mov_0426",            tl:"Anshu Sharma",     short:"Mo"},
-  {name:"NehaOcube_Mov_0326",          tl:"Akash Tomer",      short:"Neha"},
-  {name:"NikitaOcube_Mov_1225",        tl:"Sagar Maheshwari", short:"Nikita"},
-  {name:"Nishchals_TSE03_0426",        tl:"Sagar Maheshwari", short:"Nishchals"},
-  {name:"PrabhatOcube_Mov_0725",       tl:"Sagar Maheshwari", short:"Prabhat"},
-  {name:"RakhiOcube_Mov_0925",         tl:"Amit Verma",       short:"Rakhi"},
-  {name:"RiturajOcube_Mov_0426",       tl:"Himanshu Tiwari",  short:"Rituraj"},
-  {name:"SangamOcube_TSE01_0426",      tl:"Amit Verma",       short:"Sangam"},
-  {name:"SatishOcube_Mov_0426",        tl:"Himanshu Tiwari",  short:"Satish"},
-  {name:"ShubhanjaliOcube_TSE01_0426", tl:"Sagar Maheshwari", short:"Shubhanjali"},
-  {name:"ShwetaOcube_Mov_0326",        tl:"Anshu Sharma",     short:"Shweta"},
-  {name:"SushmitaCOcube_TSE02_0426",   tl:"Sagar Maheshwari", short:"SushmitaC"},
-  {name:"TejalOcube_Mov_0925",         tl:"Akash Tomer",      short:"Tejal"},
-  {name:"VishalOcube_Mov_0326",        tl:"Akash Tomer",      short:"Vishal"},
+  {name:"AayushKOcube_TSE02_0426",tl:"Sagar Maheshwari",short:"AayushK"},
+  {name:"AbhishekYOcube_TSE05_0626",tl:"Himanshu Tiwari",short:"AbhishekY"},
+  {name:"AdityaSOcube_TSE02_0426",tl:"Amit Verma",short:"AdityaS"},
+  {name:"AmitOcube_TSE04_0526",tl:"Amit Verma",short:"Amit"},
+  {name:"AnamOcube_Mov_0526",tl:"Akash Tomer",short:"Anam"},
+  {name:"AnkitOcube_Mov_0326",tl:"Anshu Sharma",short:"Ankit"},
+  {name:"AnshuOcube_Mov_0925",tl:"Anshu Sharma",short:"Anshu"},
+  {name:"AreebOcube_TSE05_0626",tl:"Amit Verma",short:"Areeb"},
+  {name:"ArshdeepOcube_Mov_0526",tl:"Himanshu Tiwari",short:"Arshdeep"},
+  {name:"AyushSOcube_TSE02_0426",tl:"Amit Verma",short:"AyushS"},
+  {name:"BhanuTOcube_TSE02_0426",tl:"Sagar Maheshwari",short:"BhanuT"},
+  {name:"ChandaOcube_Mov_0526",tl:"Himanshu Tiwari",short:"Chanda"},
+  {name:"ChitvanOcube_TSE05_0626",tl:"Sagar Maheshwari",short:"Chitvan"},
+  {name:"DivyanshuOcube_Mov_0526",tl:"Akash Tomer",short:"Divyanshu"},
+  {name:"HarshitaOcube_Mov_0326",tl:"Akash Tomer",short:"Harshita"},
+  {name:"HarshSOcube_TSE05_0626",tl:"Sagar Maheshwari",short:"HarshS"},
+  {name:"HimaniOcube_TSE05_0626",tl:"Anshu Sharma",short:"Himani"},
+  {name:"HimanshuOcube_Mov_0925",tl:"Himanshu Tiwari",short:"Himanshu"},
+  {name:"HitanshuOcube_Mov_0326",tl:"Amit Verma",short:"Hitanshu"},
+  {name:"IshaOcube_Mov_0925",tl:"Akash Tomer",short:"Isha"},
+  {name:"JaydeepSOcube_TSE02_0426",tl:"Amit Verma",short:"JaydeepS"},
+  {name:"JyotiOcube_Mov_0925",tl:"Amit Verma",short:"Jyoti"},
+  {name:"KajalOcube_TSE01_0426",tl:"Sagar Maheshwari",short:"Kajal"},
+  {name:"KhushiOcube_TSE05_0626",tl:"Sagar Maheshwari",short:"Khushi"},
+  {name:"KumkumOcube_TSE04_0526",tl:"Amit Verma",short:"Kumkum"},
+  {name:"Meenakshi_TSE03_0426",tl:"Amit Verma",short:"Meenakshi"},
+  {name:"MohitOcube_TSE01_0426",tl:"Amit Verma",short:"Mohit"},
+  {name:"MoOcube_Mov_0426",tl:"Anshu Sharma",short:"Mo"},
+  {name:"NehaOcube_Mov_0326",tl:"Akash Tomer",short:"Neha"},
+  {name:"NikitaOcube_Mov_1225",tl:"Sagar Maheshwari",short:"Nikita"},
+  {name:"Nishchals_TSE03_0426",tl:"Sagar Maheshwari",short:"Nishchals"},
+  {name:"PrabhatOcube_Mov_0725",tl:"Sagar Maheshwari",short:"Prabhat"},
+  {name:"RakhiOcube_Mov_0925",tl:"Amit Verma",short:"Rakhi"},
+  {name:"RiturajOcube_Mov_0426",tl:"Himanshu Tiwari",short:"Rituraj"},
+  {name:"SangamOcube_TSE01_0426",tl:"Amit Verma",short:"Sangam"},
+  {name:"SatishOcube_Mov_0426",tl:"Himanshu Tiwari",short:"Satish"},
+  {name:"ShubhanjaliOcube_TSE01_0426",tl:"Sagar Maheshwari",short:"Shubhanjali"},
+  {name:"ShwetaOcube_Mov_0326",tl:"Anshu Sharma",short:"Shweta"},
+  {name:"SushmitaCOcube_TSE02_0426",tl:"Sagar Maheshwari",short:"SushmitaC"},
+  {name:"TejalOcube_Mov_0925",tl:"Akash Tomer",short:"Tejal"},
+  {name:"VishalOcube_Mov_0326",tl:"Akash Tomer",short:"Vishal"},
 ];
 const TLS=["Sagar Maheshwari","Amit Verma","Akash Tomer","Himanshu Tiwari","Anshu Sharma"];
 const AVC=["#1565C0","#dc2626","#16a34a","#7c3aed","#d97706","#0d9488","#c2255c","#ea580c","#4f46e5","#0284c7","#65a30d","#9333ea"];
 const avC=i=>AVC[i%AVC.length];
 const ini=n=>n.split(/[\s_]+/).map(w=>w[0]).filter(Boolean).slice(0,2).join('').toUpperCase();
 
-// ── PRE-FILLED EXCEL DATA ─────────────────────────────────────────────────────
 const PREFILLED={
   lastUpdated:"2026-06-17",
   agents:{
-    "AayushKOcube_TSE02_0426":     {lm_ds:80, lm_dd:28,lm_act:5, mtd_ds:47, mtd_dd:23,mtd_act:1, wtd_ds:5, wtd_dd:4},
-    "AbhishekYOcube_TSE05_0626":   {lm_ds:42, lm_dd:8, lm_act:0, mtd_ds:0,  mtd_dd:0, mtd_act:0, wtd_ds:0, wtd_dd:0},
-    "AdityaSOcube_TSE02_0426":     {lm_ds:74, lm_dd:21,lm_act:3, mtd_ds:35, mtd_dd:8, mtd_act:1, wtd_ds:0, wtd_dd:0},
-    "AmitOcube_TSE04_0526":        {lm_ds:0,  lm_dd:0, lm_act:0, mtd_ds:24, mtd_dd:9, mtd_act:0, wtd_ds:7, wtd_dd:2},
-    "AnamOcube_Mov_0526":          {lm_ds:29, lm_dd:7, lm_act:0, mtd_ds:78, mtd_dd:27,mtd_act:0, wtd_ds:9, wtd_dd:2},
-    "AnkitOcube_Mov_0326":         {lm_ds:93, lm_dd:20,lm_act:0, mtd_ds:40, mtd_dd:12,mtd_act:0, wtd_ds:0, wtd_dd:0},
-    "AnshuOcube_Mov_0925":         {lm_ds:26, lm_dd:17,lm_act:0, mtd_ds:49, mtd_dd:16,mtd_act:5, wtd_ds:2, wtd_dd:0},
-    "AreebOcube_TSE05_0626":       {lm_ds:0,  lm_dd:0, lm_act:0, mtd_ds:1,  mtd_dd:0, mtd_act:0, wtd_ds:0, wtd_dd:0},
-    "ArshdeepOcube_Mov_0526":      {lm_ds:40, lm_dd:9, lm_act:0, mtd_ds:71, mtd_dd:17,mtd_act:0, wtd_ds:5, wtd_dd:1},
-    "AyushSOcube_TSE02_0426":      {lm_ds:80, lm_dd:26,lm_act:5, mtd_ds:59, mtd_dd:24,mtd_act:2, wtd_ds:0, wtd_dd:0},
-    "BhanuTOcube_TSE02_0426":      {lm_ds:59, lm_dd:16,lm_act:1, mtd_ds:56, mtd_dd:16,mtd_act:2, wtd_ds:0, wtd_dd:0},
-    "ChandaOcube_Mov_0526":        {lm_ds:25, lm_dd:5, lm_act:0, mtd_ds:56, mtd_dd:15,mtd_act:2, wtd_ds:9, wtd_dd:0},
-    "ChitvanOcube_TSE05_0626":     {lm_ds:0,  lm_dd:0, lm_act:0, mtd_ds:0,  mtd_dd:0, mtd_act:0, wtd_ds:0, wtd_dd:0},
-    "DivyanshuOcube_Mov_0526":     {lm_ds:31, lm_dd:8, lm_act:0, mtd_ds:56, mtd_dd:9, mtd_act:0, wtd_ds:9, wtd_dd:0},
-    "HarshitaOcube_Mov_0326":      {lm_ds:113,lm_dd:35,lm_act:0, mtd_ds:56, mtd_dd:26,mtd_act:1, wtd_ds:0, wtd_dd:0},
-    "HarshSOcube_TSE05_0626":      {lm_ds:0,  lm_dd:0, lm_act:0, mtd_ds:0,  mtd_dd:0, mtd_act:0, wtd_ds:0, wtd_dd:0},
-    "HimaniOcube_TSE05_0626":      {lm_ds:39, lm_dd:8, lm_act:0, mtd_ds:0,  mtd_dd:0, mtd_act:0, wtd_ds:0, wtd_dd:0},
-    "HimanshuOcube_Mov_0925":      {lm_ds:66, lm_dd:18,lm_act:0, mtd_ds:47, mtd_dd:16,mtd_act:0, wtd_ds:0, wtd_dd:0},
-    "HitanshuOcube_Mov_0326":      {lm_ds:57, lm_dd:10,lm_act:0, mtd_ds:49, mtd_dd:11,mtd_act:0, wtd_ds:0, wtd_dd:0},
-    "IshaOcube_Mov_0925":          {lm_ds:130,lm_dd:38,lm_act:0, mtd_ds:70, mtd_dd:26,mtd_act:3, wtd_ds:0, wtd_dd:0},
-    "JaydeepSOcube_TSE02_0426":    {lm_ds:65, lm_dd:24,lm_act:2, mtd_ds:47, mtd_dd:14,mtd_act:3, wtd_ds:7, wtd_dd:2},
-    "JyotiOcube_Mov_0925":         {lm_ds:14, lm_dd:5, lm_act:0, mtd_ds:47, mtd_dd:15,mtd_act:0, wtd_ds:0, wtd_dd:0},
-    "KajalOcube_TSE01_0426":       {lm_ds:83, lm_dd:28,lm_act:7, mtd_ds:41, mtd_dd:14,mtd_act:5, wtd_ds:0, wtd_dd:0},
-    "KhushiOcube_TSE05_0626":      {lm_ds:0,  lm_dd:0, lm_act:0, mtd_ds:0,  mtd_dd:0, mtd_act:0, wtd_ds:0, wtd_dd:0},
-    "KumkumOcube_TSE04_0526":      {lm_ds:72, lm_dd:16,lm_act:0, mtd_ds:24, mtd_dd:9, mtd_act:0, wtd_ds:6, wtd_dd:1},
-    "Meenakshi_TSE03_0426":        {lm_ds:69, lm_dd:17,lm_act:2, mtd_ds:45, mtd_dd:17,mtd_act:0, wtd_ds:0, wtd_dd:0},
-    "MohitOcube_TSE01_0426":       {lm_ds:35, lm_dd:23,lm_act:3, mtd_ds:51, mtd_dd:19,mtd_act:0, wtd_ds:0, wtd_dd:0},
-    "MoOcube_Mov_0426":            {lm_ds:66, lm_dd:15,lm_act:0, mtd_ds:45, mtd_dd:23,mtd_act:0, wtd_ds:4, wtd_dd:2},
-    "NehaOcube_Mov_0326":          {lm_ds:93, lm_dd:33,lm_act:0, mtd_ds:47, mtd_dd:15,mtd_act:2, wtd_ds:6, wtd_dd:1},
-    "NikitaOcube_Mov_1225":        {lm_ds:3,  lm_dd:2, lm_act:0, mtd_ds:39, mtd_dd:11,mtd_act:3, wtd_ds:0, wtd_dd:0},
-    "Nishchals_TSE03_0426":        {lm_ds:43, lm_dd:12,lm_act:9, mtd_ds:54, mtd_dd:21,mtd_act:0, wtd_ds:7, wtd_dd:3},
-    "PrabhatOcube_Mov_0725":       {lm_ds:98, lm_dd:20,lm_act:0, mtd_ds:42, mtd_dd:17,mtd_act:2, wtd_ds:2, wtd_dd:0},
-    "RakhiOcube_Mov_0925":         {lm_ds:77, lm_dd:17,lm_act:0, mtd_ds:58, mtd_dd:18,mtd_act:0, wtd_ds:8, wtd_dd:2},
-    "RiturajOcube_Mov_0426":       {lm_ds:65, lm_dd:10,lm_act:0, mtd_ds:78, mtd_dd:30,mtd_act:2, wtd_ds:0, wtd_dd:0},
-    "SangamOcube_TSE01_0426":      {lm_ds:80, lm_dd:23,lm_act:4, mtd_ds:28, mtd_dd:11,mtd_act:1, wtd_ds:0, wtd_dd:0},
-    "SatishOcube_Mov_0426":        {lm_ds:53, lm_dd:11,lm_act:0, mtd_ds:66, mtd_dd:20,mtd_act:2, wtd_ds:5, wtd_dd:2},
-    "ShubhanjaliOcube_TSE01_0426": {lm_ds:78, lm_dd:25,lm_act:4, mtd_ds:34, mtd_dd:20,mtd_act:6, wtd_ds:4, wtd_dd:3},
-    "ShwetaOcube_Mov_0326":        {lm_ds:150,lm_dd:23,lm_act:0, mtd_ds:75, mtd_dd:26,mtd_act:3, wtd_ds:10,wtd_dd:2},
-    "SushmitaCOcube_TSE02_0426":   {lm_ds:46, lm_dd:25,lm_act:1, mtd_ds:58, mtd_dd:17,mtd_act:1, wtd_ds:9, wtd_dd:1},
-    "TejalOcube_Mov_0925":         {lm_ds:95, lm_dd:22,lm_act:0, mtd_ds:89, mtd_dd:28,mtd_act:1, wtd_ds:5, wtd_dd:0},
-    "VishalOcube_Mov_0326":        {lm_ds:67, lm_dd:25,lm_act:0, mtd_ds:64, mtd_dd:31,mtd_act:0, wtd_ds:8, wtd_dd:2},
+    "AayushKOcube_TSE02_0426":{lm_ds:80,lm_dd:28,lm_act:5,mtd_ds:47,mtd_dd:23,mtd_act:1,wtd_ds:5,wtd_dd:4},
+    "AbhishekYOcube_TSE05_0626":{lm_ds:42,lm_dd:8,lm_act:0,mtd_ds:0,mtd_dd:0,mtd_act:0,wtd_ds:0,wtd_dd:0},
+    "AdityaSOcube_TSE02_0426":{lm_ds:74,lm_dd:21,lm_act:3,mtd_ds:35,mtd_dd:8,mtd_act:1,wtd_ds:0,wtd_dd:0},
+    "AmitOcube_TSE04_0526":{lm_ds:0,lm_dd:0,lm_act:0,mtd_ds:24,mtd_dd:9,mtd_act:0,wtd_ds:7,wtd_dd:2},
+    "AnamOcube_Mov_0526":{lm_ds:29,lm_dd:7,lm_act:0,mtd_ds:78,mtd_dd:27,mtd_act:0,wtd_ds:9,wtd_dd:2},
+    "AnkitOcube_Mov_0326":{lm_ds:93,lm_dd:20,lm_act:0,mtd_ds:40,mtd_dd:12,mtd_act:0,wtd_ds:0,wtd_dd:0},
+    "AnshuOcube_Mov_0925":{lm_ds:26,lm_dd:17,lm_act:0,mtd_ds:49,mtd_dd:16,mtd_act:5,wtd_ds:2,wtd_dd:0},
+    "AreebOcube_TSE05_0626":{lm_ds:0,lm_dd:0,lm_act:0,mtd_ds:1,mtd_dd:0,mtd_act:0,wtd_ds:0,wtd_dd:0},
+    "ArshdeepOcube_Mov_0526":{lm_ds:40,lm_dd:9,lm_act:0,mtd_ds:71,mtd_dd:17,mtd_act:0,wtd_ds:5,wtd_dd:1},
+    "AyushSOcube_TSE02_0426":{lm_ds:80,lm_dd:26,lm_act:5,mtd_ds:59,mtd_dd:24,mtd_act:2,wtd_ds:0,wtd_dd:0},
+    "BhanuTOcube_TSE02_0426":{lm_ds:59,lm_dd:16,lm_act:1,mtd_ds:56,mtd_dd:16,mtd_act:2,wtd_ds:0,wtd_dd:0},
+    "ChandaOcube_Mov_0526":{lm_ds:25,lm_dd:5,lm_act:0,mtd_ds:56,mtd_dd:15,mtd_act:2,wtd_ds:9,wtd_dd:0},
+    "ChitvanOcube_TSE05_0626":{lm_ds:0,lm_dd:0,lm_act:0,mtd_ds:0,mtd_dd:0,mtd_act:0,wtd_ds:0,wtd_dd:0},
+    "DivyanshuOcube_Mov_0526":{lm_ds:31,lm_dd:8,lm_act:0,mtd_ds:56,mtd_dd:9,mtd_act:0,wtd_ds:9,wtd_dd:0},
+    "HarshitaOcube_Mov_0326":{lm_ds:113,lm_dd:35,lm_act:0,mtd_ds:56,mtd_dd:26,mtd_act:1,wtd_ds:0,wtd_dd:0},
+    "HarshSOcube_TSE05_0626":{lm_ds:0,lm_dd:0,lm_act:0,mtd_ds:0,mtd_dd:0,mtd_act:0,wtd_ds:0,wtd_dd:0},
+    "HimaniOcube_TSE05_0626":{lm_ds:39,lm_dd:8,lm_act:0,mtd_ds:0,mtd_dd:0,mtd_act:0,wtd_ds:0,wtd_dd:0},
+    "HimanshuOcube_Mov_0925":{lm_ds:66,lm_dd:18,lm_act:0,mtd_ds:47,mtd_dd:16,mtd_act:0,wtd_ds:0,wtd_dd:0},
+    "HitanshuOcube_Mov_0326":{lm_ds:57,lm_dd:10,lm_act:0,mtd_ds:49,mtd_dd:11,mtd_act:0,wtd_ds:0,wtd_dd:0},
+    "IshaOcube_Mov_0925":{lm_ds:130,lm_dd:38,lm_act:0,mtd_ds:70,mtd_dd:26,mtd_act:3,wtd_ds:0,wtd_dd:0},
+    "JaydeepSOcube_TSE02_0426":{lm_ds:65,lm_dd:24,lm_act:2,mtd_ds:47,mtd_dd:14,mtd_act:3,wtd_ds:7,wtd_dd:2},
+    "JyotiOcube_Mov_0925":{lm_ds:14,lm_dd:5,lm_act:0,mtd_ds:47,mtd_dd:15,mtd_act:0,wtd_ds:0,wtd_dd:0},
+    "KajalOcube_TSE01_0426":{lm_ds:83,lm_dd:28,lm_act:7,mtd_ds:41,mtd_dd:14,mtd_act:5,wtd_ds:0,wtd_dd:0},
+    "KhushiOcube_TSE05_0626":{lm_ds:0,lm_dd:0,lm_act:0,mtd_ds:0,mtd_dd:0,mtd_act:0,wtd_ds:0,wtd_dd:0},
+    "KumkumOcube_TSE04_0526":{lm_ds:72,lm_dd:16,lm_act:0,mtd_ds:24,mtd_dd:9,mtd_act:0,wtd_ds:6,wtd_dd:1},
+    "Meenakshi_TSE03_0426":{lm_ds:69,lm_dd:17,lm_act:2,mtd_ds:45,mtd_dd:17,mtd_act:0,wtd_ds:0,wtd_dd:0},
+    "MohitOcube_TSE01_0426":{lm_ds:35,lm_dd:23,lm_act:3,mtd_ds:51,mtd_dd:19,mtd_act:0,wtd_ds:0,wtd_dd:0},
+    "MoOcube_Mov_0426":{lm_ds:66,lm_dd:15,lm_act:0,mtd_ds:45,mtd_dd:23,mtd_act:0,wtd_ds:4,wtd_dd:2},
+    "NehaOcube_Mov_0326":{lm_ds:93,lm_dd:33,lm_act:0,mtd_ds:47,mtd_dd:15,mtd_act:2,wtd_ds:6,wtd_dd:1},
+    "NikitaOcube_Mov_1225":{lm_ds:3,lm_dd:2,lm_act:0,mtd_ds:39,mtd_dd:11,mtd_act:3,wtd_ds:0,wtd_dd:0},
+    "Nishchals_TSE03_0426":{lm_ds:43,lm_dd:12,lm_act:9,mtd_ds:54,mtd_dd:21,mtd_act:0,wtd_ds:7,wtd_dd:3},
+    "PrabhatOcube_Mov_0725":{lm_ds:98,lm_dd:20,lm_act:0,mtd_ds:42,mtd_dd:17,mtd_act:2,wtd_ds:2,wtd_dd:0},
+    "RakhiOcube_Mov_0925":{lm_ds:77,lm_dd:17,lm_act:0,mtd_ds:58,mtd_dd:18,mtd_act:0,wtd_ds:8,wtd_dd:2},
+    "RiturajOcube_Mov_0426":{lm_ds:65,lm_dd:10,lm_act:0,mtd_ds:78,mtd_dd:30,mtd_act:2,wtd_ds:0,wtd_dd:0},
+    "SangamOcube_TSE01_0426":{lm_ds:80,lm_dd:23,lm_act:4,mtd_ds:28,mtd_dd:11,mtd_act:1,wtd_ds:0,wtd_dd:0},
+    "SatishOcube_Mov_0426":{lm_ds:53,lm_dd:11,lm_act:0,mtd_ds:66,mtd_dd:20,mtd_act:2,wtd_ds:5,wtd_dd:2},
+    "ShubhanjaliOcube_TSE01_0426":{lm_ds:78,lm_dd:25,lm_act:4,mtd_ds:34,mtd_dd:20,mtd_act:6,wtd_ds:4,wtd_dd:3},
+    "ShwetaOcube_Mov_0326":{lm_ds:150,lm_dd:23,lm_act:0,mtd_ds:75,mtd_dd:26,mtd_act:3,wtd_ds:10,wtd_dd:2},
+    "SushmitaCOcube_TSE02_0426":{lm_ds:46,lm_dd:25,lm_act:1,mtd_ds:58,mtd_dd:17,mtd_act:1,wtd_ds:9,wtd_dd:1},
+    "TejalOcube_Mov_0925":{lm_ds:95,lm_dd:22,lm_act:0,mtd_ds:89,mtd_dd:28,mtd_act:1,wtd_ds:5,wtd_dd:0},
+    "VishalOcube_Mov_0326":{lm_ds:67,lm_dd:25,lm_act:0,mtd_ds:64,mtd_dd:31,mtd_act:0,wtd_ds:8,wtd_dd:2},
   }
 };
-
 let D=JSON.parse(JSON.stringify(PREFILLED));
 
-// ── HELPERS ───────────────────────────────────────────────────────────────────
-const pct=(n,d)=>d>0?Math.round(n/d*1000)/10:0;
-const pCol=p=>p>=40?"#4caf50":p>=25?"#ffa726":"#ef5350";
-const pillCls=p=>p>=40?"pill-g":p>=25?"pill-w":"pill-r";
-const pillTxt=p=>p>=40?"✓ Good":p>=25?"▲ Fair":"✗ Low";
-function ag(name){return D.agents[name]||{mtd_ds:0,mtd_dd:0,mtd_act:0,wtd_ds:0,wtd_dd:0,lm_ds:0,lm_dd:0,lm_act:0};}
-function toast(msg,ok=true){const t=document.getElementById("toast");t.textContent=msg;t.className="toast show "+(ok?"toast-ok":"toast-err");setTimeout(()=>t.className="toast",3000);}
-function txt(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+// ── AMS DATA ──────────────────────────────────────────────────────────────────
+const AMS_AGENTS=[{"name":"Shweta","days":15,"talk_sec":129793,"talk_hrs":36.05,"talk_pct":25.5,"idle_pct":31.7,"break_pct":12.5,"wrapup_pct":22.9,"util":56.3,"aht":"08:54","daily_talk_min":144.2,"outgoing":2024,"connected":584,"weeks":{"W1":{"talk_min":618,"talk_pct":24.4,"util":54.7,"days":5,"outgoing":761,"connected":233},"W2":{"talk_min":670,"talk_pct":27.9,"util":60.5,"days":4,"outgoing":514,"connected":156},"W3":{"talk_min":875,"talk_pct":24.8,"util":54.8,"days":6,"outgoing":749,"connected":195}}},{"name":"Harshita","days":15,"talk_sec":110109,"talk_hrs":30.59,"talk_pct":23.1,"idle_pct":24.5,"break_pct":27.1,"wrapup_pct":22.0,"util":50.3,"aht":"09:19","daily_talk_min":122.3,"outgoing":2087,"connected":527,"weeks":{"W1":{"talk_min":436,"talk_pct":18.1,"util":46.3,"days":5,"outgoing":777,"connected":239},"W2":{"talk_min":820,"talk_pct":24.5,"util":48.1,"days":6,"outgoing":588,"connected":130},"W3":{"talk_min":580,"talk_pct":26.4,"util":58.7,"days":4,"outgoing":722,"connected":158}}},{"name":"JaydeepS","days":17,"talk_sec":82679,"talk_hrs":22.97,"talk_pct":14.9,"idle_pct":23.1,"break_pct":41.3,"wrapup_pct":17.7,"util":41.7,"aht":"08:21","daily_talk_min":81.1,"outgoing":2402,"connected":385,"weeks":{"W1":{"talk_min":587,"talk_pct":18.7,"util":43.8,"days":6,"outgoing":847,"connected":169},"W2":{"talk_min":253,"talk_pct":9.1,"util":37.9,"days":5,"outgoing":790,"connected":104},"W3":{"talk_min":537,"talk_pct":16.2,"util":42.7,"days":6,"outgoing":765,"connected":112}}},{"name":"Rituraj","days":16,"talk_sec":73027,"talk_hrs":20.29,"talk_pct":14.0,"idle_pct":37.6,"break_pct":30.4,"wrapup_pct":17.8,"util":36.3,"aht":"11:01","daily_talk_min":76.1,"outgoing":1894,"connected":389,"weeks":{"W1":{"talk_min":493,"talk_pct":19.7,"util":36.4,"days":5,"outgoing":414,"connected":136},"W2":{"talk_min":286,"talk_pct":9.9,"util":41.1,"days":5,"outgoing":819,"connected":158},"W3":{"talk_min":438,"talk_pct":13.1,"util":32.3,"days":6,"outgoing":661,"connected":95}}},{"name":"Meenakshi","days":17,"talk_sec":71350,"talk_hrs":19.82,"talk_pct":15.0,"idle_pct":27.5,"break_pct":39.6,"wrapup_pct":17.2,"util":39.7,"aht":"06:46","daily_talk_min":70.0,"outgoing":2154,"connected":380,"weeks":{"W1":{"talk_min":659,"talk_pct":22.2,"util":45.4,"days":6,"outgoing":775,"connected":136},"W2":{"talk_min":331,"talk_pct":13.3,"util":42.4,"days":6,"outgoing":760,"connected":140},"W3":{"talk_min":199,"talk_pct":8.1,"util":29.7,"days":5,"outgoing":619,"connected":104}}},{"name":"Neha","days":15,"talk_sec":69031,"talk_hrs":19.18,"talk_pct":15.3,"idle_pct":36.2,"break_pct":33.3,"wrapup_pct":16.4,"util":35.9,"aht":"08:09","daily_talk_min":76.7,"outgoing":2011,"connected":319,"weeks":{"W1":{"talk_min":206,"talk_pct":11.0,"util":30.3,"days":4,"outgoing":463,"connected":111},"W2":{"talk_min":460,"talk_pct":14.9,"util":37.0,"days":6,"outgoing":792,"connected":110},"W3":{"talk_min":484,"talk_pct":18.9,"util":39.0,"days":5,"outgoing":756,"connected":98}}},{"name":"Isha","days":17,"talk_sec":64166,"talk_hrs":17.82,"talk_pct":12.5,"idle_pct":27.2,"break_pct":30.4,"wrapup_pct":28.2,"util":45.6,"aht":"06:12","daily_talk_min":62.9,"outgoing":2538,"connected":610,"weeks":{"W1":{"talk_min":299,"talk_pct":14.0,"util":45.4,"days":4,"outgoing":536,"connected":160},"W2":{"talk_min":366,"talk_pct":11.0,"util":41.9,"days":7,"outgoing":1022,"connected":260},"W3":{"talk_min":404,"talk_pct":12.9,"util":50.0,"days":6,"outgoing":980,"connected":190}}},{"name":"Arshdeep","days":16,"talk_sec":63537,"talk_hrs":17.65,"talk_pct":12.5,"idle_pct":23.6,"break_pct":47.5,"wrapup_pct":12.5,"util":35.0,"aht":"06:12","daily_talk_min":66.2,"outgoing":2742,"connected":446,"weeks":{"W1":{"talk_min":189,"talk_pct":7.7,"util":33.1,"days":5,"outgoing":887,"connected":177},"W2":{"talk_min":450,"talk_pct":11.7,"util":33.4,"days":7,"outgoing":1274,"connected":165},"W3":{"talk_min":419,"talk_pct":19.2,"util":40.2,"days":4,"outgoing":581,"connected":104}}},{"name":"Satish","days":15,"talk_sec":62945,"talk_hrs":17.48,"talk_pct":14.3,"idle_pct":40.7,"break_pct":21.3,"wrapup_pct":25.4,"util":42.6,"aht":"10:01","daily_talk_min":69.9,"outgoing":1296,"connected":327,"weeks":{"W1":{"talk_min":261,"talk_pct":11.4,"util":34.1,"days":5,"outgoing":406,"connected":118},"W2":{"talk_min":484,"talk_pct":19.0,"util":46.6,"days":5,"outgoing":485,"connected":123},"W3":{"talk_min":304,"talk_pct":12.2,"util":47.1,"days":5,"outgoing":405,"connected":86}}},{"name":"Anam","days":16,"talk_sec":61155,"talk_hrs":16.99,"talk_pct":12.0,"idle_pct":34.3,"break_pct":30.9,"wrapup_pct":22.8,"util":39.9,"aht":"07:52","daily_talk_min":63.7,"outgoing":2158,"connected":419,"weeks":{"W1":{"talk_min":289,"talk_pct":11.6,"util":39.8,"days":5,"outgoing":852,"connected":174},"W2":{"talk_min":291,"talk_pct":7.5,"util":35.4,"days":7,"outgoing":897,"connected":161},"W3":{"talk_min":439,"talk_pct":20.6,"util":48.0,"days":4,"outgoing":409,"connected":84}}},{"name":"Divyanshu","days":16,"talk_sec":59312,"talk_hrs":16.48,"talk_pct":12.0,"idle_pct":50.4,"break_pct":28.5,"wrapup_pct":11.4,"util":28.3,"aht":"04:20","daily_talk_min":61.8,"outgoing":1741,"connected":448,"weeks":{"W1":{"talk_min":195,"talk_pct":7.7,"util":22.3,"days":5,"outgoing":514,"connected":130},"W2":{"talk_min":305,"talk_pct":9.8,"util":26.9,"days":6,"outgoing":640,"connected":164},"W3":{"talk_min":488,"talk_pct":19.0,"util":36.1,"days":5,"outgoing":587,"connected":154}}},{"name":"Tejal","days":17,"talk_sec":58549,"talk_hrs":16.26,"talk_pct":10.8,"idle_pct":27.2,"break_pct":34.1,"wrapup_pct":27.4,"util":44.2,"aht":"08:22","daily_talk_min":57.4,"outgoing":2161,"connected":468,"weeks":{"W1":{"talk_min":337,"talk_pct":14.2,"util":43.2,"days":5,"outgoing":454,"connected":142},"W2":{"talk_min":379,"talk_pct":9.4,"util":42.1,"days":7,"outgoing":860,"connected":185},"W3":{"talk_min":260,"talk_pct":9.9,"util":48.2,"days":5,"outgoing":847,"connected":141}}},{"name":"AayushK","days":17,"talk_sec":55194,"talk_hrs":15.33,"talk_pct":10.8,"idle_pct":13.6,"break_pct":58.2,"wrapup_pct":17.2,"util":36.2,"aht":"09:27","daily_talk_min":54.1,"outgoing":1986,"connected":271,"weeks":{"W1":{"talk_min":449,"talk_pct":14.9,"util":41.5,"days":6,"outgoing":762,"connected":105},"W2":{"talk_min":249,"talk_pct":8.3,"util":32.3,"days":6,"outgoing":671,"connected":84},"W3":{"talk_min":222,"talk_pct":9.0,"util":34.3,"days":5,"outgoing":553,"connected":82}}},{"name":"AyushS","days":17,"talk_sec":55162,"talk_hrs":15.32,"talk_pct":10.7,"idle_pct":19.8,"break_pct":54.3,"wrapup_pct":13.8,"util":30.8,"aht":"06:25","daily_talk_min":54.1,"outgoing":1839,"connected":305,"weeks":{"W1":{"talk_min":125,"talk_pct":4.6,"util":20.0,"days":6,"outgoing":488,"connected":101},"W2":{"talk_min":589,"talk_pct":17.5,"util":38.9,"days":6,"outgoing":714,"connected":115},"W3":{"talk_min":206,"talk_pct":8.2,"util":34.0,"days":5,"outgoing":637,"connected":89}}},{"name":"Nishchals","days":17,"talk_sec":53878,"talk_hrs":14.97,"talk_pct":10.5,"idle_pct":26.6,"break_pct":57.0,"wrapup_pct":9.6,"util":26.2,"aht":"06:18","daily_talk_min":52.8,"outgoing":1792,"connected":278,"weeks":{"W1":{"talk_min":293,"talk_pct":10.4,"util":26.5,"days":6,"outgoing":720,"connected":99},"W2":{"talk_min":322,"talk_pct":10.2,"util":24.5,"days":6,"outgoing":595,"connected":96},"W3":{"talk_min":283,"talk_pct":11.0,"util":27.8,"days":5,"outgoing":477,"connected":83}}},{"name":"Kajal","days":11,"talk_sec":52727,"talk_hrs":14.65,"talk_pct":17.4,"idle_pct":25.1,"break_pct":47.4,"wrapup_pct":11.1,"util":38.0,"aht":"06:08","daily_talk_min":79.9,"outgoing":1288,"connected":252,"weeks":{"W1":{"talk_min":689,"talk_pct":22.4,"util":46.4,"days":6,"outgoing":1048,"connected":198},"W2":{"talk_min":29,"talk_pct":6.0,"util":16.7,"days":1,"outgoing":80,"connected":22},"W3":{"talk_min":161,"talk_pct":10.7,"util":30.9,"days":4,"outgoing":160,"connected":32}}},{"name":"BhanuT","days":17,"talk_sec":51114,"talk_hrs":14.2,"talk_pct":9.8,"idle_pct":30.9,"break_pct":44.0,"wrapup_pct":15.6,"util":33.4,"aht":"07:19","daily_talk_min":50.1,"outgoing":2073,"connected":310,"weeks":{"W1":{"talk_min":270,"talk_pct":8.9,"util":32.5,"days":6,"outgoing":753,"connected":104},"W2":{"talk_min":197,"talk_pct":6.4,"util":30.5,"days":6,"outgoing":762,"connected":119},"W3":{"talk_min":385,"talk_pct":15.0,"util":38.1,"days":5,"outgoing":558,"connected":87}}},{"name":"Rakhi","days":16,"talk_sec":47007,"talk_hrs":13.06,"talk_pct":10.0,"idle_pct":20.0,"break_pct":66.7,"wrapup_pct":11.9,"util":24.0,"aht":"08:19","daily_talk_min":49.0,"outgoing":1194,"connected":217,"weeks":{"W1":{"talk_min":286,"talk_pct":12.3,"util":20.9,"days":5,"outgoing":278,"connected":46},"W2":{"talk_min":320,"talk_pct":10.6,"util":28.7,"days":6,"outgoing":537,"connected":89},"W3":{"talk_min":177,"talk_pct":7.1,"util":21.4,"days":5,"outgoing":379,"connected":82}}},{"name":"Chanda","days":15,"talk_sec":45097,"talk_hrs":12.53,"talk_pct":9.7,"idle_pct":45.7,"break_pct":22.9,"wrapup_pct":17.7,"util":35.1,"aht":"06:51","daily_talk_min":50.1,"outgoing":1794,"connected":375,"weeks":{"W1":{"talk_min":152,"talk_pct":7.8,"util":25.8,"days":4,"outgoing":321,"connected":90},"W2":{"talk_min":370,"talk_pct":11.6,"util":38.4,"days":6,"outgoing":830,"connected":186},"W3":{"talk_min":230,"talk_pct":8.8,"util":38.7,"days":5,"outgoing":643,"connected":99}}},{"name":"Himanshu","days":17,"talk_sec":44340,"talk_hrs":12.32,"talk_pct":7.5,"idle_pct":26.9,"break_pct":36.0,"wrapup_pct":32.6,"util":42.5,"aht":"19:47","daily_talk_min":43.5,"outgoing":1081,"connected":271,"weeks":{"W1":{"talk_min":203,"talk_pct":8.2,"util":40.9,"days":5,"outgoing":300,"connected":104},"W2":{"talk_min":346,"talk_pct":8.2,"util":44.0,"days":6,"outgoing":533,"connected":120},"W3":{"talk_min":190,"talk_pct":6.0,"util":42.3,"days":6,"outgoing":248,"connected":47}}},{"name":"Hitanshu","days":16,"talk_sec":44262,"talk_hrs":12.3,"talk_pct":9.2,"idle_pct":36.9,"break_pct":44.1,"wrapup_pct":16.3,"util":27.8,"aht":"09:03","daily_talk_min":46.1,"outgoing":1409,"connected":298,"weeks":{"W1":{"talk_min":127,"talk_pct":5.5,"util":18.9,"days":5,"outgoing":341,"connected":76},"W2":{"talk_min":284,"talk_pct":9.2,"util":32.0,"days":6,"outgoing":629,"connected":119},"W3":{"talk_min":326,"talk_pct":12.7,"util":31.7,"days":5,"outgoing":439,"connected":103}}},{"name":"Vishal","days":17,"talk_sec":43972,"talk_hrs":12.21,"talk_pct":9.1,"idle_pct":35.1,"break_pct":37.8,"wrapup_pct":13.1,"util":34.4,"aht":"05:38","daily_talk_min":43.1,"outgoing":2620,"connected":506,"weeks":{"W1":{"talk_min":114,"talk_pct":6.6,"util":34.3,"days":5,"outgoing":419,"connected":91},"W2":{"talk_min":358,"talk_pct":9.6,"util":32.8,"days":7,"outgoing":1250,"connected":268},"W3":{"talk_min":261,"talk_pct":10.1,"util":36.8,"days":5,"outgoing":951,"connected":147}}},{"name":"Nikita","days":15,"talk_sec":43322,"talk_hrs":12.03,"talk_pct":9.0,"idle_pct":21.7,"break_pct":57.6,"wrapup_pct":13.4,"util":24.2,"aht":"11:01","daily_talk_min":48.1,"outgoing":823,"connected":161,"weeks":{"W1":{"talk_min":97,"talk_pct":4.7,"util":17.4,"days":4,"outgoing":186,"connected":44},"W2":{"talk_min":341,"talk_pct":12.4,"util":30.9,"days":5,"outgoing":388,"connected":66},"W3":{"talk_min":285,"talk_pct":8.9,"util":23.1,"days":6,"outgoing":249,"connected":51}}},{"name":"Amit","days":16,"talk_sec":42097,"talk_hrs":11.69,"talk_pct":8.7,"idle_pct":33.4,"break_pct":52.7,"wrapup_pct":7.7,"util":23.0,"aht":"04:34","daily_talk_min":43.9,"outgoing":1764,"connected":332,"weeks":{"W1":{"talk_min":110,"talk_pct":4.8,"util":17.8,"days":5,"outgoing":410,"connected":106},"W2":{"talk_min":196,"talk_pct":6.3,"util":18.5,"days":6,"outgoing":683,"connected":137},"W3":{"talk_min":396,"talk_pct":14.9,"util":33.5,"days":5,"outgoing":671,"connected":89}}},{"name":"Kumkum","days":16,"talk_sec":34892,"talk_hrs":9.69,"talk_pct":7.5,"idle_pct":40.5,"break_pct":42.7,"wrapup_pct":13.9,"util":26.1,"aht":"06:11","daily_talk_min":36.3,"outgoing":1426,"connected":304,"weeks":{"W1":{"talk_min":71,"talk_pct":3.1,"util":23.8,"days":5,"outgoing":470,"connected":98},"W2":{"talk_min":266,"talk_pct":8.9,"util":25.1,"days":6,"outgoing":551,"connected":105},"W3":{"talk_min":244,"talk_pct":9.6,"util":29.5,"days":5,"outgoing":405,"connected":101}}},{"name":"AdityaS","days":14,"talk_sec":33710,"talk_hrs":9.36,"talk_pct":8.2,"idle_pct":24.9,"break_pct":50.7,"wrapup_pct":15.4,"util":32.9,"aht":"07:03","daily_talk_min":40.1,"outgoing":1679,"connected":242,"weeks":{"W1":{"talk_min":238,"talk_pct":10.3,"util":36.3,"days":5,"outgoing":649,"connected":80},"W2":{"talk_min":55,"talk_pct":3.6,"util":28.1,"days":3,"outgoing":368,"connected":41},"W3":{"talk_min":269,"talk_pct":8.9,"util":32.5,"days":6,"outgoing":662,"connected":121}}},{"name":"Shubhanjali","days":16,"talk_sec":33474,"talk_hrs":9.3,"talk_pct":7.2,"idle_pct":9.0,"break_pct":75.6,"wrapup_pct":16.8,"util":30.3,"aht":"15:26","daily_talk_min":34.9,"outgoing":1148,"connected":139,"weeks":{"W1":{"talk_min":154,"talk_pct":5.1,"util":22.1,"days":6,"outgoing":484,"connected":47},"W2":{"talk_min":245,"talk_pct":11.7,"util":44.6,"days":5,"outgoing":315,"connected":52},"W3":{"talk_min":160,"talk_pct":6.1,"util":25.8,"days":5,"outgoing":349,"connected":40}}},{"name":"Jyoti","days":17,"talk_sec":32045,"talk_hrs":8.9,"talk_pct":6.7,"idle_pct":24.4,"break_pct":54.1,"wrapup_pct":21.8,"util":31.3,"aht":"10:44","daily_talk_min":31.4,"outgoing":1157,"connected":215,"weeks":{"W1":{"talk_min":56,"talk_pct":2.6,"util":19.3,"days":5,"outgoing":169,"connected":39},"W2":{"talk_min":150,"talk_pct":5.0,"util":28.0,"days":6,"outgoing":412,"connected":78},"W3":{"talk_min":329,"talk_pct":11.8,"util":44.7,"days":6,"outgoing":576,"connected":98}}},{"name":"Mo","days":15,"talk_sec":29999,"talk_hrs":8.33,"talk_pct":6.9,"idle_pct":30.9,"break_pct":47.1,"wrapup_pct":20.0,"util":29.2,"aht":"07:56","daily_talk_min":33.3,"outgoing":1089,"connected":301,"weeks":{"W1":{"talk_min":137,"talk_pct":5.9,"util":27.8,"days":5,"outgoing":280,"connected":87},"W2":{"talk_min":128,"talk_pct":5.2,"util":18.7,"days":5,"outgoing":267,"connected":76},"W3":{"talk_min":234,"talk_pct":9.5,"util":41.3,"days":5,"outgoing":542,"connected":138}}},{"name":"Himani","days":6,"talk_sec":25600,"talk_hrs":7.11,"talk_pct":12.5,"idle_pct":21.0,"break_pct":53.5,"wrapup_pct":12.0,"util":34.3,"aht":"04:52","daily_talk_min":71.1,"outgoing":767,"connected":180,"weeks":{"W1":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0},"W2":{"talk_min":9,"talk_pct":4.9,"util":21.5,"days":1,"outgoing":23,"connected":7},"W3":{"talk_min":418,"talk_pct":12.9,"util":36.9,"days":5,"outgoing":744,"connected":173}}},{"name":"Sangam","days":13,"talk_sec":24369,"talk_hrs":6.77,"talk_pct":6.1,"idle_pct":21.3,"break_pct":69.9,"wrapup_pct":9.3,"util":19.9,"aht":"06:34","daily_talk_min":31.2,"outgoing":1924,"connected":184,"weeks":{"W1":{"talk_min":247,"talk_pct":8.0,"util":25.4,"days":6,"outgoing":1104,"connected":118},"W2":{"talk_min":9,"talk_pct":1.0,"util":16.1,"days":2,"outgoing":315,"connected":9},"W3":{"talk_min":150,"talk_pct":5.7,"util":14.7,"days":5,"outgoing":505,"connected":57}}},{"name":"SushmitaC","days":13,"talk_sec":23571,"talk_hrs":6.55,"talk_pct":6.4,"idle_pct":40.1,"break_pct":52.3,"wrapup_pct":9.1,"util":16.9,"aht":"07:07","daily_talk_min":30.2,"outgoing":1195,"connected":148,"weeks":{"W1":{"talk_min":111,"talk_pct":12.9,"util":18.9,"days":2,"outgoing":94,"connected":33},"W2":{"talk_min":134,"talk_pct":4.6,"util":15.1,"days":6,"outgoing":419,"connected":74},"W3":{"talk_min":148,"talk_pct":6.3,"util":18.2,"days":5,"outgoing":682,"connected":41}}},{"name":"Anshu","days":17,"talk_sec":22652,"talk_hrs":6.29,"talk_pct":3.8,"idle_pct":36.1,"break_pct":55.1,"wrapup_pct":6.1,"util":15.6,"aht":"07:35","daily_talk_min":22.2,"outgoing":761,"connected":130,"weeks":{"W1":{"talk_min":107,"talk_pct":4.0,"util":14.5,"days":5,"outgoing":241,"connected":54},"W2":{"talk_min":120,"talk_pct":3.0,"util":20.0,"days":6,"outgoing":264,"connected":50},"W3":{"talk_min":151,"talk_pct":4.7,"util":11.9,"days":6,"outgoing":256,"connected":26}}},{"name":"Pradeep","days":6,"talk_sec":15150,"talk_hrs":4.21,"talk_pct":8.2,"idle_pct":62.7,"break_pct":17.6,"wrapup_pct":11.7,"util":23.2,"aht":"05:40","daily_talk_min":42.1,"outgoing":501,"connected":134,"weeks":{"W1":{"talk_min":209,"talk_pct":8.4,"util":20.8,"days":5,"outgoing":347,"connected":93},"W2":{"talk_min":43,"talk_pct":7.4,"util":35.3,"days":1,"outgoing":154,"connected":41},"W3":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0}}},{"name":"Mohit","days":18,"talk_sec":14453,"talk_hrs":4.01,"talk_pct":2.5,"idle_pct":16.8,"break_pct":73.4,"wrapup_pct":7.6,"util":19.5,"aht":"05:05","daily_talk_min":13.4,"outgoing":2309,"connected":256,"weeks":{"W1":{"talk_min":71,"talk_pct":2.5,"util":18.9,"days":6,"outgoing":631,"connected":53},"W2":{"talk_min":48,"talk_pct":1.7,"util":20.3,"days":6,"outgoing":812,"connected":62},"W3":{"talk_min":122,"talk_pct":3.2,"util":19.2,"days":6,"outgoing":866,"connected":141}}},{"name":"Ankit","days":15,"talk_sec":14365,"talk_hrs":3.99,"talk_pct":3.2,"idle_pct":19.0,"break_pct":51.5,"wrapup_pct":26.5,"util":34.7,"aht":"10:40","daily_talk_min":16.0,"outgoing":1543,"connected":320,"weeks":{"W1":{"talk_min":75,"talk_pct":4.0,"util":40.6,"days":4,"outgoing":529,"connected":127},"W2":{"talk_min":110,"talk_pct":3.6,"util":36.1,"days":6,"outgoing":590,"connected":129},"W3":{"talk_min":54,"talk_pct":2.1,"util":28.3,"days":5,"outgoing":424,"connected":64}}},{"name":"Prabhat","days":18,"talk_sec":12894,"talk_hrs":3.58,"talk_pct":2.4,"idle_pct":15.6,"break_pct":76.9,"wrapup_pct":9.5,"util":14.1,"aht":"07:37","daily_talk_min":11.9,"outgoing":866,"connected":151,"weeks":{"W1":{"talk_min":102,"talk_pct":4.5,"util":14.1,"days":5,"outgoing":180,"connected":48},"W2":{"talk_min":62,"talk_pct":1.7,"util":16.3,"days":7,"outgoing":374,"connected":64},"W3":{"talk_min":51,"talk_pct":1.7,"util":11.6,"days":6,"outgoing":312,"connected":39}}},{"name":"Anil","days":6,"talk_sec":9535,"talk_hrs":2.65,"talk_pct":5.8,"idle_pct":64.8,"break_pct":26.7,"wrapup_pct":8.7,"util":20.7,"aht":"03:04","daily_talk_min":26.5,"outgoing":526,"connected":128,"weeks":{"W1":{"talk_min":145,"talk_pct":6.4,"util":21.9,"days":5,"outgoing":446,"connected":109},"W2":{"talk_min":14,"talk_pct":3.0,"util":15.1,"days":1,"outgoing":80,"connected":19},"W3":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0}}},{"name":"Khushi","days":7,"talk_sec":8694,"talk_hrs":2.42,"talk_pct":4.5,"idle_pct":24.0,"break_pct":61.0,"wrapup_pct":12.9,"util":25.0,"aht":"03:19","daily_talk_min":20.7,"outgoing":704,"connected":205,"weeks":{"W1":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0},"W2":{"talk_min":19,"talk_pct":9.7,"util":47.5,"days":1,"outgoing":83,"connected":25},"W3":{"talk_min":126,"talk_pct":4.2,"util":21.2,"days":6,"outgoing":621,"connected":180}}},{"name":"AbhishekP","days":3,"talk_sec":8533,"talk_hrs":2.37,"talk_pct":9.4,"idle_pct":37.4,"break_pct":31.2,"wrapup_pct":15.2,"util":41.2,"aht":"03:59","daily_talk_min":47.4,"outgoing":486,"connected":94,"weeks":{"W1":{"talk_min":142,"talk_pct":9.4,"util":41.2,"days":3,"outgoing":486,"connected":94},"W2":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0},"W3":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0}}},{"name":"HarshS","days":5,"talk_sec":5275,"talk_hrs":1.47,"talk_pct":4.0,"idle_pct":37.0,"break_pct":53.9,"wrapup_pct":8.4,"util":19.6,"aht":"02:15","daily_talk_min":17.6,"outgoing":537,"connected":120,"weeks":{"W1":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0},"W2":{"talk_min":7,"talk_pct":3.4,"util":27.2,"days":1,"outgoing":82,"connected":20},"W3":{"talk_min":81,"talk_pct":4.1,"util":17.6,"days":4,"outgoing":455,"connected":100}}},{"name":"Vikram","days":2,"talk_sec":4867,"talk_hrs":1.35,"talk_pct":12.1,"idle_pct":57.6,"break_pct":2.5,"wrapup_pct":18.3,"util":33.7,"aht":"03:11","daily_talk_min":40.6,"outgoing":204,"connected":69,"weeks":{"W1":{"talk_min":81,"talk_pct":12.1,"util":33.7,"days":2,"outgoing":204,"connected":69},"W2":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0},"W3":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0}}},{"name":"Akash","days":3,"talk_sec":3645,"talk_hrs":1.01,"talk_pct":4.1,"idle_pct":79.2,"break_pct":7.8,"wrapup_pct":10.4,"util":18.7,"aht":"03:23","daily_talk_min":20.2,"outgoing":344,"connected":58,"weeks":{"W1":{"talk_min":61,"talk_pct":4.1,"util":18.7,"days":3,"outgoing":344,"connected":58},"W2":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0},"W3":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0}}},{"name":"Sachin","days":2,"talk_sec":3555,"talk_hrs":0.99,"talk_pct":8.4,"idle_pct":57.0,"break_pct":16.0,"wrapup_pct":29.2,"util":30.3,"aht":"05:47","daily_talk_min":29.6,"outgoing":106,"connected":50,"weeks":{"W1":{"talk_min":59,"talk_pct":8.4,"util":30.3,"days":2,"outgoing":106,"connected":50},"W2":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0},"W3":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0}}},{"name":"Shivam","days":4,"talk_sec":3121,"talk_hrs":0.87,"talk_pct":3.2,"idle_pct":52.7,"break_pct":19.4,"wrapup_pct":28.5,"util":33.0,"aht":"04:30","daily_talk_min":13.0,"outgoing":312,"connected":72,"weeks":{"W1":{"talk_min":52,"talk_pct":3.2,"util":33.0,"days":4,"outgoing":312,"connected":72},"W2":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0},"W3":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0}}},{"name":"Chitvan","days":5,"talk_sec":3074,"talk_hrs":0.85,"talk_pct":2.3,"idle_pct":26.1,"break_pct":59.9,"wrapup_pct":11.8,"util":23.9,"aht":"02:33","daily_talk_min":10.2,"outgoing":511,"connected":116,"weeks":{"W1":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0},"W2":{"talk_min":14,"talk_pct":6.2,"util":37.8,"days":1,"outgoing":88,"connected":31},"W3":{"talk_min":37,"talk_pct":1.9,"util":20.5,"days":4,"outgoing":423,"connected":85}}},{"name":"Lucky","days":4,"talk_sec":3037,"talk_hrs":0.84,"talk_pct":2.6,"idle_pct":57.9,"break_pct":37.3,"wrapup_pct":5.1,"util":10.8,"aht":"03:20","daily_talk_min":12.7,"outgoing":229,"connected":61,"weeks":{"W1":{"talk_min":13,"talk_pct":1.0,"util":5.7,"days":3,"outgoing":74,"connected":17},"W2":{"talk_min":37,"talk_pct":6.4,"util":25.9,"days":1,"outgoing":155,"connected":44},"W3":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0}}},{"name":"AbhishekY","days":3,"talk_sec":1046,"talk_hrs":0.29,"talk_pct":5.5,"idle_pct":27.6,"break_pct":50.1,"wrapup_pct":9.5,"util":23.6,"aht":"01:00","daily_talk_min":5.8,"outgoing":117,"connected":31,"weeks":{"W1":{"talk_min":0,"talk_pct":0,"util":0,"days":0,"outgoing":0,"connected":0},"W2":{"talk_min":10,"talk_pct":6.4,"util":34.1,"days":1,"outgoing":66,"connected":18},"W3":{"talk_min":7,"talk_pct":4.5,"util":18.4,"days":2,"outgoing":51,"connected":13}}}];
 
-// ── CHARTS ───────────────────────────────────────────────────────────────────
+const AMS_DAILY=[{"date":"01 Jun","talk_hrs":14.82,"agents":13,"util":32.6,"week":"W1"},{"date":"02 Jun","talk_hrs":21.08,"agents":40,"util":19.9,"week":"W1"},{"date":"03 Jun","talk_hrs":36.44,"agents":43,"util":36.8,"week":"W1"},{"date":"04 Jun","talk_hrs":31.19,"agents":39,"util":30.8,"week":"W1"},{"date":"05 Jun","talk_hrs":30.59,"agents":33,"util":32.5,"week":"W1"},{"date":"06 Jun","talk_hrs":26.29,"agents":35,"util":31.5,"week":"W1"},{"date":"08 Jun","talk_hrs":32.82,"agents":36,"util":36.6,"week":"W2"},{"date":"09 Jun","talk_hrs":22.84,"agents":31,"util":30.5,"week":"W2"},{"date":"10 Jun","talk_hrs":21.9,"agents":30,"util":29.4,"week":"W2"},{"date":"11 Jun","talk_hrs":25.08,"agents":30,"util":29.9,"week":"W2"},{"date":"12 Jun","talk_hrs":25.87,"agents":25,"util":36.7,"week":"W2"},{"date":"13 Jun","talk_hrs":19.95,"agents":32,"util":33.0,"week":"W2"},{"date":"14 Jun","talk_hrs":21.37,"agents":21,"util":32.0,"week":"W2"},{"date":"15 Jun","talk_hrs":34.45,"agents":34,"util":38.7,"week":"W3"},{"date":"16 Jun","talk_hrs":26.18,"agents":39,"util":31.8,"week":"W3"},{"date":"17 Jun","talk_hrs":32.29,"agents":30,"util":32.3,"week":"W3"},{"date":"18 Jun","talk_hrs":27.64,"agents":32,"util":29.6,"week":"W3"},{"date":"19 Jun","talk_hrs":27.69,"agents":35,"util":26.9,"week":"W3"},{"date":"20 Jun","talk_hrs":37.23,"agents":39,"util":32.4,"week":"W3"}];
+
+const AMS_WEEKS=[{"week":"W1","label":"Wk 1 (1-7 Jun)","talk_hrs":160.41,"talk_pct":9.9,"util":30.4,"idle_pct":40.9,"break_pct":35.0,"agents":44},{"week":"W2","label":"Wk 2 (8-14 Jun)","talk_hrs":169.82,"talk_pct":9.6,"util":32.6,"idle_pct":29.2,"break_pct":45.1,"agents":44},{"week":"W3","label":"Wk 3 (15-20 Jun)","talk_hrs":185.47,"talk_pct":10.5,"util":31.9,"idle_pct":19.8,"break_pct":54.9,"agents":46}];
+
+// MTD totals
+const AMS_MTD={talk_hrs:515.7,talk_pct:10.0,idle_pct:29.7,break_pct:45.3,wrapup_pct:16.3,util:31.7,agents:55,staffed_hrs:5153};
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+let activeWk='all';
 const charts={};
 function mkC(id,cfg){if(charts[id])charts[id].destroy();const e=document.getElementById(id);if(e)charts[id]=new Chart(e,cfg);}
-const co=(max,legend=false)=>({responsive:true,maintainAspectRatio:false,animation:{duration:700},
-  plugins:{legend:{display:legend,labels:{color:"#4a6080",font:{size:11},boxWidth:10,boxHeight:10}}},
-  scales:{
-    y:{max,ticks:{color:"#4a6080",font:{size:10}},grid:{color:"rgba(255,255,255,.04)"},border:{display:false}},
-    x:{ticks:{color:"#4a6080",font:{size:10},maxRotation:35},grid:{display:false},border:{display:false}}
-  }});
+const gc='rgba(255,255,255,.04)',tc='#4a6080';
+const coB=(mx,leg=false)=>({responsive:true,maintainAspectRatio:false,animation:{duration:600},plugins:{legend:{display:leg,labels:{color:'#6b88a8',font:{size:10},boxWidth:9,boxHeight:9}}},scales:{y:{max:mx,ticks:{color:tc,font:{size:10}},grid:{color:gc},border:{display:false}},x:{ticks:{color:tc,font:{size:10},maxRotation:35},grid:{display:false},border:{display:false}}}});
 
-// ── RENDER ALL ────────────────────────────────────────────────────────────────
+// ── MODULE SWITCH ──────────────────────────────────────────────────────────────
+function switchMod(id,el){
+  document.querySelectorAll('.mod-tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.mod-pane').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('mod-'+id).classList.add('on');
+  if(id==='ams')renderAMS();
+  else renderAll();
+}
+
+// ── BUSY HELPERS ──────────────────────────────────────────────────────────────
+const pct=(n,d)=>d>0?Math.round(n/d*1000)/10:0;
+const pCol=p=>p>=40?'#4caf50':p>=25?'#ffa726':'#ef5350';
+const pillCls=p=>p>=40?'pill-g':p>=25?'pill-w':'pill-r';
+function ag(name){return D.agents[name]||{mtd_ds:0,mtd_dd:0,mtd_act:0,wtd_ds:0,wtd_dd:0,lm_ds:0,lm_dd:0,lm_act:0};}
+function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(ok?'toast-ok':'toast-err');setTimeout(()=>t.className='toast',3000);}
+
+function switchTab(id,el){
+  document.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');document.getElementById('pane-'+id).classList.add('on');
+  renderAll();
+}
+
 function renderAll(){renderOverview();renderDsdd();renderDta();renderTL();renderTLAgents();}
 
-// ── OVERVIEW ─────────────────────────────────────────────────────────────────
+// ── BUSY OVERVIEW ─────────────────────────────────────────────────────────────
 function renderOverview(){
   const sum=k=>AGENTS.reduce((s,a)=>s+(ag(a.name)[k]||0),0);
-  const mtd_ds=sum("mtd_ds"),mtd_dd=sum("mtd_dd"),mtd_act=sum("mtd_act");
-  const lm_ds=sum("lm_ds"),lm_dd=sum("lm_dd"),lm_act=sum("lm_act");
-  const wtd_ds=sum("wtd_ds"),wtd_dd=sum("wtd_dd");
+  const mtd_ds=sum('mtd_ds'),mtd_dd=sum('mtd_dd'),mtd_act=sum('mtd_act');
+  const lm_ds=sum('lm_ds'),lm_dd=sum('lm_dd'),lm_act=sum('lm_act');
+  const wtd_ds=sum('wtd_ds'),wtd_dd=sum('wtd_dd');
   const dp=pct(mtd_dd,mtd_ds),lp=pct(lm_dd,lm_ds),diff=(dp-lp).toFixed(1);
   const dtap=pct(mtd_act,mtd_dd),ldta=pct(lm_act,lm_dd);
   const active=AGENTS.filter(a=>(ag(a.name).mtd_ds||0)>0).length;
 
-  document.getElementById("kpiGrid").innerHTML=[
-    {icon:"📅",lbl:"DS — MTD",val:mtd_ds,sub:"Demo Scheduled",cls:"ac",ac:"var(--blue-lt)",bar:null},
-    {icon:"✅",lbl:"DD — MTD",val:mtd_dd,sub:"Demo Done",cls:"ok",ac:"var(--up)",bar:null},
-    {icon:"📊",lbl:"DS→DD %",val:dp+"%",sub:(diff>=0?"↑":"↓")+Math.abs(diff)+"pp vs LM ("+lp+"%)",cls:"ok",ac:pCol(dp),bar:Math.min(dp,100),barC:pCol(dp),tag:diff>=0?"tag-up":"tag-dn",tagT:(diff>=0?"↑":"↓")+" vs LM"},
-    {icon:"🎯",lbl:"Activations",val:mtd_act,sub:"Deals matured MTD",cls:"ac",ac:"var(--blue-lt)",bar:null},
-    {icon:"💡",lbl:"DD→Act %",val:dtap+"%",sub:"vs "+ldta+"% last month",cls:"wb",ac:"var(--warn)",bar:Math.min(dtap*2,100),barC:"var(--warn)"},
-    {icon:"📈",lbl:"WTD DS→DD",val:pct(wtd_dd,wtd_ds)+"%",sub:wtd_ds+" DS → "+wtd_dd+" DD this week",cls:"er",ac:"var(--dn)",bar:null},
-    {icon:"📋",lbl:"LM DS→DD %",val:lp+"%",sub:"Last month benchmark",cls:"ac",ac:"var(--blue-lt)",bar:Math.min(lp,100),barC:"var(--blue-lt)"},
-    {icon:"⚡",lbl:"Active Agents",val:active+"/"+AGENTS.length,sub:"with MTD activity",cls:"wb",ac:"var(--warn)",bar:Math.round(active/AGENTS.length*100),barC:"var(--warn)"},
+  document.getElementById('kpiGrid').innerHTML=[
+    {icon:'📅',lbl:'DS — MTD',val:mtd_ds,sub:'Demo Scheduled',cls:'ac',ac:'var(--blt)',bar:null},
+    {icon:'✅',lbl:'DD — MTD',val:mtd_dd,sub:'Demo Done',cls:'ok',ac:'var(--up)',bar:null},
+    {icon:'📊',lbl:'DS→DD %',val:dp+'%',sub:(diff>=0?'↑':'↓')+Math.abs(diff)+'pp vs LM ('+lp+'%)',cls:'ok',ac:pCol(dp),bar:Math.min(dp,100),barC:pCol(dp)},
+    {icon:'🎯',lbl:'Activations',val:mtd_act,sub:'MTD matured',cls:'ac',ac:'var(--blt)',bar:null},
+    {icon:'💡',lbl:'DD→Act %',val:dtap+'%',sub:'vs '+ldta+'% LM',cls:'wb',ac:'var(--warn)',bar:Math.min(dtap*2,100),barC:'var(--warn)'},
+    {icon:'📈',lbl:'WTD DS→DD',val:pct(wtd_dd,wtd_ds)+'%',sub:wtd_ds+' DS → '+wtd_dd+' DD',cls:'er',ac:'var(--dn)'},
+    {icon:'📋',lbl:'LM DS→DD %',val:lp+'%',sub:'Benchmark',cls:'ac',ac:'var(--blt)',bar:Math.min(lp,100),barC:'var(--blt)'},
+    {icon:'⚡',lbl:'Active Agents',val:active+'/'+AGENTS.length,sub:'with MTD activity',cls:'wb',ac:'var(--warn)',bar:Math.round(active/AGENTS.length*100),barC:'var(--warn)'},
   ].map(k=>`<div class="kpi ${k.cls}">
-    <span class="kpi-icon">${k.icon}</span>
-    <div class="kpi-lbl">${k.lbl}</div>
+    <div class="kpi-lbl">${k.icon} ${k.lbl}</div>
     <div class="kpi-val" style="color:${k.ac}">${k.val}</div>
     <div class="kpi-sub">${k.sub}</div>
-    ${k.tag?`<span class="kpi-tag ${k.tag}">${k.tagT}</span>`:""}
-    ${k.bar!=null?`<div class="kpi-bar"><div class="kpi-fill" style="background:${k.barC};width:${k.bar}%"></div></div>`:""}
-  </div>`).join("");
+    ${k.bar!=null?`<div class="kpi-bar"><div class="kpi-fill" style="background:${k.barC};width:${k.bar}%"></div></div>`:''}
+  </div>`).join('');
 
-  mkC("momChart",{type:"bar",data:{labels:["Last Month","MTD"],datasets:[{data:[lp,dp],backgroundColor:["rgba(30,111,217,.3)","rgba(30,111,217,.85)"],borderRadius:7,borderSkipped:false}]},options:co(60)});
-  mkC("dtaMomChart",{type:"bar",data:{labels:["Last Month","MTD"],datasets:[{data:[ldta,dtap],backgroundColor:["rgba(255,255,255,.08)","rgba(106,176,255,.45)"],borderRadius:7,borderSkipped:false}]},options:co(20)});
+  mkC('momChart',{type:'bar',data:{labels:['Last Month','MTD'],datasets:[{data:[lp,dp],backgroundColor:['rgba(30,111,217,.3)','rgba(30,111,217,.85)'],borderRadius:6,borderSkipped:false}]},options:coB(60)});
+  mkC('dtaMomChart',{type:'bar',data:{labels:['Last Month','MTD'],datasets:[{data:[ldta,dtap],backgroundColor:['rgba(255,255,255,.08)','rgba(106,176,255,.45)'],borderRadius:6,borderSkipped:false}]},options:coB(20)});
 
   const top20=[...AGENTS].map(a=>({...ag(a.name),short:a.short})).filter(a=>a.mtd_ds>0).sort((a,b)=>b.mtd_ds-a.mtd_ds).slice(0,20);
-  mkC("funnelChart",{type:"bar",data:{labels:top20.map(a=>a.short),datasets:[
-    {label:"DS",data:top20.map(a=>a.mtd_ds),backgroundColor:"rgba(30,111,217,.55)",borderRadius:5,borderSkipped:false},
-    {label:"DD",data:top20.map(a=>a.mtd_dd),backgroundColor:"rgba(106,176,255,.8)",borderRadius:5,borderSkipped:false},
-  ]},options:co(undefined,true)});
+  mkC('funnelChart',{type:'bar',data:{labels:top20.map(a=>a.short),datasets:[{label:'DS',data:top20.map(a=>a.mtd_ds),backgroundColor:'rgba(30,111,217,.55)',borderRadius:4,borderSkipped:false},{label:'DD',data:top20.map(a=>a.mtd_dd),backgroundColor:'rgba(106,176,255,.8)',borderRadius:4,borderSkipped:false}]},options:coB(undefined,true)});
 
   const top15=[...AGENTS].map(a=>({...ag(a.name),short:a.short})).filter(a=>a.mtd_ds>0).sort((a,b)=>b.mtd_ds-a.mtd_ds).slice(0,15);
-  mkC("wtdChart",{type:"bar",data:{labels:top15.map(a=>a.short),datasets:[
-    {label:"MTD DS",data:top15.map(a=>a.mtd_ds),backgroundColor:"rgba(30,111,217,.5)",borderRadius:5,borderSkipped:false},
-    {label:"WTD DS",data:top15.map(a=>a.wtd_ds),backgroundColor:"rgba(13,148,136,.7)",borderRadius:5,borderSkipped:false},
-  ]},options:co(undefined,true)});
+  mkC('wtdChart',{type:'bar',data:{labels:top15.map(a=>a.short),datasets:[{label:'MTD DS',data:top15.map(a=>a.mtd_ds),backgroundColor:'rgba(30,111,217,.5)',borderRadius:4,borderSkipped:false},{label:'WTD DS',data:top15.map(a=>a.wtd_ds),backgroundColor:'rgba(13,148,136,.7)',borderRadius:4,borderSkipped:false}]},options:coB(undefined,true)});
 
   const withAct=[...AGENTS].map((a,i)=>({...ag(a.name),short:a.short,i})).filter(a=>a.mtd_act>0).sort((a,b)=>b.mtd_act-a.mtd_act);
-  mkC("actChart",{type:"bar",data:{labels:withAct.map(a=>a.short),datasets:[{label:"Activations",data:withAct.map(a=>a.mtd_act),backgroundColor:withAct.map((_,i)=>AVC[i%AVC.length]+"bb"),borderRadius:6,borderSkipped:false}]},options:co(undefined,false)});
+  mkC('actChart',{type:'bar',data:{labels:withAct.map(a=>a.short),datasets:[{data:withAct.map(a=>a.mtd_act),backgroundColor:withAct.map((_,i)=>AVC[i%AVC.length]+'bb'),borderRadius:5,borderSkipped:false}]},options:coB()});
 }
 
-// ── DS→DD ────────────────────────────────────────────────────────────────────
+function pillHtml(v,hi=40,lo=25){const c=v>=hi?'pill-g':v>=lo?'pill-w':'pill-r';return`<span class="pill ${c}">${v}%</span>`;}
+function renderLb(id,data,fn){
+  const mx=Math.max(...data.map(fn),1);
+  document.getElementById(id).innerHTML=data.map((a,i)=>{
+    const v=fn(a);
+    return`<div class="lb-row">
+      <div class="lb-rank ${i<3?'lb-gold':''}">${i+1}</div>
+      <div class="lb-av" style="background:${avC(a.i)}">${ini(a.short)}</div>
+      <div style="flex:1;min-width:0"><div class="lb-name">${a.short}</div><div class="lb-tl">${a.tl.split(' ')[0]}</div></div>
+      <div class="lb-bar-t"><div class="lb-bar-f" style="width:${Math.min(100,v/mx*100)}%"></div></div>
+      <div class="lb-pct" style="color:${pCol(v)}">${v}%</div>
+    </div>`;
+  }).join('');
+}
+
 function renderDsdd(){
-  const tlF=document.getElementById("tlFilter").value;
-  const srt=document.getElementById("dsddSort").value;
+  const tlF=document.getElementById('tlFilter').value;
+  const srt=document.getElementById('dsddSort').value;
   let data=AGENTS.map((a,i)=>({...a,i,...ag(a.name)})).filter(a=>!tlF||a.tl===tlF);
   const sm={mtd_pct:a=>pct(a.mtd_dd,a.mtd_ds),mtd_dd:a=>a.mtd_dd,mtd_ds:a=>a.mtd_ds,wtd_pct:a=>pct(a.wtd_dd,a.wtd_ds)};
   data.sort((a,b)=>sm[srt](b)-sm[srt](a));
   const sums={lm_ds:0,lm_dd:0,mtd_ds:0,mtd_dd:0,wtd_ds:0,wtd_dd:0};
-
-  document.getElementById("dsddBody").innerHTML=data.map((a,rank)=>{
+  document.getElementById('dsddBody').innerHTML=data.map((a,rank)=>{
     const lp=pct(a.lm_dd,a.lm_ds),mp=pct(a.mtd_dd,a.mtd_ds),wp=pct(a.wtd_dd,a.wtd_ds);
     const diff=(mp-lp).toFixed(1);
-    const trend=mp>lp?`<span class="up">▲ +${diff}pp</span>`:mp<lp?`<span class="dn">▼ ${diff}pp</span>`:`<span class="muted">—</span>`;
+    const trend=mp>lp?`<span class="up">▲ +${diff}pp</span>`:mp<lp?`<span class="dn">▼ ${diff}pp</span>`:`<span class="mu">—</span>`;
     Object.keys(sums).forEach(k=>sums[k]+=(a[k]||0));
     return`<tr>
-      <td class="muted" style="font-size:10px">${rank+1}</td>
-      <td><div style="display:flex;align-items:center;gap:7px"><div style="width:22px;height:22px;border-radius:50%;background:${avC(a.i)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">${ini(a.short)}</div><span class="fw6">${a.short}</span></div></td>
-      <td class="muted sm">${a.tl.split(" ")[0]}</td>
+      <td class="mu sm">${rank+1}</td>
+      <td><div style="display:flex;align-items:center;gap:6px"><div style="width:20px;height:20px;border-radius:50%;background:${avC(a.i)};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff">${ini(a.short)}</div><span class="fw6">${a.short}</span></div></td>
+      <td class="mu sm">${a.tl.split(' ')[0]}</td>
       <td class="mono">${a.lm_ds}</td><td class="mono">${a.lm_dd}</td><td>${pillHtml(lp)}</td>
       <td class="mono"><strong>${a.mtd_ds}</strong></td><td class="mono"><strong>${a.mtd_dd}</strong></td><td>${pillHtml(mp)}</td>
       <td class="mono">${a.wtd_ds}</td><td class="mono">${a.wtd_dd}</td><td>${pillHtml(wp)}</td>
       <td>${trend}</td>
     </tr>`;
-  }).join("");
-
-  document.getElementById("dsddFoot").innerHTML=`<tr>
-    <td colspan="3"><strong>Total</strong></td>
-    <td class="mono">${sums.lm_ds}</td><td class="mono">${sums.lm_dd}</td><td><strong>${pct(sums.lm_dd,sums.lm_ds)}%</strong></td>
-    <td class="mono">${sums.mtd_ds}</td><td class="mono">${sums.mtd_dd}</td><td><strong>${pct(sums.mtd_dd,sums.mtd_ds)}%</strong></td>
-    <td class="mono">${sums.wtd_ds}</td><td class="mono">${sums.wtd_dd}</td><td><strong>${pct(sums.wtd_dd,sums.wtd_ds)}%</strong></td>
-    <td></td>
-  </tr>`;
-
+  }).join('');
+  document.getElementById('dsddFoot').innerHTML=`<tr><td colspan="3"><strong>Total</strong></td><td class="mono">${sums.lm_ds}</td><td class="mono">${sums.lm_dd}</td><td><strong>${pct(sums.lm_dd,sums.lm_ds)}%</strong></td><td class="mono">${sums.mtd_ds}</td><td class="mono">${sums.mtd_dd}</td><td><strong>${pct(sums.mtd_dd,sums.mtd_ds)}%</strong></td><td class="mono">${sums.wtd_ds}</td><td class="mono">${sums.wtd_dd}</td><td><strong>${pct(sums.wtd_dd,sums.wtd_ds)}%</strong></td><td></td></tr>`;
   const active=AGENTS.map((a,i)=>({...a,i,...ag(a.name)})).filter(a=>a.mtd_ds>=5);
-  renderLb("lb-dsdd-top",[...active].sort((a,b)=>pct(b.mtd_dd,b.mtd_ds)-pct(a.mtd_dd,a.mtd_ds)).slice(0,8),a=>pct(a.mtd_dd,a.mtd_ds));
-  renderLb("lb-dsdd-bot",[...active].sort((a,b)=>pct(a.mtd_dd,a.mtd_ds)-pct(b.mtd_dd,b.mtd_ds)).slice(0,8),a=>pct(a.mtd_dd,a.mtd_ds));
+  renderLb('lb-dsdd-top',[...active].sort((a,b)=>pct(b.mtd_dd,b.mtd_ds)-pct(a.mtd_dd,a.mtd_ds)).slice(0,8),a=>pct(a.mtd_dd,a.mtd_ds));
+  renderLb('lb-dsdd-bot',[...active].sort((a,b)=>pct(a.mtd_dd,a.mtd_ds)-pct(b.mtd_dd,b.mtd_ds)).slice(0,8),a=>pct(a.mtd_dd,a.mtd_ds));
 }
 
-// ── DD→ACT ───────────────────────────────────────────────────────────────────
 function renderDta(){
-  const tlF=document.getElementById("tlFilterDta").value;
-  let data=AGENTS.map((a,i)=>({...a,i,...ag(a.name)})).filter(a=>!tlF||a.tl===tlF)
-    .sort((a,b)=>pct(b.mtd_act,b.mtd_dd)-pct(a.mtd_act,a.mtd_dd));
+  const tlF=document.getElementById('tlFilterDta').value;
+  let data=AGENTS.map((a,i)=>({...a,i,...ag(a.name)})).filter(a=>!tlF||a.tl===tlF).sort((a,b)=>pct(b.mtd_act,b.mtd_dd)-pct(a.mtd_act,a.mtd_dd));
   const sums={lm_dd:0,lm_act:0,mtd_dd:0,mtd_act:0};
-
-  document.getElementById("dtaBody").innerHTML=data.map((a,rank)=>{
+  document.getElementById('dtaBody').innerHTML=data.map((a,rank)=>{
     const lp=pct(a.lm_act,a.lm_dd),mp=pct(a.mtd_act,a.mtd_dd);
     const diff=(mp-lp).toFixed(1);
-    const trend=mp>lp?`<span class="up">▲ +${diff}pp</span>`:mp<lp?`<span class="dn">▼ ${diff}pp</span>`:`<span class="muted">—</span>`;
+    const trend=mp>lp?`<span class="up">▲ +${diff}pp</span>`:mp<lp?`<span class="dn">▼ ${diff}pp</span>`:`<span class="mu">—</span>`;
     Object.keys(sums).forEach(k=>sums[k]+=(a[k]||0));
-    return`<tr>
-      <td class="muted" style="font-size:10px">${rank+1}</td>
-      <td><div style="display:flex;align-items:center;gap:7px"><div style="width:22px;height:22px;border-radius:50%;background:${avC(a.i)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">${ini(a.short)}</div><span class="fw6">${a.short}</span></div></td>
-      <td class="muted sm">${a.tl.split(" ")[0]}</td>
-      <td class="mono">${a.lm_dd}</td><td class="mono">${a.lm_act}</td><td>${pillHtml(lp,25,10)}</td>
-      <td class="mono"><strong>${a.mtd_dd}</strong></td><td class="mono"><strong>${a.mtd_act}</strong></td><td>${pillHtml(mp,25,10)}</td>
-      <td>${trend}</td>
-    </tr>`;
-  }).join("");
-
-  document.getElementById("dtaFoot").innerHTML=`<tr>
-    <td colspan="3"><strong>Total</strong></td>
-    <td class="mono">${sums.lm_dd}</td><td class="mono">${sums.lm_act}</td><td><strong>${pct(sums.lm_act,sums.lm_dd)}%</strong></td>
-    <td class="mono">${sums.mtd_dd}</td><td class="mono">${sums.mtd_act}</td><td><strong>${pct(sums.mtd_act,sums.mtd_dd)}%</strong></td>
-    <td></td>
-  </tr>`;
-
+    return`<tr><td class="mu sm">${rank+1}</td><td><div style="display:flex;align-items:center;gap:6px"><div style="width:20px;height:20px;border-radius:50%;background:${avC(a.i)};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff">${ini(a.short)}</div><span class="fw6">${a.short}</span></div></td><td class="mu sm">${a.tl.split(' ')[0]}</td><td class="mono">${a.lm_dd}</td><td class="mono">${a.lm_act}</td><td>${pillHtml(lp,25,10)}</td><td class="mono"><strong>${a.mtd_dd}</strong></td><td class="mono"><strong>${a.mtd_act}</strong></td><td>${pillHtml(mp,25,10)}</td><td>${trend}</td></tr>`;
+  }).join('');
+  document.getElementById('dtaFoot').innerHTML=`<tr><td colspan="3"><strong>Total</strong></td><td class="mono">${sums.lm_dd}</td><td class="mono">${sums.lm_act}</td><td><strong>${pct(sums.lm_act,sums.lm_dd)}%</strong></td><td class="mono">${sums.mtd_dd}</td><td class="mono">${sums.mtd_act}</td><td><strong>${pct(sums.mtd_act,sums.mtd_dd)}%</strong></td><td></td></tr>`;
   const active=AGENTS.map((a,i)=>({...a,i,...ag(a.name)})).filter(a=>a.mtd_dd>0);
-  renderLb("lb-dta-top",[...active].sort((a,b)=>pct(b.mtd_act,b.mtd_dd)-pct(a.mtd_act,a.mtd_dd)).slice(0,8),a=>pct(a.mtd_act,a.mtd_dd));
-
+  renderLb('lb-dta-top',[...active].sort((a,b)=>pct(b.mtd_act,b.mtd_dd)-pct(a.mtd_act,a.mtd_dd)).slice(0,8),a=>pct(a.mtd_act,a.mtd_dd));
   const withAct=AGENTS.map((a,i)=>({...a,i,...ag(a.name)})).filter(a=>a.mtd_act>0).sort((a,b)=>b.mtd_act-a.mtd_act);
-  mkC("dtaBarChart",{type:"bar",data:{labels:withAct.map(a=>a.short),datasets:[{label:"Activations",data:withAct.map(a=>a.mtd_act),backgroundColor:"rgba(30,111,217,.75)",borderRadius:5,borderSkipped:false}]},options:co()});
+  mkC('dtaBarChart',{type:'bar',data:{labels:withAct.map(a=>a.short),datasets:[{data:withAct.map(a=>a.mtd_act),backgroundColor:'rgba(30,111,217,.75)',borderRadius:4,borderSkipped:false}]},options:coB()});
 }
 
-// ── TL VIEW ───────────────────────────────────────────────────────────────────
 function renderTL(){
   const ts=(tl,k)=>AGENTS.filter(a=>a.tl===tl).reduce((s,a)=>s+(ag(a.name)[k]||0),0);
-  document.getElementById("tlCards").innerHTML=TLS.map(tl=>{
-    const md=ts(tl,"mtd_ds"),mdd=ts(tl,"mtd_dd"),ma=ts(tl,"mtd_act"),ld=ts(tl,"lm_ds"),ldd=ts(tl,"lm_dd");
-    return`<div class="tl-card">
-      <div class="tl-name">${tl}</div>
+  document.getElementById('tlCards').innerHTML=TLS.map(tl=>{
+    const md=ts(tl,'mtd_ds'),mdd=ts(tl,'mtd_dd'),ma=ts(tl,'mtd_act'),ld=ts(tl,'lm_ds'),ldd=ts(tl,'lm_dd');
+    return`<div class="tl-card"><div class="tl-name">${tl}</div>
       <div class="tl-row"><span>Agents</span><strong>${AGENTS.filter(a=>a.tl===tl).length}</strong></div>
       <div class="tl-row"><span>MTD DS</span><strong>${md}</strong></div>
       <div class="tl-row"><span>MTD DD</span><strong>${mdd}</strong></div>
       <div class="tl-row"><span>DS→DD %</span><strong style="color:${pCol(pct(mdd,md))}">${pct(mdd,md)}%</strong></div>
       <div class="tl-row"><span>LM DS→DD %</span><strong>${pct(ldd,ld)}%</strong></div>
       <div class="tl-row"><span>Activations</span><strong>${ma}</strong></div>
-      <div class="tl-row"><span>DD→Act %</span><strong style="color:${pCol(pct(ma,mdd)*2)}">${pct(ma,mdd)}%</strong></div>
+      <div class="tl-row"><span>DD→Act %</span><strong>${pct(ma,mdd)}%</strong></div>
     </div>`;
-  }).join("");
-
-  mkC("tlConvChart",{type:"bar",data:{labels:TLS.map(t=>t.split(" ")[0]),datasets:[
-    {label:"LM %",data:TLS.map(t=>pct(ts(t,"lm_dd"),ts(t,"lm_ds"))),backgroundColor:"rgba(30,111,217,.25)",borderRadius:5,borderSkipped:false},
-    {label:"MTD %",data:TLS.map(t=>pct(ts(t,"mtd_dd"),ts(t,"mtd_ds"))),backgroundColor:"rgba(30,111,217,.85)",borderRadius:5,borderSkipped:false},
-  ]},options:co(undefined,true)});
-
-  mkC("tlDtaChart",{type:"bar",data:{labels:TLS.map(t=>t.split(" ")[0]),datasets:[
-    {label:"LM %",data:TLS.map(t=>pct(ts(t,"lm_act"),ts(t,"lm_dd"))),backgroundColor:"rgba(255,255,255,.08)",borderRadius:5,borderSkipped:false},
-    {label:"MTD %",data:TLS.map(t=>pct(ts(t,"mtd_act"),ts(t,"mtd_dd"))),backgroundColor:"rgba(106,176,255,.5)",borderRadius:5,borderSkipped:false},
-  ]},options:co(undefined,true)});
+  }).join('');
+  mkC('tlConvChart',{type:'bar',data:{labels:TLS.map(t=>t.split(' ')[0]),datasets:[{label:'LM%',data:TLS.map(t=>pct(ts(t,'lm_dd'),ts(t,'lm_ds'))),backgroundColor:'rgba(30,111,217,.25)',borderRadius:4,borderSkipped:false},{label:'MTD%',data:TLS.map(t=>pct(ts(t,'mtd_dd'),ts(t,'mtd_ds'))),backgroundColor:'rgba(30,111,217,.85)',borderRadius:4,borderSkipped:false}]},options:coB(undefined,true)});
+  mkC('tlDtaChart',{type:'bar',data:{labels:TLS.map(t=>t.split(' ')[0]),datasets:[{label:'LM%',data:TLS.map(t=>pct(ts(t,'lm_act'),ts(t,'lm_dd'))),backgroundColor:'rgba(255,255,255,.08)',borderRadius:4,borderSkipped:false},{label:'MTD%',data:TLS.map(t=>pct(ts(t,'mtd_act'),ts(t,'mtd_dd'))),backgroundColor:'rgba(106,176,255,.5)',borderRadius:4,borderSkipped:false}]},options:coB(undefined,true)});
 }
 
 function renderTLAgents(){
-  const tlF=document.getElementById("tlAgFilter").value;
-  let data=AGENTS.map((a,i)=>({...a,i,...ag(a.name)})).filter(a=>!tlF||a.tl===tlF)
-    .sort((a,b)=>pct(b.mtd_dd,b.mtd_ds)-pct(a.mtd_dd,a.mtd_ds));
+  const tlF=document.getElementById('tlAgFilter').value;
+  let data=AGENTS.map((a,i)=>({...a,i,...ag(a.name)})).filter(a=>!tlF||a.tl===tlF).sort((a,b)=>pct(b.mtd_dd,b.mtd_ds)-pct(a.mtd_dd,a.mtd_ds));
   const sums={lm_ds:0,lm_dd:0,lm_act:0,mtd_ds:0,mtd_dd:0,mtd_act:0,wtd_ds:0,wtd_dd:0};
-
-  document.getElementById("tlAgBody").innerHTML=data.map((a,rank)=>{
+  document.getElementById('tlAgBody').innerHTML=data.map((a,rank)=>{
     const lp=pct(a.lm_dd,a.lm_ds),mp=pct(a.mtd_dd,a.mtd_ds),wp=pct(a.wtd_dd,a.wtd_ds),dta=pct(a.mtd_act,a.mtd_dd);
     Object.keys(sums).forEach(k=>sums[k]+=(a[k]||0));
-    return`<tr>
-      <td class="muted" style="font-size:10px">${rank+1}</td>
-      <td><div style="display:flex;align-items:center;gap:7px"><div style="width:22px;height:22px;border-radius:50%;background:${avC(a.i)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">${ini(a.short)}</div><span class="fw6">${a.short}</span></div></td>
-      <td class="muted sm">${a.tl.split(" ")[0]}</td>
-      <td class="mono">${a.lm_ds}</td><td class="mono">${a.lm_dd}</td><td>${pillHtml(lp)}</td>
-      <td class="mono"><strong>${a.mtd_ds}</strong></td><td class="mono"><strong>${a.mtd_dd}</strong></td><td>${pillHtml(mp)}</td>
-      <td class="mono">${a.mtd_act}</td><td>${pillHtml(dta,25,10)}</td>
-      <td class="mono">${a.wtd_ds}</td><td class="mono">${a.wtd_dd}</td><td>${pillHtml(wp)}</td>
-      <td><span class="pill ${pillCls(mp)}">${pillTxt(mp)}</span></td>
-    </tr>`;
-  }).join("");
-
-  document.getElementById("tlAgFoot").innerHTML=`<tr>
-    <td colspan="3"><strong>Total</strong></td>
-    <td class="mono">${sums.lm_ds}</td><td class="mono">${sums.lm_dd}</td><td><strong>${pct(sums.lm_dd,sums.lm_ds)}%</strong></td>
-    <td class="mono">${sums.mtd_ds}</td><td class="mono">${sums.mtd_dd}</td><td><strong>${pct(sums.mtd_dd,sums.mtd_ds)}%</strong></td>
-    <td class="mono">${sums.mtd_act}</td><td><strong>${pct(sums.mtd_act,sums.mtd_dd)}%</strong></td>
-    <td class="mono">${sums.wtd_ds}</td><td class="mono">${sums.wtd_dd}</td><td><strong>${pct(sums.wtd_dd,sums.wtd_ds)}%</strong></td>
-    <td></td>
-  </tr>`;
+    return`<tr><td class="mu sm">${rank+1}</td><td><div style="display:flex;align-items:center;gap:6px"><div style="width:20px;height:20px;border-radius:50%;background:${avC(a.i)};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff">${ini(a.short)}</div><span class="fw6">${a.short}</span></div></td><td class="mu sm">${a.tl.split(' ')[0]}</td><td class="mono">${a.lm_ds}</td><td class="mono">${a.lm_dd}</td><td>${pillHtml(lp)}</td><td class="mono"><strong>${a.mtd_ds}</strong></td><td class="mono"><strong>${a.mtd_dd}</strong></td><td>${pillHtml(mp)}</td><td class="mono">${a.mtd_act}</td><td>${pillHtml(dta,25,10)}</td><td class="mono">${a.wtd_ds}</td><td class="mono">${a.wtd_dd}</td><td>${pillHtml(wp)}</td><td><span class="pill ${pillCls(mp)}">${mp>=40?'✓ Good':mp>=25?'▲ Fair':'✗ Low'}</span></td></tr>`;
+  }).join('');
+  document.getElementById('tlAgFoot').innerHTML=`<tr><td colspan="3"><strong>Total</strong></td><td class="mono">${sums.lm_ds}</td><td class="mono">${sums.lm_dd}</td><td><strong>${pct(sums.lm_dd,sums.lm_ds)}%</strong></td><td class="mono">${sums.mtd_ds}</td><td class="mono">${sums.mtd_dd}</td><td><strong>${pct(sums.mtd_dd,sums.mtd_ds)}%</strong></td><td class="mono">${sums.mtd_act}</td><td><strong>${pct(sums.mtd_act,sums.mtd_dd)}%</strong></td><td class="mono">${sums.wtd_ds}</td><td class="mono">${sums.wtd_dd}</td><td><strong>${pct(sums.wtd_dd,sums.wtd_ds)}%</strong></td><td></td></tr>`;
 }
 
-// ── LEADERBOARD ───────────────────────────────────────────────────────────────
-function pillHtml(v,hi=40,lo=25){const c=v>=hi?"pill-g":v>=lo?"pill-w":"pill-r";return`<span class="pill ${c}">${v}%</span>`;}
-function renderLb(id,data,fn){
-  const mx=Math.max(...data.map(fn),1);
-  document.getElementById(id).innerHTML=data.map((a,i)=>{
-    const v=fn(a),c=v>=40?"up":v>=25?"warn-clr":"dn";
-    return`<div class="lb-row">
-      <div class="lb-rank ${i<3?"lb-gold":""}">${i+1}</div>
-      <div class="lb-av" style="background:${avC(a.i)}">${ini(a.short)}</div>
-      <div style="flex:1;min-width:0"><div class="lb-name" title="${a.name}">${a.short}</div><div class="lb-tl">${a.tl.split(" ")[0]}</div></div>
-      <div class="lb-bar-t"><div class="lb-bar-f" style="width:${Math.min(100,v/mx*100)}%"></div></div>
-      <div class="lb-pct" style="color:${pCol(v)}">${v}%</div>
-    </div>`;
-  }).join("");
+// ── AMS MODULE ────────────────────────────────────────────────────────────────
+function setWk(wk,el){
+  activeWk=wk;
+  document.querySelectorAll('.wk-tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  renderAMS();
+}
+
+function getAmsData(){
+  if(activeWk==='all') return {
+    agents: AMS_AGENTS.map(a=>({name:a.name,talk_min:Math.round(a.talk_hrs*60),talk_pct:a.talk_pct,util:a.util,idle_pct:a.idle_pct,break_pct:a.break_pct,wrapup_pct:a.wrapup_pct,aht:a.aht,days:a.days,outgoing:a.outgoing,connected:a.connected})),
+    summary:{talk_hrs:AMS_MTD.talk_hrs,talk_pct:AMS_MTD.talk_pct,util:AMS_MTD.util,idle_pct:AMS_MTD.idle_pct,break_pct:AMS_MTD.break_pct,wrapup_pct:AMS_MTD.wrapup_pct,agents:AMS_MTD.agents}
+  };
+  const wkSumRow=AMS_WEEKS.find(w=>w.week===activeWk)||{talk_hrs:0,talk_pct:0,util:0,idle_pct:0,break_pct:0};
+  return {
+    agents: AMS_AGENTS.map(a=>{
+      const w=a.weeks[activeWk]||{talk_min:0,talk_pct:0,util:0,days:0,outgoing:0,connected:0};
+      return {name:a.name,talk_min:w.talk_min,talk_pct:w.talk_pct,util:w.util,idle_pct:a.idle_pct,break_pct:a.break_pct,wrapup_pct:a.wrapup_pct,aht:a.aht,days:w.days,outgoing:w.outgoing,connected:w.connected};
+    }),
+    summary:{talk_hrs:wkSumRow.talk_hrs,talk_pct:wkSumRow.talk_pct,util:wkSumRow.util,idle_pct:wkSumRow.idle_pct,break_pct:wkSumRow.break_pct,wrapup_pct:0}
+  };
+}
+
+function renderAMS(){
+  const {agents,summary}=getAmsData();
+  const lbl=activeWk==='all'?'MTD':{W1:'Wk 1 · 1-7 Jun',W2:'Wk 2 · 8-14 Jun',W3:'Wk 3 · 15-20 Jun'}[activeWk];
+  document.getElementById('wkLabel').textContent=' — '+lbl;
+  document.getElementById('distTitle').textContent=`Team Staffed Time Distribution — ${lbl}`;
+  document.getElementById('dailyChartTitle').textContent=`Daily Talk Hours — ${activeWk==='all'?'MTD (Jun 1-20)':lbl}`;
+
+  // Week cards
+  const maxTalk=Math.max(...AMS_WEEKS.map(w=>w.talk_hrs));
+  document.getElementById('wkCards').innerHTML=AMS_WEEKS.map(w=>`
+    <div class="wk-card ${activeWk===w.week?'sel':''}" onclick="setWk('${w.week}',this)">
+      <div class="wl">${w.label}</div>
+      <div class="wv">${w.talk_hrs.toFixed(0)}h</div>
+      <div class="ws">Talk Time · ${w.talk_pct}% of staffed · ${w.agents} agents</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px;font-size:10px">
+        <div style="color:var(--mu)">Util<br><strong style="color:var(--acc)">${w.util}%</strong></div>
+        <div style="color:var(--mu)">Idle<br><strong style="color:${w.idle_pct>35?'#ef4444':'#f59e0b'}">${w.idle_pct}%</strong></div>
+        <div style="color:var(--mu)">Break<br><strong style="color:var(--mu2)">${w.break_pct}%</strong></div>
+      </div>
+      <div class="wbar"><div class="wfill" style="width:${(w.talk_hrs/maxTalk*100).toFixed(0)}%"></div></div>
+    </div>
+  `).join('');
+
+  // AMS KPIs
+  document.getElementById('amsKpis').innerHTML=[
+    {lbl:'Total Talk',val:summary.talk_hrs.toFixed(1)+'h',sub:'hours logged',cls:'tl',ac:'var(--teal)'},
+    {lbl:'Talk % of Staffed',val:summary.talk_pct+'%',sub:'productive time ratio',cls:'ok',ac:'var(--up)',bar:summary.talk_pct*4,barC:'var(--up)'},
+    {lbl:'Avg Utilization',val:summary.util+'%',sub:'team average',cls:'ac',ac:'var(--blt)',bar:summary.util,barC:'var(--blt)'},
+    {lbl:'Idle %',val:summary.idle_pct+'%',sub:'of staffed hours idle',cls:'er',ac:'var(--dn)',bar:summary.idle_pct,barC:'var(--dn)'},
+    {lbl:'Break %',val:summary.break_pct+'%',sub:'of staffed on break',cls:'wb',ac:'var(--warn)',bar:Math.min(summary.break_pct,100),barC:'var(--warn)'},
+    {lbl:'Active Agents',val:(activeWk==='all'?55:AMS_WEEKS.find(w=>w.week===activeWk)?.agents||0).toString(),sub:'agents with data',cls:'pu',ac:'var(--acc)'},
+  ].map(k=>`<div class="kpi ${k.cls}">
+    <div class="kpi-lbl">${k.lbl}</div>
+    <div class="kpi-val" style="color:${k.ac}">${k.val}</div>
+    <div class="kpi-sub">${k.sub}</div>
+    ${k.bar!=null?`<div class="kpi-bar"><div class="kpi-fill" style="background:${k.barC};width:${Math.min(k.bar,100)}%"></div></div>`:''}
+  </div>`).join('');
+
+  // Daily chart
+  const dailyFiltered=activeWk==='all'?AMS_DAILY:AMS_DAILY.filter(d=>d.week===activeWk);
+  mkC('amsDailyChart',{type:'bar',data:{labels:dailyFiltered.map(d=>d.date),datasets:[{data:dailyFiltered.map(d=>d.talk_hrs),backgroundColor:dailyFiltered.map(d=>d.talk_hrs>=35?'rgba(0,212,170,.8)':d.talk_hrs>=28?'rgba(0,212,170,.5)':'rgba(0,212,170,.3)'),borderColor:dailyFiltered.map(d=>d.talk_hrs>=35?'#00d4aa':'transparent'),borderWidth:1,borderRadius:4}]},options:{...coB(),plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y.toFixed(1)} hrs · ${dailyFiltered[ctx.dataIndex].agents} agents`}}}}});
+
+  // Week chart
+  mkC('amsWkChart',{type:'bar',data:{labels:AMS_WEEKS.map(w=>w.week),datasets:[{label:'Talk Hrs',data:AMS_WEEKS.map(w=>w.talk_hrs),backgroundColor:['rgba(124,92,252,.4)','rgba(124,92,252,.6)','rgba(124,92,252,.85)'],borderRadius:6,borderSkipped:false},{label:'Util%×10',data:AMS_WEEKS.map(w=>w.util*10),backgroundColor:'rgba(0,212,170,.2)',borderRadius:6,borderSkipped:false}]},options:coB(undefined,true)});
+
+  // Stacked dist bars
+  const top15=agents.filter(a=>a.talk_min>0).sort((a,b)=>b.talk_min-a.talk_min).slice(0,15);
+  const maxMin=Math.max(...top15.map(a=>a.talk_min),1);
+  document.getElementById('stkBarsWrap').innerHTML=`
+    <div style="margin-bottom:8px;display:flex;gap:12px;font-size:10px;color:var(--mu2)">
+      <span style="color:#4f7cff">■ Talk</span><span style="color:#ef4444">■ Idle</span><span style="color:#f59e0b">■ Break</span><span style="color:#00d4aa">■ Wrapup</span>
+    </div>
+    ${top15.map(a=>{
+      const tp=a.talk_pct,ip=Math.min(a.idle_pct,100-tp),bp=Math.min(a.break_pct,100-tp-ip),wp=Math.max(0,100-tp-ip-bp);
+      return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <div style="min-width:70px;font-size:10px;font-weight:600;color:var(--mu2);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.name}</div>
+        <div style="flex:1;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden;height:20px;display:flex">
+          <div style="width:${tp}%;background:#4f7cff;display:flex;align-items:center;padding:0 4px;font-size:9px;font-weight:700;color:rgba(255,255,255,.9);overflow:hidden;white-space:nowrap">${tp>5?tp+'%':''}</div>
+          <div style="width:${ip}%;background:#ef4444;opacity:.7"></div>
+          <div style="width:${bp}%;background:#f59e0b;opacity:.7"></div>
+          <div style="width:${wp}%;background:#00d4aa;opacity:.7"></div>
+        </div>
+        <div style="min-width:38px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mu2)">${a.talk_min}m</div>
+        <div style="min-width:34px;font-family:'JetBrains Mono',monospace;font-size:10px;color:${a.util>=50?'#22c55e':a.util>=30?'#4f7cff':'#f59e0b'}">${a.util}%</div>
+      </div>`;
+    }).join('')}
+  `;
+
+  renderAmsTable(agents);
+}
+
+function renderAmsTable(agentsIn){
+  const agents=agentsIn||getAmsData().agents;
+  const search=document.getElementById('amsSearch').value.toLowerCase();
+  const utilF=document.getElementById('amsUtilFilter').value;
+  const sortK=document.getElementById('amsSortKey').value;
+
+  let data=[...agents].filter(a=>{
+    if(search&&!a.name.toLowerCase().includes(search))return false;
+    if(utilF==='high'&&a.util<50)return false;
+    if(utilF==='mid'&&(a.util<30||a.util>=50))return false;
+    if(utilF==='low'&&a.util>=30)return false;
+    return true;
+  }).sort((a,b)=>b[sortK]-a[sortK]);
+
+  const maxTalk=Math.max(...data.map(a=>a.talk_min),1);
+  const isWeek=activeWk!=='all';
+
+  document.getElementById('amsTableHead').innerHTML=`
+    <th>#  Agent</th>
+    <th>${isWeek?'Days':'Days'}</th>
+    <th>Talk Time</th>
+    ${isWeek?'':'<th>W1</th><th>W2</th><th>W3</th>'}
+    <th>Talk%</th>
+    <th>Idle%</th>
+    <th>Break%</th>
+    <th>Util%</th>
+    <th>AHT</th>
+    <th>Dials</th>
+    <th>Connected</th>
+  `;
+
+  document.getElementById('amsTableBody').innerHTML=data.map((a,i)=>{
+    const bW=(a.talk_min/maxTalk*100).toFixed(1);
+    const bC=a.talk_pct>=20?'#22c55e':a.talk_pct>=12?'#4f7cff':a.talk_pct>=8?'#f59e0b':'#ef4444';
+    // Week badges (MTD view only)
+    let wkCols='';
+    if(!isWeek){
+      const fa=AMS_AGENTS.find(x=>x.name===a.name);
+      ['W1','W2','W3'].forEach(wk=>{
+        const wd=fa?.weeks[wk];
+        const v=wd?.talk_pct||0;
+        wkCols+=`<td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:${v>=15?'#22c55e':v>=8?'#4f7cff':v>0?'#f59e0b':'#4a6080'}">${wd&&wd.days>0?v+'%':'—'}</span></td>`;
+      });
+    }
+    return`<tr>
+      <td><span style="color:var(--mu);margin-right:5px;font-size:10px">${i+1}</span>${a.name}</td>
+      <td class="mono">${a.days||0}</td>
+      <td><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:${bW}%;background:${bC}"></div></div><span class="mono">${a.talk_min}m</span></div></td>
+      ${wkCols}
+      <td><span style="color:${bC};font-family:'JetBrains Mono',monospace;font-weight:700">${a.talk_pct}%</span></td>
+      <td><span class="pill ${a.idle_pct>=50?'pill-r':a.idle_pct>=35?'pill-w':'pill-g'}">${a.idle_pct}%</span></td>
+      <td class="mono" style="color:${a.break_pct>70?'#ef4444':a.break_pct>50?'#f59e0b':'var(--mu2)'}">${a.break_pct}%</td>
+      <td><span style="color:${a.util>=50?'#22c55e':a.util>=30?'#4f7cff':'#f59e0b'};font-family:'JetBrains Mono',monospace;font-weight:700">${a.util}%</span></td>
+      <td class="mono">${a.aht||'—'}</td>
+      <td class="mono">${a.outgoing||0}</td>
+      <td class="mono">${a.connected||0}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('amsFooter').textContent=`Showing ${data.length} of ${agents.length} agents`;
 }
 
 // ── FIREBASE ──────────────────────────────────────────────────────────────────
 function connectFirebase(){
-  db.ref(DB_KEY).on("value",snap=>{
+  db.ref(DB_KEY).on('value',snap=>{
     if(snap.exists()){
       const val=snap.val();
       const hasData=val.agents&&Object.values(val.agents).some(a=>(a.mtd_ds||0)>0||(a.lm_ds||0)>0);
@@ -870,83 +985,63 @@ function connectFirebase(){
       db.ref(DB_KEY).set(PREFILLED).catch(()=>{});
     }
     renderAll();
-    setSyncOk();
-  },err=>setSyncErr(err.message));
-}
-
-function setSyncOk(){
-  document.getElementById("syncDot").className="sync-dot";
-  document.getElementById("syncBar").className="sync-bar";
-  document.getElementById("syncMsg").textContent="● Firebase connected — live sync active";
-  document.getElementById("syncLbl").textContent="Live · "+D.lastUpdated;
-  txt("lastUpdated","Last synced: "+new Date().toLocaleTimeString("en-IN"));
-}
-function setSyncErr(m){
-  document.getElementById("syncDot").className="sync-dot error";
-  document.getElementById("syncBar").className="sync-bar err";
-  document.getElementById("syncMsg").textContent="⚠ "+m;
-  document.getElementById("syncLbl").textContent="Offline";
-}
-
-function forcePush(){
-  const b=document.getElementById("forceBtn");
-  b.textContent="⏳ Pushing…";b.disabled=true;
-  db.ref(DB_KEY).set(PREFILLED)
-    .then(()=>{toast("✅ Excel data loaded to Firebase!");b.textContent="✅ Done";setTimeout(()=>{b.textContent="⚡ Load Data";b.disabled=false;},3000);})
-    .catch(e=>{toast("❌ "+e.message,false);b.textContent="⚡ Load Data";b.disabled=false;});
-}
-window.forcePush=forcePush;window.forceReset=forcePush;
-
-// ── AUTH / MODALS ─────────────────────────────────────────────────────────────
-function openLogin(){document.getElementById("loginOvl").classList.add("on");document.getElementById("loginPw").value="";document.getElementById("loginErr").style.display="none";setTimeout(()=>document.getElementById("loginPw").focus(),100);}
-function closeLogin(){document.getElementById("loginOvl").classList.remove("on");}
-function doLogin(){if(btoa(document.getElementById("loginPw").value)===ADMIN_PW){closeLogin();openEdit();}else document.getElementById("loginErr").style.display="block";}
-function openEdit(){populateEdit();document.getElementById("editOvl").classList.add("on");}
-function closeEdit(){document.getElementById("editOvl").classList.remove("on");}
-function swTab(id,idx){
-  document.querySelectorAll(".tp").forEach(p=>p.classList.remove("on"));
-  document.querySelectorAll(".m-tab").forEach(t=>t.classList.remove("on"));
-  document.getElementById(id).classList.add("on");
-  document.querySelectorAll(".m-tab")[idx].classList.add("on");
-  if(id!=='tpXL'){ document.getElementById('xlPreview').style.display='none'; _xlPending=null; }
-}
-function switchTab(id,el){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll(".pane").forEach(p=>p.classList.remove("active"));el.classList.add("active");document.getElementById("pane-"+id).classList.add("active");renderAll();}
-
-function populateEdit(){
-  ["MTD","LM"].forEach(type=>{
-    document.getElementById("ag"+type+"Wrap").innerHTML=AGENTS.map((a,ai)=>{
-      const d=ag(a.name);
-      const mp=type==="MTD"?pct(d.mtd_dd||0,d.mtd_ds||0):pct(d.lm_dd||0,d.lm_ds||0);
-      const fields=type==="MTD"
-        ?[["MTD DS","m_mtd_ds",d.mtd_ds||0],["MTD DD","m_mtd_dd",d.mtd_dd||0],["MTD Act","m_mtd_act",d.mtd_act||0],["WTD DS","m_wtd_ds",d.wtd_ds||0],["WTD DD","m_wtd_dd",d.wtd_dd||0]]
-        :[["LM DS","l_lm_ds",d.lm_ds||0],["LM DD","l_lm_dd",d.lm_dd||0],["LM Act","l_lm_act",d.lm_act||0]];
-      const pfx=type.toLowerCase();
-      return`<div class="ag-wrap">
-        <div class="ag-hdr" onclick="toggleAg('${pfx}s${ai}','${pfx}ar${ai}')">
-          <div style="width:24px;height:24px;border-radius:50%;background:${avC(ai)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">${ini(a.short)}</div>
-          <strong>${a.short}</strong>
-          <span style="font-size:10px;color:var(--muted)">${a.tl.split(" ")[0]}</span>
-          <span style="margin-left:auto;font-size:11px;font-weight:700;color:${pCol(mp)}">${mp}%</span>
-          <span id="${pfx}ar${ai}" style="font-size:10px;color:var(--muted);margin-left:8px;transition:transform .2s">▼</span>
-        </div>
-        <div class="ag-body" id="${pfx}s${ai}">
-          <div class="two-inp">${fields.map(([lbl,fid,val])=>`<div class="fg"><label>${lbl}</label><input type="number" id="${fid}_${ai}" value="${val}" min="0"></div>`).join("")}</div>
-        </div>
-      </div>`;
-    }).join("");
+    document.getElementById('syncDot').className='sync-dot';
+    document.getElementById('syncBar').className='sync-bar';
+    document.getElementById('syncMsg').textContent='● Firebase connected — live sync active';
+    document.getElementById('syncLbl').textContent='Live · '+D.lastUpdated;
+    document.getElementById('lastUpdated').textContent='Synced: '+new Date().toLocaleTimeString('en-IN');
+  },err=>{
+    document.getElementById('syncDot').className='sync-dot error';
+    document.getElementById('syncBar').className='sync-bar err';
+    document.getElementById('syncMsg').textContent='⚠ '+err.message;
+    document.getElementById('syncLbl').textContent='Offline';
   });
 }
 
-function toggleAg(bid,aid){
-  const b=document.getElementById(bid),a=document.getElementById(aid);
-  const open=b.style.display==="block";
-  b.style.display=open?"none":"block";
-  if(a)a.style.transform=open?"":"rotate(180deg)";
+function forcePush(){
+  const b=document.getElementById('forceBtn');b.textContent='⏳…';b.disabled=true;
+  db.ref(DB_KEY).set(PREFILLED)
+    .then(()=>{toast('✅ Data synced!');b.textContent='✅ Done';setTimeout(()=>{b.textContent='⚡ Sync Data';b.disabled=false;},3000);})
+    .catch(e=>{toast('❌ '+e.message,false);b.textContent='⚡ Sync Data';b.disabled=false;});
+}
+window.forcePush=forcePush;
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+function openLogin(){document.getElementById('loginOvl').classList.add('on');setTimeout(()=>document.getElementById('loginPw').focus(),100);}
+function closeLogin(){document.getElementById('loginOvl').classList.remove('on');}
+function doLogin(){if(btoa(document.getElementById('loginPw').value)===ADMIN_PW){closeLogin();openEdit();}else document.getElementById('loginErr').style.display='block';}
+function openEdit(){populateEdit();document.getElementById('editOvl').classList.add('on');}
+function closeEdit(){document.getElementById('editOvl').classList.remove('on');}
+function swTab(id,idx){document.querySelectorAll('.tp').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.m-tab').forEach(t=>t.classList.remove('on'));document.getElementById(id).classList.add('on');document.querySelectorAll('.m-tab')[idx].classList.add('on');}
+
+function populateEdit(){
+  ['MTD','LM'].forEach(type=>{
+    document.getElementById('ag'+type+'Wrap').innerHTML=AGENTS.map((a,ai)=>{
+      const d=ag(a.name);
+      const mp=type==='MTD'?pct(d.mtd_dd||0,d.mtd_ds||0):pct(d.lm_dd||0,d.lm_ds||0);
+      const fields=type==='MTD'
+        ?[['MTD DS','m_mtd_ds',d.mtd_ds||0],['MTD DD','m_mtd_dd',d.mtd_dd||0],['MTD Act','m_mtd_act',d.mtd_act||0],['WTD DS','m_wtd_ds',d.wtd_ds||0],['WTD DD','m_wtd_dd',d.wtd_dd||0]]
+        :[['LM DS','l_lm_ds',d.lm_ds||0],['LM DD','l_lm_dd',d.lm_dd||0],['LM Act','l_lm_act',d.lm_act||0]];
+      const pfx=type.toLowerCase();
+      return`<div class="ag-wrap">
+        <div class="ag-hdr" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'">
+          <div style="width:22px;height:22px;border-radius:50%;background:${avC(ai)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">${ini(a.short)}</div>
+          <strong>${a.short}</strong>
+          <span style="font-size:10px;color:var(--mu)">${a.tl.split(' ')[0]}</span>
+          <span style="margin-left:auto;font-size:11px;font-weight:700;color:${pCol(mp)}">${mp}%</span>
+          <span style="font-size:10px;color:var(--mu);margin-left:8px">▼</span>
+        </div>
+        <div class="ag-body" id="${pfx}s${ai}">
+          <div class="two-inp">${fields.map(([lbl,fid,val])=>`<div class="fg"><label>${lbl}</label><input type="number" id="${fid}_${ai}" value="${val}" min="0"></div>`).join('')}</div>
+        </div>
+      </div>`;
+    }).join('');
+  });
 }
 
 function saveData(){
   const now=new Date();
-  const ds=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+  const ds=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
   const g=(id,fb)=>{const e=document.getElementById(id);return e?parseInt(e.value)||0:fb||0;};
   const newD={lastUpdated:ds,agents:{}};
   AGENTS.forEach((a,ai)=>{
@@ -959,169 +1054,15 @@ function saveData(){
     };
   });
   closeEdit();
-  document.getElementById("savOvl").classList.add("on");
-  db.ref(DB_KEY).set(newD)
-    .then(()=>{document.getElementById("savOvl").classList.remove("on");toast("☁️ Saved & synced to all viewers!");})
-    .catch(e=>{document.getElementById("savOvl").classList.remove("on");toast("❌ "+e.message,false);});
-}
-
-// ── EXCEL UPLOAD ─────────────────────────────────────────────────────────────
-let _xlPending = null;
-
-function handleDrop(e){
-  e.preventDefault();
-  document.getElementById('dropZone').style.borderColor='';
-  const file = e.dataTransfer.files[0];
-  if(file) processXLFile(file);
-}
-function handleXLUpload(e){
-  const file = e.target.files[0];
-  if(file) processXLFile(file);
-  e.target.value='';
-}
-
-function processXLFile(file){
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
-      const result = {};
-
-      // ── Sheet: DS TO DD ──
-      const dsToDd = wb.Sheets['DS TO DD'] || wb.Sheets['DS to DD'] || wb.Sheets[wb.SheetNames[0]];
-      if(dsToDd){
-        const rows = XLSX.utils.sheet_to_json(dsToDd, {header:1});
-        // Find data rows — skip until we see an agent name
-        let start = 0;
-        for(let i=0;i<rows.length;i++){
-          const cell = String(rows[i][0]||'').trim();
-          if(AGENTS.find(a=>a.name===cell)){start=i;break;}
-        }
-        // Detect columns from header row above data
-        const hdr = rows[start-1]||[];
-        const colIdx = (keywords) => hdr.findIndex(h=>keywords.some(k=>String(h||'').toLowerCase().includes(k)));
-
-        // Try to detect column positions from header
-        // Expected: AgentName | Status | Tenure | TL | LM_DS | LM_DD | LM% | MTD_DS | MTD_DD | MTD% | WTD_DS | WTD_DD | WTD%
-        rows.slice(start).forEach(row=>{
-          const name = String(row[0]||'').trim();
-          if(!name || !AGENTS.find(a=>a.name===name)) return;
-          if(!result[name]) result[name]={};
-          // Columns 4,5 = LM DS,DD | 7,8 = MTD DS,DD | 10,11 = WTD DS,DD
-          result[name].lm_ds  = parseInt(row[4])||0;
-          result[name].lm_dd  = parseInt(row[5])||0;
-          result[name].mtd_ds = parseInt(row[7])||0;
-          result[name].mtd_dd = parseInt(row[8])||0;
-          result[name].wtd_ds = parseInt(row[10])||0;
-          result[name].wtd_dd = parseInt(row[11])||0;
-        });
-      }
-
-      // ── Sheet: DD To Activation ──
-      const ddAct = wb.Sheets['DD To Activation '] || wb.Sheets['DD To Activation'] || wb.Sheets['DD to Activation'] || wb.Sheets[wb.SheetNames[1]];
-      if(ddAct){
-        const rows = XLSX.utils.sheet_to_json(ddAct, {header:1});
-        let start = 0;
-        for(let i=0;i<rows.length;i++){
-          const cell = String(rows[i][0]||'').trim();
-          if(AGENTS.find(a=>a.name===cell)){start=i;break;}
-        }
-        rows.slice(start).forEach(row=>{
-          const name = String(row[0]||'').trim();
-          if(!name || !AGENTS.find(a=>a.name===name)) return;
-          if(!result[name]) result[name]={};
-          // Columns: Agent|Status|Tenure|TL | LM_DD | LM_Mat | LM% | MTD_DD | MTD_Mat | MTD%
-          result[name].lm_act  = parseInt(row[5])||0;
-          result[name].mtd_act = parseInt(row[8])||0;
-        });
-      }
-
-      const count = Object.keys(result).length;
-      if(count === 0){ toast('No matching agent data found in file',false); return; }
-
-      // Merge with existing
-      const merged = {};
-      AGENTS.forEach(a=>{
-        const ex = ag(a.name);
-        merged[a.name] = {...ex, ...(result[a.name]||{})};
-      });
-
-      _xlPending = merged;
-      showXLPreview(merged, count);
-
-    } catch(err){
-      toast('Error reading file: '+err.message, false);
-      console.error(err);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-function showXLPreview(merged, count){
-  document.getElementById('xlPreview').style.display='block';
-  document.getElementById('xlPreviewTitle').textContent=`✓ Read ${count} agents — review before saving`;
-
-  document.getElementById('xlPreviewHead').innerHTML=`<tr>
-    ${['Agent','LM DS','LM DD','LM Act','MTD DS','MTD DD','MTD Act','WTD DS','WTD DD'].map(h=>`<th style="padding:8px 10px;font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--border);white-space:nowrap">${h}</th>`).join('')}
-  </tr>`;
-
-  document.getElementById('xlPreviewBody').innerHTML = AGENTS.map(a=>{
-    const d = merged[a.name]||{};
-    const anyData = (d.mtd_ds||0)+(d.lm_ds||0)>0;
-    return`<tr style="border-bottom:1px solid rgba(255,255,255,.04);${!anyData?'opacity:.4':''}">
-      <td style="padding:7px 10px;font-weight:600;font-size:11px">${a.short}</td>
-      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px">${d.lm_ds||0}</td>
-      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px">${d.lm_dd||0}</td>
-      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px">${d.lm_act||0}</td>
-      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700">${d.mtd_ds||0}</td>
-      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700">${d.mtd_dd||0}</td>
-      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px">${d.mtd_act||0}</td>
-      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px">${d.wtd_ds||0}</td>
-      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px">${d.wtd_dd||0}</td>
-    </tr>`;
-  }).join('');
-}
-
-function confirmXLSave(){
-  if(!_xlPending){ toast('No data to save',false); return; }
-  const now = new Date();
-  const ds = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-  const newD = {lastUpdated:ds, agents:_xlPending};
-  closeEdit();
   document.getElementById('savOvl').classList.add('on');
   db.ref(DB_KEY).set(newD)
-    .then(()=>{ document.getElementById('savOvl').classList.remove('on'); toast('✅ Excel data saved & synced!'); _xlPending=null; })
-    .catch(e=>{ document.getElementById('savOvl').classList.remove('on'); toast('❌ Save failed: '+e.message,false); });
-}
-
-function downloadTemplate(){
-  const wb = XLSX.utils.book_new();
-
-  // Sheet 1: DS TO DD
-  const dsRows = [
-    ['Agent Name','Status','Tenure','TL','Demo Scheduled (LM)','Demo Done (LM)','DS-DD % LM','Demo Scheduled (MTD)','Demo Done (MTD)','DS-DD % MTD','Demo Scheduled (WTD)','Demo Done (WTD)','DS-DD % WTD'],
-    ...AGENTS.map(a=>{const d=ag(a.name);return[a.name,'Active','0-3 M',a.tl,d.lm_ds||0,d.lm_dd||0,'',d.mtd_ds||0,d.mtd_dd||0,'',d.wtd_ds||0,d.wtd_dd||0,''];})
-  ];
-  const ws1 = XLSX.utils.aoa_to_sheet(dsRows);
-  ws1['!cols']=[{wch:36},{wch:8},{wch:7},{wch:20},{wch:18},{wch:15},{wch:12},{wch:18},{wch:15},{wch:12},{wch:18},{wch:15},{wch:12}];
-  XLSX.utils.book_append_sheet(wb, ws1, 'DS TO DD');
-
-  // Sheet 2: DD To Activation
-  const actRows = [
-    ['Agent Name','Status','Tenure','TL','Demo Done (LM)','Matured (LM)','DTA % LM','Demo Done (MTD)','Matured (MTD)','DTA % MTD'],
-    ...AGENTS.map(a=>{const d=ag(a.name);return[a.name,'Active','0-3 M',a.tl,d.lm_dd||0,d.lm_act||0,'',d.mtd_dd||0,d.mtd_act||0,''];})
-  ];
-  const ws2 = XLSX.utils.aoa_to_sheet(actRows);
-  ws2['!cols']=[{wch:36},{wch:8},{wch:7},{wch:20},{wch:15},{wch:13},{wch:10},{wch:15},{wch:13},{wch:10}];
-  XLSX.utils.book_append_sheet(wb, ws2, 'DD To Activation');
-
-  XLSX.writeFile(wb, 'BUSY_Dashboard_Template.xlsx');
-  toast('Template downloaded ✓');
+    .then(()=>{document.getElementById('savOvl').classList.remove('on');toast('☁️ Saved & synced!');})
+    .catch(e=>{document.getElementById('savOvl').classList.remove('on');toast('❌ '+e.message,false);});
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 const nd=new Date();
-document.getElementById("todayBadge").textContent=nd.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric",weekday:"short"});
+document.getElementById('todayBadge').textContent=nd.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',weekday:'short'});
 renderAll();
 connectFirebase();
 </script>
