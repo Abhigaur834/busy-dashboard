@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Ocube Command Centre — Jun 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -1186,7 +1189,7 @@ function switchAmsTab(id,el){
   else{el.style.color='var(--acc)';el.style.borderBottomColor='var(--acc)';}
   document.getElementById('ams-pane-talktime').style.display=id==='talktime'?'':'none';
   document.getElementById('ams-pane-apr').style.display=id==='apr'?'':'none';
-  if(id==='apr') renderAPR();
+  if(id==='apr') setTimeout(()=>renderAPR(), 0);
 }
 
 // ── APR DATA ──────────────────────────────────────────────────────────────────
@@ -1368,10 +1371,21 @@ function renderAPR(){
     const wklbl=aprWk==='all'?'MTD':{'W1':'Wk 1 (1-7 Jun)','W2':'Wk 2 (8-14 Jun)','W3':'Wk 3 (15-20 Jun)'}[aprWk];
     document.getElementById('aprTableTitle').textContent=`Agent-Wise APR — ${wklbl} · June 2026`;
 
-    // Group by TL
+    // Group by TL — normalise TL name to handle case/spacing differences
+    const normT=t=>String(t||'').trim();
+    agData.forEach(a=>{ a.TL=normT(a.TL); });
     const byTL={};
     agData.forEach(a=>{if(!byTL[a.TL])byTL[a.TL]=[];byTL[a.TL].push(a);});
-    const tlOrd=APR_TL_ORDER.filter(t=>byTL[t]);
+    // Build ordered list — include any TLs present in data even if not in order array
+    const tlOrd=[...APR_TL_ORDER.filter(t=>byTL[t]),...Object.keys(byTL).filter(t=>!APR_TL_ORDER.includes(t))];
+
+    // Guard: if no data at all show helpful message
+    if(agData.length===0){
+      document.getElementById('aprHead').innerHTML='';
+      document.getElementById('aprBody').innerHTML=`<tr><td colspan="13" style="text-align:center;padding:40px;color:var(--mu);font-size:13px">⚠ No agent data found. Check TL filter or upload AMS data via <strong>📤 AMS Upload</strong></td></tr>`;
+      document.getElementById('aprFooter').textContent='0 agents loaded';
+      return;
+    }
 
     let html='';
     let ci=0;
@@ -1850,6 +1864,8 @@ function confirmAmsUpload(){
 const nd=new Date();
 document.getElementById('todayBadge').textContent=nd.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',weekday:'short'});
 renderAll();
+// Pre-render APR table while pane is hidden so it's instant on first tab click
+setTimeout(()=>renderAPR(), 100);
 connectFirebase();
 </script>
 </body>
