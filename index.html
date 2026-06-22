@@ -259,7 +259,13 @@ select:focus,input[type=text]:focus{border-color:var(--blue)}
 
 <header class="hdr">
   <div class="logo">
-    <div class="logo-chip">O<span class="ul">CU</span>BE</div>
+    <div style="background:linear-gradient(135deg,#0d1520,#162035);border:1px solid rgba(106,176,255,.15);border-radius:8px;padding:6px 14px;font-size:20px;font-weight:900;letter-spacing:2.5px;color:#fff;display:flex;align-items:center;box-shadow:0 0 14px rgba(30,111,217,.15)">B<span style="color:var(--blt);text-shadow:0 0 12px rgba(106,176,255,.6)">U</span>SY</div>
+    <div class="hdr-div"></div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 56" height="36" aria-label="OCube Services" style="flex-shrink:0">
+      <circle cx="28" cy="4"  r="2.6" fill="white" opacity="1"/><circle cx="37" cy="5.5" r="2.3" fill="white" opacity=".95"/><circle cx="45" cy="10" r="2.0" fill="white" opacity=".9"/><circle cx="51" cy="17" r="1.8" fill="white" opacity=".85"/><circle cx="54" cy="25" r="1.6" fill="white" opacity=".8"/><circle cx="53" cy="33" r="1.5" fill="white" opacity=".75"/><circle cx="49" cy="41" r="1.6" fill="white" opacity=".7"/><circle cx="42" cy="47" r="1.8" fill="white" opacity=".7"/><circle cx="34" cy="51" r="2.0" fill="white" opacity=".75"/><circle cx="25" cy="52" r="2.3" fill="white" opacity=".8"/><circle cx="16" cy="50" r="2.0" fill="white" opacity=".75"/><circle cx="9"  cy="44" r="1.8" fill="white" opacity=".7"/><circle cx="4"  cy="37" r="1.6" fill="white" opacity=".65"/><circle cx="2"  cy="28" r="1.5" fill="white" opacity=".6"/><circle cx="4"  cy="20" r="1.6" fill="white" opacity=".65"/><circle cx="9"  cy="13" r="1.8" fill="white" opacity=".7"/><circle cx="16" cy="7"  r="2.0" fill="white" opacity=".8"/><circle cx="22" cy="4.5" r="2.3" fill="white" opacity=".9"/>
+      <circle cx="28" cy="10" r="1.5" fill="white" opacity=".7"/><circle cx="34" cy="11" r="1.4" fill="white" opacity=".65"/><circle cx="40" cy="15" r="1.3" fill="white" opacity=".6"/><circle cx="44" cy="21" r="1.2" fill="white" opacity=".55"/><circle cx="45" cy="28" r="1.1" fill="white" opacity=".5"/><circle cx="43" cy="35" r="1.2" fill="white" opacity=".5"/><circle cx="39" cy="41" r="1.3" fill="white" opacity=".55"/><circle cx="33" cy="44" r="1.4" fill="white" opacity=".6"/><circle cx="26" cy="45" r="1.5" fill="white" opacity=".65"/><circle cx="19" cy="43" r="1.4" fill="white" opacity=".6"/><circle cx="14" cy="38" r="1.3" fill="white" opacity=".55"/><circle cx="11" cy="32" r="1.2" fill="white" opacity=".5"/><circle cx="11" cy="25" r="1.1" fill="white" opacity=".5"/><circle cx="14" cy="18" r="1.2" fill="white" opacity=".55"/><circle cx="18" cy="13" r="1.3" fill="white" opacity=".6"/><circle cx="23" cy="10" r="1.4" fill="white" opacity=".65"/>
+      <text x="64" y="38" font-family="Inter,system-ui,sans-serif" font-size="26" font-weight="700" fill="#ffffff" letter-spacing="0.5">cube</text>
+    </svg>
     <div class="hdr-div"></div>
     <div class="logo-info">
       <div class="t1">Command Centre — Jun 2026</div>
@@ -270,6 +276,7 @@ select:focus,input[type=text]:focus{border-color:var(--blue)}
     <span class="live-pill"><span class="live-dot"></span><span id="syncLbl">Connecting…</span></span>
     <button class="btn btn-ghost" onclick="window.print()">🖨</button>
     <button class="btn btn-green" onclick="forcePush()" id="forceBtn">⚡ Sync Data</button>
+    <button class="btn" style="background:rgba(0,212,170,.1);color:var(--teal);border:1px solid rgba(0,212,170,.3)" onclick="openAmsUpload()">📤 AMS Upload</button>
     <button class="btn btn-blue" onclick="openLogin()">✏️ Update</button>
   </div>
 </header>
@@ -413,9 +420,15 @@ select:focus,input[type=text]:focus{border-color:var(--blue)}
 
 <!-- ══════════ AMS MODULE ══════════ -->
 <div class="mod-pane" id="mod-ams">
-  <div class="ams-pane">
 
-    <!-- Week selector -->
+  <!-- AMS sub-tabs -->
+  <div style="display:flex;gap:0;border-bottom:1px solid var(--b);background:rgba(0,0,0,.3);position:sticky;top:118px;z-index:100;overflow-x:auto">
+    <div class="sub-tab on" id="amsTab-talktime" onclick="switchAmsTab('talktime',this)" style="color:var(--teal);border-bottom-color:var(--teal)">📊 Talk Time Analysis</div>
+    <div class="sub-tab" id="amsTab-apr" onclick="switchAmsTab('apr',this)">📋 APR Full Table</div>
+  </div>
+
+  <!-- ── TALK TIME PANE ── -->
+  <div id="ams-pane-talktime" class="ams-pane">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
       <div class="sec teal" style="margin:0">AMS Talk Time — June 2026 · 55 Agents</div>
       <div class="wk-tabs">
@@ -425,14 +438,8 @@ select:focus,input[type=text]:focus{border-color:var(--blue)}
         <div class="wk-tab" onclick="setWk('W3',this)">Wk 3 · 15-20 Jun</div>
       </div>
     </div>
-
-    <!-- Week summary cards -->
     <div class="wk-cards" id="wkCards"></div>
-
-    <!-- AMS KPIs -->
     <div class="kpi-row" id="amsKpis"></div>
-
-    <!-- Time dist + daily charts -->
     <div class="chart-grid">
       <div class="chart-card">
         <div class="ch"><h4 id="dailyChartTitle">Daily Talk Hours — MTD</h4></div>
@@ -443,51 +450,162 @@ select:focus,input[type=text]:focus{border-color:var(--blue)}
         <canvas id="amsWkChart"></canvas>
       </div>
     </div>
-
-    <!-- Time breakdown stacked bar -->
     <div class="chart-full" style="margin-bottom:16px">
       <div class="ch">
         <h4 id="distTitle">Team Staffed Time Distribution — MTD</h4>
         <div style="display:flex;gap:12px;font-size:10px">
-          <span style="color:#4f7cff">■ Talk</span>
-          <span style="color:#ef4444">■ Idle</span>
-          <span style="color:#f59e0b">■ Break</span>
-          <span style="color:#00d4aa">■ Wrapup</span>
+          <span style="color:#4f7cff">■ Talk</span><span style="color:#ef4444">■ Idle</span>
+          <span style="color:#f59e0b">■ Break</span><span style="color:#00d4aa">■ Wrapup</span>
         </div>
       </div>
       <div id="stkBarsWrap"></div>
     </div>
-
-    <!-- Agent table -->
     <div class="sec teal">Agent-Level Talk Time <span id="wkLabel" style="font-size:9px;color:var(--mu);font-weight:400;text-transform:none;letter-spacing:0"> — MTD</span></div>
     <div class="fb">
       <input type="text" id="amsSearch" placeholder="Search agent…" oninput="renderAmsTable()" style="max-width:200px">
       <label>Util:</label>
       <select id="amsUtilFilter" onchange="renderAmsTable()">
-        <option value="">All</option>
-        <option value="high">High ≥ 50%</option>
-        <option value="mid">Mid 30-50%</option>
-        <option value="low">Low &lt; 30%</option>
+        <option value="">All</option><option value="high">High ≥ 50%</option>
+        <option value="mid">Mid 30-50%</option><option value="low">Low &lt; 30%</option>
       </select>
       <label>Sort:</label>
       <select id="amsSortKey" onchange="renderAmsTable()">
-        <option value="talk_min">Talk Min</option>
-        <option value="talk_pct">Talk%</option>
-        <option value="util">Utilization</option>
-        <option value="idle_pct">Idle%</option>
+        <option value="talk_min">Talk Min</option><option value="talk_pct">Talk%</option>
+        <option value="util">Utilization</option><option value="idle_pct">Idle%</option>
         <option value="connected">Connected</option>
       </select>
     </div>
     <div class="tbl">
-      <table>
-        <thead>
-          <tr id="amsTableHead"></tr>
-        </thead>
-        <tbody id="amsTableBody"></tbody>
-      </table>
+      <table><thead><tr id="amsTableHead"></tr></thead><tbody id="amsTableBody"></tbody></table>
     </div>
     <div id="amsFooter" style="padding:8px 12px;font-size:10px;color:var(--mu);border-top:1px solid var(--b);background:var(--grad);border-radius:0 0 11px 11px"></div>
+  </div>
 
+  <!-- ── APR TABLE PANE ── -->
+  <div id="ams-pane-apr" style="display:none;padding:18px 20px">
+
+    <!-- APR view tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+      <div style="font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-right:4px">View:</div>
+      <div class="wk-tab all on" id="aprV-agent" onclick="switchAprView('agent',this)">👤 Agent-Wise</div>
+      <div class="wk-tab" id="aprV-tl" onclick="switchAprView('tl',this)">🏆 TL-Wise</div>
+      <div class="wk-tab" id="aprV-week" onclick="switchAprView('week',this)">📅 Week Comparison</div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div id="aprWkBar" style="display:flex;gap:6px">
+          <div class="wk-tab all on" id="aprWk-all" onclick="setAprWk('all',this)">MTD</div>
+          <div class="wk-tab" id="aprWk-W1" onclick="setAprWk('W1',this)">Wk 1</div>
+          <div class="wk-tab" id="aprWk-W2" onclick="setAprWk('W2',this)">Wk 2</div>
+          <div class="wk-tab" id="aprWk-W3" onclick="setAprWk('W3',this)">Wk 3</div>
+        </div>
+        <select id="aprTlFilter" onchange="renderAPR()" style="display:none">
+          <option value="">All TLs</option>
+          <option>Akash Tomer</option><option>Amit Verma</option>
+          <option>Anshu Sharma</option><option>Himanshu Tiwari</option><option>Sagar Maheshwari</option>
+        </select>
+        <select id="aprMetric" onchange="renderAPR()" style="display:none">
+          <option value="AVG_Talk_Time">Highlight: Talk Time</option>
+          <option value="AVG_Idle_Time">Highlight: Idle Time</option>
+          <option value="Occupancy_pct">Highlight: Occupancy%</option>
+          <option value="AVG_Handle_Time">Highlight: Handle Time</option>
+          <option value="AVG_Break">Highlight: Break</option>
+        </select>
+        <input type="text" id="aprSearch" placeholder="Search…" oninput="renderAPR()" style="max-width:130px">
+      </div>
+    </div>
+
+    <!-- APR table container -->
+    <div style="background:var(--s1);border:1px solid var(--b);border-radius:11px;overflow:hidden">
+      <div style="padding:11px 16px;border-bottom:1px solid var(--b);display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--txt)" id="aprTableTitle">Agent-Wise APR — MTD June 2026</div>
+          <div style="font-size:10px;color:var(--mu);margin-top:2px">Daily averages · 🟢 Green=Good · 🔴 Red=Attention · 🟡 Yellow=Warning</div>
+        </div>
+      </div>
+      <div style="overflow-x:auto;max-height:65vh;overflow-y:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap">
+          <thead id="aprHead" style="position:sticky;top:0;z-index:5"></thead>
+          <tbody id="aprBody"></tbody>
+        </table>
+      </div>
+      <div id="aprFooter" style="padding:8px 16px;font-size:10px;color:var(--mu);border-top:1px solid var(--b)">Loading…</div>
+    </div>
+
+  </div><!-- /ams-pane-apr -->
+
+</div><!-- /mod-ams -->
+
+<!-- AMS UPLOAD MODAL -->
+<div class="ovl" id="amsUploadOvl">
+  <div class="modal" style="width:min(640px,96vw)">
+    <h2>📤 Upload AMS Talk Time Data</h2>
+    <p>Upload your AMS report Excel file. Data updates all Talk Time charts, APR tables, and week-wise views instantly.</p>
+
+    <!-- FORMAT GUIDE -->
+    <div style="background:rgba(0,212,170,.07);border:1px solid rgba(0,212,170,.2);border-radius:9px;padding:12px 16px;margin-bottom:14px;font-size:11px;line-height:1.7">
+      <div style="font-weight:700;color:var(--teal);margin-bottom:6px">📋 Required Excel Format (Sheet1)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;color:var(--mu2)">
+        <span>• <strong style="color:var(--txt)">Agent Name</strong> — full agent ID</span>
+        <span>• <strong style="color:var(--txt)">Team Leader</strong> — TL name</span>
+        <span>• <strong style="color:var(--txt)">Date</strong> — DD-MM-YYYY or date value</span>
+        <span>• <strong style="color:var(--txt)">Week</strong> — "1st Week" / "2nd Week" / "3rd Week"</span>
+        <span>• <strong style="color:var(--txt)">Outgoing_Call</strong> — total dials</span>
+        <span>• <strong style="color:var(--txt)">Con_Outgoing_Call</strong> — connected calls</span>
+        <span>• <strong style="color:var(--txt)">Total_Talk</strong> — HH:MM:SS talk time</span>
+        <span>• <strong style="color:var(--txt)">Staffed</strong> — HH:MM:SS staffed time</span>
+        <span>• <strong style="color:var(--txt)">Idle_Time</strong> — HH:MM:SS idle</span>
+        <span>• <strong style="color:var(--txt)">Break2_Time</strong> — HH:MM:SS break</span>
+        <span>• <strong style="color:var(--txt)">Wrapup_Time</strong> — HH:MM:SS wrapup</span>
+        <span>• <strong style="color:var(--txt)">Utilization_Per</strong> — occupancy %</span>
+        <span>• <strong style="color:var(--txt)">AHT</strong> — avg handle time HH:MM:SS</span>
+        <span>• <strong style="color:var(--txt)">Dialing_Time</strong> — HH:MM:SS dial time</span>
+        <span>• <strong style="color:var(--txt)">Login_Hrs</strong> — net login HH:MM:SS</span>
+        <span>• <strong style="color:var(--txt)">Demo Done, Total Lead, Demo Schedule, Activation</strong></span>
+      </div>
+    </div>
+
+    <!-- DROP ZONE -->
+    <div id="amsDropZone" onclick="document.getElementById('amsXlFile').click()"
+      ondragover="event.preventDefault();this.style.borderColor='var(--teal)'"
+      ondragleave="this.style.borderColor=''"
+      ondrop="handleAmsDrop(event)"
+      style="border:2px dashed var(--b2);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:12px">
+      <div style="font-size:30px;margin-bottom:8px">📁</div>
+      <div style="font-size:13px;font-weight:600;color:var(--txt);margin-bottom:4px">Click to choose or drag & drop Excel file</div>
+      <div style="font-size:11px;color:var(--mu)">.xlsx file · Same format as AMS_Busy.xlsx</div>
+      <input type="file" id="amsXlFile" accept=".xlsx,.xls" style="display:none" onchange="handleAmsUpload(event)">
+    </div>
+
+    <!-- PROGRESS -->
+    <div id="amsUploadProgress" style="display:none;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.2);border-radius:8px">
+        <div class="spin" style="border-top-color:var(--teal)"></div>
+        <span id="amsProgressMsg" style="font-size:12px;color:var(--teal)">Reading file…</span>
+      </div>
+    </div>
+
+    <!-- PREVIEW -->
+    <div id="amsUploadPreview" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--teal)" id="amsPreviewTitle"></div>
+        <div style="font-size:10px;color:var(--mu)" id="amsPreviewSub"></div>
+      </div>
+      <!-- Summary grid -->
+      <div id="amsPreviewStats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px"></div>
+      <!-- Sample rows -->
+      <div style="background:var(--s1);border:1px solid var(--b);border-radius:8px;overflow:auto;max-height:200px;margin-bottom:12px">
+        <table style="width:100%;border-collapse:collapse;font-size:10px;white-space:nowrap">
+          <thead id="amsPreviewHead"></thead>
+          <tbody id="amsPreviewBody"></tbody>
+        </table>
+      </div>
+      <button onclick="confirmAmsUpload()" style="width:100%;padding:11px;background:linear-gradient(135deg,var(--teal),#007a62);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">✓ Apply & Update Dashboard</button>
+    </div>
+
+    <div id="amsUploadError" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 14px;font-size:11px;color:#f87171;margin-bottom:12px"></div>
+
+    <div class="m-act">
+      <button class="btn-sec" onclick="closeAmsUpload()">Close</button>
+    </div>
   </div>
 </div>
 
@@ -1058,6 +1176,674 @@ function saveData(){
   db.ref(DB_KEY).set(newD)
     .then(()=>{document.getElementById('savOvl').classList.remove('on');toast('☁️ Saved & synced!');})
     .catch(e=>{document.getElementById('savOvl').classList.remove('on');toast('❌ '+e.message,false);});
+}
+
+// ── AMS SUB-TAB SWITCH ───────────────────────────────────────────────────────
+function switchAmsTab(id,el){
+  document.querySelectorAll('#mod-ams .sub-tab').forEach(t=>{t.classList.remove('on');t.style.color='';t.style.borderBottomColor='';});
+  el.classList.add('on');
+  if(id==='talktime'){el.style.color='var(--teal)';el.style.borderBottomColor='var(--teal)';}
+  else{el.style.color='var(--acc)';el.style.borderBottomColor='var(--acc)';}
+  document.getElementById('ams-pane-talktime').style.display=id==='talktime'?'':'none';
+  document.getElementById('ams-pane-apr').style.display=id==='apr'?'':'none';
+  if(id==='apr') renderAPR();
+}
+
+// ── APR DATA ──────────────────────────────────────────────────────────────────
+const APR_TL_DATA=[
+  {TL:"Akash Tomer",Agents:10,No_of_call:16687,Connected_call:3617,AVG_Staffing:"08:28:33",AVG_Net_Login:"09:25:47",AVG_Dail_Time:"00:53:04",AVG_Talk_Time:"01:04:24",AVG_Wrap_Time:"01:38:01",AVG_Handle_Time:"02:42:26",AVG_Idle_Time:"03:09:02",AVG_Break:"01:43:59",Occupancy_pct:37.6,Avg_AHT:"06:45",_talk_pct:12.7},
+  {TL:"Amit Verma",Agents:12,No_of_call:19319,Connected_call:3137,AVG_Staffing:"08:15:04",AVG_Net_Login:"09:12:51",AVG_Dail_Time:"00:47:05",AVG_Talk_Time:"00:44:56",AVG_Wrap_Time:"01:08:44",AVG_Handle_Time:"01:53:41",AVG_Idle_Time:"02:08:56",AVG_Break:"03:25:19",Occupancy_pct:28.8,Avg_AHT:"07:08",_talk_pct:9.1},
+  {TL:"Anshu Sharma",Agents:5,No_of_call:6184,Connected_call:1515,AVG_Staffing:"08:56:20",AVG_Net_Login:"09:15:11",AVG_Dail_Time:"00:38:15",AVG_Talk_Time:"00:54:30",AVG_Wrap_Time:"01:33:48",AVG_Handle_Time:"02:28:19",AVG_Idle_Time:"02:36:11",AVG_Break:"03:13:33",Occupancy_pct:33.4,Avg_AHT:"08:23",_talk_pct:10.2},
+  {TL:"Himanshu Tiwari",Agents:7,No_of_call:8954,Connected_call:1847,AVG_Staffing:"08:33:14",AVG_Net_Login:"09:16:29",AVG_Dail_Time:"00:46:31",AVG_Talk_Time:"00:58:19",AVG_Wrap_Time:"01:50:25",AVG_Handle_Time:"02:48:45",AVG_Idle_Time:"02:55:38",AVG_Break:"02:02:19",Occupancy_pct:38.1,Avg_AHT:"10:34",_talk_pct:11.4},
+  {TL:"Sagar Maheshwari",Agents:21,No_of_call:14260,Connected_call:2497,AVG_Staffing:"07:54:30",AVG_Net_Login:"08:50:26",AVG_Dail_Time:"00:37:38",AVG_Talk_Time:"00:37:55",AVG_Wrap_Time:"01:01:45",AVG_Handle_Time:"01:39:40",AVG_Idle_Time:"01:59:33",AVG_Break:"03:37:36",Occupancy_pct:26.0,Avg_AHT:"07:31",_talk_pct:8.0}
+];
+
+const APR_TOTAL={Agents:55,No_of_call:65404,Connected_call:12613,AVG_Staffing:"08:19:28",AVG_Net_Login:"09:10:26",AVG_Dail_Time:"00:44:49",AVG_Talk_Time:"00:49:59",AVG_Wrap_Time:"01:21:19",AVG_Handle_Time:"02:11:18",AVG_Idle_Time:"02:28:11",AVG_Break:"02:55:08",Occupancy_pct:31.7,Avg_AHT:"07:45",_talk_pct:10.0};
+
+const APR_AGENT_DATA=[
+  {short_name:"Shweta",TL:"Anshu Sharma",days:15,No_of_call:2024,Connected_call:584,AVG_Staffing:"09:25:09",AVG_Net_Login:"09:45:17",AVG_Dail_Time:"00:55:06",AVG_Talk_Time:"02:24:12",AVG_Wrap_Time:"02:09:18",AVG_Handle_Time:"04:33:31",AVG_Idle_Time:"02:58:58",AVG_Break:"00:57:33",Occupancy_pct:56.3,Avg_AHT:"08:54",_talk_pct:25.5,_idle_pct:31.7},
+  {short_name:"Harshita",TL:"Akash Tomer",days:15,No_of_call:2087,Connected_call:527,AVG_Staffing:"08:50:23",AVG_Net_Login:"09:29:38",AVG_Dail_Time:"00:51:43",AVG_Talk_Time:"02:02:20",AVG_Wrap_Time:"01:56:31",AVG_Handle_Time:"03:58:51",AVG_Idle_Time:"02:10:02",AVG_Break:"01:49:45",Occupancy_pct:50.3,Avg_AHT:"09:19",_talk_pct:23.1,_idle_pct:24.5},
+  {short_name:"Kajal",TL:"Sagar Maheshwari",days:11,No_of_call:1288,Connected_call:252,AVG_Staffing:"07:39:47",AVG_Net_Login:"08:40:07",AVG_Dail_Time:"00:50:30",AVG_Talk_Time:"01:19:53",AVG_Wrap_Time:"00:51:11",AVG_Handle_Time:"02:11:04",AVG_Idle_Time:"01:55:31",AVG_Break:"02:42:40",Occupancy_pct:38.0,Avg_AHT:"06:08",_talk_pct:17.4,_idle_pct:25.1},
+  {short_name:"Neha",TL:"Akash Tomer",days:15,No_of_call:2011,Connected_call:319,AVG_Staffing:"08:21:08",AVG_Net_Login:"09:14:28",AVG_Dail_Time:"00:43:07",AVG_Talk_Time:"01:16:42",AVG_Wrap_Time:"01:22:23",AVG_Handle_Time:"02:39:05",AVG_Idle_Time:"03:01:18",AVG_Break:"01:57:36",Occupancy_pct:35.9,Avg_AHT:"08:09",_talk_pct:15.3,_idle_pct:36.2},
+  {short_name:"Meenakshi",TL:"Amit Verma",days:17,No_of_call:2154,Connected_call:380,AVG_Staffing:"07:46:15",AVG_Net_Login:"08:51:41",AVG_Dail_Time:"01:00:24",AVG_Talk_Time:"01:09:57",AVG_Wrap_Time:"01:20:22",AVG_Handle_Time:"02:30:19",AVG_Idle_Time:"02:08:23",AVG_Break:"02:07:08",Occupancy_pct:39.7,Avg_AHT:"06:46",_talk_pct:15.0,_idle_pct:27.5},
+  {short_name:"JaydeepS",TL:"Amit Verma",days:17,No_of_call:2402,Connected_call:385,AVG_Staffing:"09:04:21",AVG_Net_Login:"10:03:32",AVG_Dail_Time:"01:14:24",AVG_Talk_Time:"01:21:03",AVG_Wrap_Time:"01:36:05",AVG_Handle_Time:"02:57:08",AVG_Idle_Time:"02:05:47",AVG_Break:"02:47:00",Occupancy_pct:41.7,Avg_AHT:"08:21",_talk_pct:14.9,_idle_pct:23.1},
+  {short_name:"Rituraj",TL:"Himanshu Tiwari",days:16,No_of_call:1894,Connected_call:389,AVG_Staffing:"09:05:01",AVG_Net_Login:"09:59:16",AVG_Dail_Time:"00:46:14",AVG_Talk_Time:"01:16:04",AVG_Wrap_Time:"01:37:04",AVG_Handle_Time:"02:53:09",AVG_Idle_Time:"03:24:49",AVG_Break:"02:00:47",Occupancy_pct:36.3,Avg_AHT:"11:01",_talk_pct:14.0,_idle_pct:37.6},
+  {short_name:"Satish",TL:"Himanshu Tiwari",days:15,No_of_call:1296,Connected_call:327,AVG_Staffing:"08:08:14",AVG_Net_Login:"08:59:16",AVG_Dail_Time:"00:39:41",AVG_Talk_Time:"01:09:56",AVG_Wrap_Time:"02:03:52",AVG_Handle_Time:"03:13:48",AVG_Idle_Time:"03:18:33",AVG_Break:"00:56:11",Occupancy_pct:42.6,Avg_AHT:"10:01",_talk_pct:14.3,_idle_pct:40.7},
+  {short_name:"Isha",TL:"Akash Tomer",days:17,No_of_call:2538,Connected_call:610,AVG_Staffing:"08:24:58",AVG_Net_Login:"09:24:26",AVG_Dail_Time:"01:06:35",AVG_Talk_Time:"01:02:54",AVG_Wrap_Time:"02:22:19",AVG_Handle_Time:"03:25:14",AVG_Idle_Time:"02:17:08",AVG_Break:"01:36:00",Occupancy_pct:45.6,Avg_AHT:"06:12",_talk_pct:12.5,_idle_pct:27.2},
+  {short_name:"Himani",TL:"Anshu Sharma",days:6,No_of_call:767,Connected_call:180,AVG_Staffing:"09:29:44",AVG_Net_Login:"07:58:36",AVG_Dail_Time:"00:57:38",AVG_Talk_Time:"01:11:06",AVG_Wrap_Time:"01:08:19",AVG_Handle_Time:"02:19:26",AVG_Idle_Time:"01:59:51",AVG_Break:"04:12:48",Occupancy_pct:34.3,Avg_AHT:"04:52",_talk_pct:12.5,_idle_pct:21.0},
+  {short_name:"Arshdeep",TL:"Himanshu Tiwari",days:16,No_of_call:2742,Connected_call:446,AVG_Staffing:"08:50:03",AVG_Net_Login:"09:51:28",AVG_Dail_Time:"01:16:56",AVG_Talk_Time:"01:06:11",AVG_Wrap_Time:"01:06:16",AVG_Handle_Time:"02:12:27",AVG_Idle_Time:"02:04:55",AVG_Break:"03:15:43",Occupancy_pct:35.0,Avg_AHT:"06:12",_talk_pct:12.5,_idle_pct:23.6},
+  {short_name:"Anam",TL:"Akash Tomer",days:16,No_of_call:2158,Connected_call:419,AVG_Staffing:"08:50:14",AVG_Net_Login:"09:49:37",AVG_Dail_Time:"00:52:15",AVG_Talk_Time:"01:03:42",AVG_Wrap_Time:"02:00:53",AVG_Handle_Time:"03:04:35",AVG_Idle_Time:"03:01:52",AVG_Break:"01:51:31",Occupancy_pct:39.9,Avg_AHT:"07:52",_talk_pct:12.0,_idle_pct:34.3},
+  {short_name:"Divyanshu",TL:"Akash Tomer",days:16,No_of_call:1741,Connected_call:448,AVG_Staffing:"08:34:42",AVG_Net_Login:"09:45:32",AVG_Dail_Time:"00:46:23",AVG_Talk_Time:"01:01:47",AVG_Wrap_Time:"00:58:53",AVG_Handle_Time:"02:00:40",AVG_Idle_Time:"04:19:28",AVG_Break:"01:28:02",Occupancy_pct:28.3,Avg_AHT:"04:20",_talk_pct:12.0,_idle_pct:50.4},
+  {short_name:"Tejal",TL:"Akash Tomer",days:17,No_of_call:2161,Connected_call:468,AVG_Staffing:"08:49:40",AVG_Net_Login:"09:55:40",AVG_Dail_Time:"01:02:51",AVG_Talk_Time:"00:57:24",AVG_Wrap_Time:"02:24:58",AVG_Handle_Time:"03:22:22",AVG_Idle_Time:"02:23:50",AVG_Break:"02:00:36",Occupancy_pct:44.2,Avg_AHT:"08:22",_talk_pct:10.8,_idle_pct:27.2},
+  {short_name:"AayushK",TL:"Sagar Maheshwari",days:17,No_of_call:1986,Connected_call:271,AVG_Staffing:"08:19:05",AVG_Net_Login:"09:23:06",AVG_Dail_Time:"01:01:46",AVG_Talk_Time:"00:54:06",AVG_Wrap_Time:"01:25:45",AVG_Handle_Time:"02:19:51",AVG_Idle_Time:"01:07:44",AVG_Break:"03:49:41",Occupancy_pct:36.2,Avg_AHT:"09:27",_talk_pct:10.8,_idle_pct:13.6},
+  {short_name:"AyushS",TL:"Amit Verma",days:17,No_of_call:1839,Connected_call:305,AVG_Staffing:"08:25:14",AVG_Net_Login:"09:17:21",AVG_Dail_Time:"00:55:55",AVG_Talk_Time:"00:54:04",AVG_Wrap_Time:"01:09:39",AVG_Handle_Time:"02:03:44",AVG_Idle_Time:"01:39:57",AVG_Break:"03:45:37",Occupancy_pct:30.8,Avg_AHT:"06:25",_talk_pct:10.7,_idle_pct:19.8},
+  {short_name:"Nishchals",TL:"Sagar Maheshwari",days:17,No_of_call:1792,Connected_call:278,AVG_Staffing:"08:23:09",AVG_Net_Login:"09:32:54",AVG_Dail_Time:"00:50:06",AVG_Talk_Time:"00:52:49",AVG_Wrap_Time:"00:48:15",AVG_Handle_Time:"01:41:04",AVG_Idle_Time:"02:13:51",AVG_Break:"03:38:07",Occupancy_pct:26.2,Avg_AHT:"06:18",_talk_pct:10.5,_idle_pct:26.6},
+  {short_name:"Rakhi",TL:"Amit Verma",days:16,No_of_call:1194,Connected_call:217,AVG_Staffing:"08:10:25",AVG_Net_Login:"09:27:29",AVG_Dail_Time:"00:30:20",AVG_Talk_Time:"00:48:57",AVG_Wrap_Time:"00:58:29",AVG_Handle_Time:"01:47:27",AVG_Idle_Time:"01:38:09",AVG_Break:"04:14:28",Occupancy_pct:24.0,Avg_AHT:"08:19",_talk_pct:10.0,_idle_pct:20.0},
+  {short_name:"BhanuT",TL:"Sagar Maheshwari",days:17,No_of_call:2073,Connected_call:310,AVG_Staffing:"08:30:02",AVG_Net_Login:"09:37:05",AVG_Dail_Time:"01:02:12",AVG_Talk_Time:"00:50:06",AVG_Wrap_Time:"01:19:19",AVG_Handle_Time:"02:09:26",AVG_Idle_Time:"02:37:37",AVG_Break:"02:40:45",Occupancy_pct:33.4,Avg_AHT:"07:19",_talk_pct:9.8,_idle_pct:30.9},
+  {short_name:"Chanda",TL:"Himanshu Tiwari",days:15,No_of_call:1794,Connected_call:375,AVG_Staffing:"08:36:53",AVG_Net_Login:"09:17:56",AVG_Dail_Time:"00:55:07",AVG_Talk_Time:"00:50:06",AVG_Wrap_Time:"01:31:30",AVG_Handle_Time:"02:21:36",AVG_Idle_Time:"03:56:23",AVG_Break:"01:23:46",Occupancy_pct:35.1,Avg_AHT:"06:51",_talk_pct:9.7,_idle_pct:45.7},
+  {short_name:"Nikita",TL:"Sagar Maheshwari",days:15,No_of_call:823,Connected_call:161,AVG_Staffing:"08:53:18",AVG_Net_Login:"09:28:23",AVG_Dail_Time:"00:19:31",AVG_Talk_Time:"00:48:08",AVG_Wrap_Time:"01:11:39",AVG_Handle_Time:"01:59:47",AVG_Idle_Time:"01:55:58",AVG_Break:"04:38:00",Occupancy_pct:24.2,Avg_AHT:"11:01",_talk_pct:9.0,_idle_pct:21.7},
+  {short_name:"Vishal",TL:"Akash Tomer",days:17,No_of_call:2620,Connected_call:506,AVG_Staffing:"07:52:10",AVG_Net_Login:"08:43:39",AVG_Dail_Time:"01:03:57",AVG_Talk_Time:"00:43:06",AVG_Wrap_Time:"01:01:43",AVG_Handle_Time:"01:44:50",AVG_Idle_Time:"02:45:48",AVG_Break:"02:17:34",Occupancy_pct:34.4,Avg_AHT:"05:38",_talk_pct:9.1,_idle_pct:35.1},
+  {short_name:"Hitanshu",TL:"Amit Verma",days:16,No_of_call:1409,Connected_call:298,AVG_Staffing:"08:20:26",AVG_Net_Login:"09:33:11",AVG_Dail_Time:"00:32:00",AVG_Talk_Time:"00:46:06",AVG_Wrap_Time:"01:21:33",AVG_Handle_Time:"02:07:39",AVG_Idle_Time:"03:04:53",AVG_Break:"02:35:52",Occupancy_pct:27.8,Avg_AHT:"09:03",_talk_pct:9.2,_idle_pct:36.9},
+  {short_name:"AdityaS",TL:"Amit Verma",days:14,No_of_call:1679,Connected_call:242,AVG_Staffing:"08:09:52",AVG_Net_Login:"09:12:02",AVG_Dail_Time:"01:03:47",AVG_Talk_Time:"00:40:07",AVG_Wrap_Time:"01:15:30",AVG_Handle_Time:"01:55:38",AVG_Idle_Time:"02:02:07",AVG_Break:"03:08:19",Occupancy_pct:32.9,Avg_AHT:"07:03",_talk_pct:8.2,_idle_pct:24.9},
+  {short_name:"Amit",TL:"Amit Verma",days:16,No_of_call:1764,Connected_call:332,AVG_Staffing:"08:23:49",AVG_Net_Login:"09:24:59",AVG_Dail_Time:"00:45:42",AVG_Talk_Time:"00:43:51",AVG_Wrap_Time:"00:38:59",AVG_Handle_Time:"01:22:50",AVG_Idle_Time:"02:48:02",AVG_Break:"03:27:13",Occupancy_pct:23.0,Avg_AHT:"04:34",_talk_pct:8.7,_idle_pct:33.4},
+  {short_name:"Kumkum",TL:"Amit Verma",days:16,No_of_call:1426,Connected_call:304,AVG_Staffing:"08:07:08",AVG_Net_Login:"09:12:03",AVG_Dail_Time:"00:37:33",AVG_Talk_Time:"00:36:20",AVG_Wrap_Time:"01:07:30",AVG_Handle_Time:"01:43:50",AVG_Idle_Time:"03:17:03",AVG_Break:"02:28:40",Occupancy_pct:26.1,Avg_AHT:"06:11",_talk_pct:7.5,_idle_pct:40.5},
+  {short_name:"Himanshu",TL:"Himanshu Tiwari",days:17,No_of_call:1081,Connected_call:271,AVG_Staffing:"09:41:47",AVG_Net_Login:"09:48:56",AVG_Dail_Time:"00:24:00",AVG_Talk_Time:"00:43:28",AVG_Wrap_Time:"03:09:32",AVG_Handle_Time:"03:53:00",AVG_Idle_Time:"02:36:45",AVG_Break:"02:48:01",Occupancy_pct:42.5,Avg_AHT:"19:47",_talk_pct:7.5,_idle_pct:26.9},
+  {short_name:"Shubhanjali",TL:"Sagar Maheshwari",days:16,No_of_call:1148,Connected_call:139,AVG_Staffing:"08:00:57",AVG_Net_Login:"09:11:34",AVG_Dail_Time:"00:26:54",AVG_Talk_Time:"00:34:52",AVG_Wrap_Time:"01:20:56",AVG_Handle_Time:"01:55:48",AVG_Idle_Time:"00:43:23",AVG_Break:"04:54:51",Occupancy_pct:30.3,Avg_AHT:"15:26",_talk_pct:7.2,_idle_pct:9.0},
+  {short_name:"Mo",TL:"Anshu Sharma",days:15,No_of_call:1089,Connected_call:301,AVG_Staffing:"08:03:28",AVG_Net_Login:"09:05:59",AVG_Dail_Time:"00:31:04",AVG_Talk_Time:"00:33:19",AVG_Wrap_Time:"01:36:39",AVG_Handle_Time:"02:09:59",AVG_Idle_Time:"02:29:21",AVG_Break:"02:53:03",Occupancy_pct:29.2,Avg_AHT:"07:56",_talk_pct:6.9,_idle_pct:30.9},
+  {short_name:"Jyoti",TL:"Amit Verma",days:17,No_of_call:1157,Connected_call:215,AVG_Staffing:"07:48:37",AVG_Net_Login:"08:59:12",AVG_Dail_Time:"00:32:36",AVG_Talk_Time:"00:31:25",AVG_Wrap_Time:"01:42:00",AVG_Handle_Time:"02:13:25",AVG_Idle_Time:"01:54:08",AVG_Break:"03:08:26",Occupancy_pct:31.3,Avg_AHT:"10:44",_talk_pct:6.7,_idle_pct:24.4},
+  {short_name:"SushmitaC",TL:"Sagar Maheshwari",days:13,No_of_call:1195,Connected_call:148,AVG_Staffing:"07:51:32",AVG_Net_Login:"08:47:39",AVG_Dail_Time:"00:14:46",AVG_Talk_Time:"00:30:13",AVG_Wrap_Time:"00:42:44",AVG_Handle_Time:"01:12:57",AVG_Idle_Time:"03:08:55",AVG_Break:"03:14:52",Occupancy_pct:16.9,Avg_AHT:"07:07",_talk_pct:6.4,_idle_pct:40.1},
+  {short_name:"Sangam",TL:"Amit Verma",days:13,No_of_call:1924,Connected_call:184,AVG_Staffing:"08:30:16",AVG_Net_Login:"09:47:59",AVG_Dail_Time:"00:36:21",AVG_Talk_Time:"00:31:14",AVG_Wrap_Time:"00:47:38",AVG_Handle_Time:"01:18:52",AVG_Idle_Time:"01:48:36",AVG_Break:"04:46:26",Occupancy_pct:19.9,Avg_AHT:"06:34",_talk_pct:6.1,_idle_pct:21.3},
+  {short_name:"Anshu",TL:"Anshu Sharma",days:17,No_of_call:761,Connected_call:130,AVG_Staffing:"09:38:43",AVG_Net_Login:"09:12:32",AVG_Dail_Time:"00:16:43",AVG_Talk_Time:"00:22:12",AVG_Wrap_Time:"00:35:09",AVG_Handle_Time:"00:57:22",AVG_Idle_Time:"03:28:59",AVG_Break:"04:55:39",Occupancy_pct:15.6,Avg_AHT:"07:35",_talk_pct:3.8,_idle_pct:36.1},
+  {short_name:"Ankit",TL:"Anshu Sharma",days:15,No_of_call:1543,Connected_call:320,AVG_Staffing:"08:18:57",AVG_Net_Login:"09:27:53",AVG_Dail_Time:"00:45:14",AVG_Talk_Time:"00:15:57",AVG_Wrap_Time:"02:12:08",AVG_Handle_Time:"02:28:06",AVG_Idle_Time:"01:34:57",AVG_Break:"03:30:38",Occupancy_pct:34.7,Avg_AHT:"10:40",_talk_pct:3.2,_idle_pct:19.0},
+  {short_name:"Mohit",TL:"Amit Verma",days:18,No_of_call:2309,Connected_call:256,AVG_Staffing:"08:45:43",AVG_Net_Login:"08:30:00",AVG_Dail_Time:"00:51:10",AVG_Talk_Time:"00:13:22",AVG_Wrap_Time:"00:40:06",AVG_Handle_Time:"00:53:29",AVG_Idle_Time:"01:28:18",AVG_Break:"05:32:44",Occupancy_pct:19.5,Avg_AHT:"05:05",_talk_pct:2.5,_idle_pct:16.8},
+  {short_name:"Prabhat",TL:"Sagar Maheshwari",days:18,No_of_call:866,Connected_call:151,AVG_Staffing:"08:14:38",AVG_Net_Login:"09:04:25",AVG_Dail_Time:"00:17:43",AVG_Talk_Time:"00:11:56",AVG_Wrap_Time:"00:47:07",AVG_Handle_Time:"00:59:03",AVG_Idle_Time:"01:17:16",AVG_Break:"05:40:35",Occupancy_pct:14.1,Avg_AHT:"07:37",_talk_pct:2.4,_idle_pct:15.6}
+];
+
+const APR_WK_TL=[
+  {Week:"W1",TL:"Akash Tomer",No_of_call:5152,Connected_call:1307,AVG_Staffing:"07:53:03",AVG_Net_Login:"08:44:30",AVG_Dail_Time:"00:42:02",AVG_Talk_Time:"00:49:47",AVG_Wrap_Time:"01:24:12",AVG_Handle_Time:"02:13:59",AVG_Idle_Time:"04:16:53",AVG_Break:"00:40:08",Occupancy_pct:32.6,Avg_AHT:"05:37",_talk_pct:10.5},
+  {Week:"W1",TL:"Amit Verma",No_of_call:6162,Connected_call:1022,AVG_Staffing:"07:54:19",AVG_Net_Login:"08:58:04",AVG_Dail_Time:"00:43:05",AVG_Talk_Time:"00:42:58",AVG_Wrap_Time:"01:00:37",AVG_Handle_Time:"01:43:35",AVG_Idle_Time:"02:28:32",AVG_Break:"02:59:06",Occupancy_pct:26.8,Avg_AHT:"07:00",_talk_pct:9.1},
+  {Week:"W1",TL:"Anshu Sharma",No_of_call:1811,Connected_call:501,AVG_Staffing:"08:17:00",AVG_Net_Login:"08:57:47",AVG_Dail_Time:"00:38:28",AVG_Talk_Time:"00:49:22",AVG_Wrap_Time:"01:40:49",AVG_Handle_Time:"02:30:11",AVG_Idle_Time:"04:18:48",AVG_Break:"00:49:31",Occupancy_pct:34.1,Avg_AHT:"08:07",_talk_pct:9.9},
+  {Week:"W1",TL:"Himanshu Tiwari",No_of_call:2358,Connected_call:633,AVG_Staffing:"07:51:46",AVG_Net_Login:"08:38:15",AVG_Dail_Time:"00:38:52",AVG_Talk_Time:"00:52:15",AVG_Wrap_Time:"01:40:23",AVG_Handle_Time:"02:32:39",AVG_Idle_Time:"03:37:17",AVG_Break:"01:02:56",Occupancy_pct:35.6,Avg_AHT:"08:38",_talk_pct:11.1},
+  {Week:"W1",TL:"Sagar Maheshwari",No_of_call:5409,Connected_call:980,AVG_Staffing:"07:52:20",AVG_Net_Login:"08:53:31",AVG_Dail_Time:"00:45:33",AVG_Talk_Time:"00:45:40",AVG_Wrap_Time:"01:07:11",AVG_Handle_Time:"01:52:52",AVG_Idle_Time:"02:39:06",AVG_Break:"02:34:47",Occupancy_pct:29.0,Avg_AHT:"07:26",_talk_pct:9.7},
+  {Week:"W2",TL:"Akash Tomer",No_of_call:6283,Connected_call:1338,AVG_Staffing:"08:52:08",AVG_Net_Login:"09:48:14",AVG_Dail_Time:"00:54:54",AVG_Talk_Time:"01:03:16",AVG_Wrap_Time:"01:43:13",AVG_Handle_Time:"02:46:29",AVG_Idle_Time:"02:53:17",AVG_Break:"02:17:27",Occupancy_pct:37.3,Avg_AHT:"07:16",_talk_pct:11.9},
+  {Week:"W2",TL:"Amit Verma",No_of_call:6633,Connected_call:1018,AVG_Staffing:"08:16:45",AVG_Net_Login:"09:20:01",AVG_Dail_Time:"00:50:08",AVG_Talk_Time:"00:42:34",AVG_Wrap_Time:"01:11:43",AVG_Handle_Time:"01:54:18",AVG_Idle_Time:"02:14:51",AVG_Break:"03:17:25",Occupancy_pct:29.5,Avg_AHT:"07:23",_talk_pct:8.6},
+  {Week:"W2",TL:"Anshu Sharma",No_of_call:1658,Connected_call:418,AVG_Staffing:"09:07:35",AVG_Net_Login:"09:06:56",AVG_Dail_Time:"00:32:18",AVG_Talk_Time:"00:47:09",AVG_Wrap_Time:"01:27:16",AVG_Handle_Time:"02:14:26",AVG_Idle_Time:"02:28:52",AVG_Break:"03:51:58",Occupancy_pct:31.5,Avg_AHT:"08:16",_talk_pct:8.6},
+  {Week:"W2",TL:"Himanshu Tiwari",No_of_call:4007,Connected_call:770,AVG_Staffing:"09:21:29",AVG_Net_Login:"09:40:49",AVG_Dail_Time:"00:57:46",AVG_Talk_Time:"01:04:52",AVG_Wrap_Time:"01:53:43",AVG_Handle_Time:"02:58:35",AVG_Idle_Time:"03:14:50",AVG_Break:"02:10:16",Occupancy_pct:40.0,Avg_AHT:"07:56",_talk_pct:11.6},
+  {Week:"W2",TL:"Sagar Maheshwari",No_of_call:4012,Connected_call:697,AVG_Staffing:"08:06:28",AVG_Net_Login:"08:56:35",AVG_Dail_Time:"00:36:20",AVG_Talk_Time:"00:36:00",AVG_Wrap_Time:"01:04:29",AVG_Handle_Time:"01:40:30",AVG_Idle_Time:"02:00:43",AVG_Break:"03:48:54",Occupancy_pct:27.4,Avg_AHT:"07:21",_talk_pct:7.4},
+  {Week:"W3",TL:"Akash Tomer",No_of_call:5252,Connected_call:972,AVG_Staffing:"08:43:17",AVG_Net_Login:"09:49:58",AVG_Dail_Time:"01:05:25",AVG_Talk_Time:"01:25:47",AVG_Wrap_Time:"01:49:24",AVG_Handle_Time:"03:15:11",AVG_Idle_Time:"01:59:29",AVG_Break:"02:23:06",Occupancy_pct:44.9,Avg_AHT:"07:32",_talk_pct:16.4},
+  {Week:"W3",TL:"Amit Verma",No_of_call:6524,Connected_call:1097,AVG_Staffing:"08:34:10",AVG_Net_Login:"09:20:37",AVG_Dail_Time:"00:48:06",AVG_Talk_Time:"00:49:15",AVG_Wrap_Time:"01:13:56",AVG_Handle_Time:"02:03:12",AVG_Idle_Time:"01:43:32",AVG_Break:"03:59:18",Occupancy_pct:30.1,Avg_AHT:"07:01",_talk_pct:9.6},
+  {Week:"W3",TL:"Anshu Sharma",No_of_call:2715,Connected_call:596,AVG_Staffing:"09:14:50",AVG_Net_Login:"09:34:09",AVG_Dail_Time:"00:42:57",AVG_Talk_Time:"01:04:07",AVG_Wrap_Time:"01:34:12",AVG_Handle_Time:"02:38:19",AVG_Idle_Time:"01:29:56",AVG_Break:"04:23:35",Occupancy_pct:34.5,Avg_AHT:"08:41",_talk_pct:11.6},
+  {Week:"W3",TL:"Himanshu Tiwari",No_of_call:2589,Connected_call:444,AVG_Staffing:"08:18:33",AVG_Net_Login:"09:24:33",AVG_Dail_Time:"00:41:16",AVG_Talk_Time:"00:56:42",AVG_Wrap_Time:"01:55:51",AVG_Handle_Time:"02:52:34",AVG_Idle_Time:"01:57:54",AVG_Break:"02:46:48",Occupancy_pct:38.4,Avg_AHT:"15:08",_talk_pct:11.4},
+  {Week:"W3",TL:"Sagar Maheshwari",No_of_call:4839,Connected_call:820,AVG_Staffing:"07:47:18",AVG_Net_Login:"08:42:54",AVG_Dail_Time:"00:31:23",AVG_Talk_Time:"00:32:17",AVG_Wrap_Time:"00:54:40",AVG_Handle_Time:"01:26:57",AVG_Idle_Time:"01:22:24",AVG_Break:"04:26:31",Occupancy_pct:22.2,Avg_AHT:"07:42",_talk_pct:6.9}
+];
+
+// ── APR COLOR HELPERS ─────────────────────────────────────────────────────────
+function aprTalkColor(hms){
+  const p=hms.split(':');const m=+p[0]*60+ +p[1];
+  return m>=90?'background:rgba(34,197,94,.15);color:#4ade80':m>=60?'background:rgba(79,124,255,.15);color:#93c5fd':m>=30?'':'background:rgba(239,68,68,.13);color:#f87171';
+}
+function aprIdleColor(hms){
+  const p=hms.split(':');const m=+p[0]*60+ +p[1];
+  return m>=240?'background:rgba(239,68,68,.15);color:#f87171':m>=120?'background:rgba(245,158,11,.13);color:#fbbf24':'';
+}
+function aprOccColor(v){
+  return v>=50?'background:rgba(34,197,94,.15);color:#4ade80':v>=35?'background:rgba(79,124,255,.15);color:#93c5fd':v>=25?'':'background:rgba(245,158,11,.13);color:#fbbf24';
+}
+function aprTalkPctColor(v){
+  return v>=20?'background:rgba(34,197,94,.15);color:#4ade80':v>=12?'background:rgba(79,124,255,.15);color:#93c5fd':v>=8?'':'background:rgba(239,68,68,.13);color:#f87171';
+}
+
+// ── APR VIEW STATE ────────────────────────────────────────────────────────────
+let aprView='agent', aprWk='all';
+
+function switchAprView(view,el){
+  aprView=view;
+  document.querySelectorAll('#ams-pane-apr .wk-tab[id^="aprV-"]').forEach(t=>{t.classList.remove('on');t.style.background='';t.style.borderColor='';t.style.color='';});
+  el.classList.add('on');
+  // show/hide filters
+  document.getElementById('aprTlFilter').style.display=(view==='agent')?'':'none';
+  document.getElementById('aprMetric').style.display=(view==='week')?'':'none';
+  document.getElementById('aprWkBar').style.display=(view==='week')?'none':'';
+  renderAPR();
+}
+
+function setAprWk(wk,el){
+  aprWk=wk;
+  document.querySelectorAll('#aprWkBar .wk-tab').forEach(t=>{t.classList.remove('on');});
+  el.classList.add('on');
+  renderAPR();
+}
+
+// ── APR RENDER ────────────────────────────────────────────────────────────────
+const APR_TL_ORDER=["Akash Tomer","Amit Verma","Anshu Sharma","Himanshu Tiwari","Sagar Maheshwari"];
+
+function aprColHead(){
+  return `<tr style="background:#0d1626">
+    <th style="position:sticky;left:0;background:#0d1626;z-index:3;padding:6px 10px;text-align:left;font-size:9px;color:var(--mu);border-bottom:1px solid var(--b);min-width:130px"></th>
+    <th colspan="2" style="padding:5px 8px;font-size:9px;color:var(--mu);border-bottom:1px solid var(--b);text-align:center">Calls</th>
+    <th colspan="8" style="padding:5px 8px;font-size:9px;color:#6ab0ff;border-bottom:1px solid var(--b);text-align:center">⏱ Avg Time Metrics / Day</th>
+    <th colspan="2" style="padding:5px 8px;font-size:9px;color:#4ade80;border-bottom:1px solid var(--b);text-align:center">📊 Perf</th>
+  </tr>
+  <tr style="background:rgba(13,22,38,.95)">
+    <th style="position:sticky;left:0;background:rgba(13,22,38,.98);z-index:3;padding:5px 10px;text-align:left;font-size:9px;color:var(--mu);border-bottom:1px solid var(--b)">Name</th>
+    ${['Dials','Connected','Staffing','Net Login','Dial Time','Talk Time▲','Wrap Time','Handle Time','Idle Time▼','Break','Occ%','AHT'].map((h,i)=>`<th style="padding:5px 8px;font-size:9px;color:${i===5?'#4f7cff':i===8?'#ef4444':i===10?'#22c55e':'var(--mu)'};border-bottom:1px solid var(--b);text-align:center;cursor:pointer;white-space:nowrap">${h}</th>`).join('')}
+  </tr>`;
+}
+
+function aprRow(name,avatar,d,isTL,isTotal){
+  const sty=isTotal?'background:rgba(0,212,170,.06);font-weight:800':isTL?'background:rgba(79,124,255,.07);font-weight:700':'';
+  const nameCell=isTotal
+    ?`<td style="position:sticky;left:0;background:rgba(0,212,170,.08);z-index:1;padding:7px 10px;font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;border-bottom:1px solid var(--b)">${name}</td>`
+    :isTL
+    ?`<td style="position:sticky;left:0;background:rgba(79,124,255,.1);z-index:1;padding:7px 10px;font-size:11px;font-weight:700;color:var(--acc);white-space:nowrap;border-bottom:1px solid var(--b);border-right:1px solid var(--b)">${name}</td>`
+    :`<td style="position:sticky;left:0;background:var(--s1);z-index:1;padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.03);border-right:1px solid var(--b)">
+        <div style="display:flex;align-items:center;gap:6px;white-space:nowrap">
+          <div style="width:20px;height:20px;border-radius:50%;background:${avatar};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0">${name.split(/[\s_]/)[0].slice(0,2).toUpperCase()}</div>
+          <span style="font-weight:600;font-size:11px">${name}</span>
+          ${d.days?`<span style="font-size:9px;color:var(--mu)">${d.days}d</span>`:''}
+        </div>
+      </td>`;
+  const bd='border-bottom:1px solid rgba(255,255,255,.03)';
+  const tc=(v,s)=>`<td style="${bd};text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;${s||''}">${v}</td>`;
+  return `<tr style="${sty}">
+    ${nameCell}
+    ${tc((d.No_of_call||0).toLocaleString())}
+    ${tc((d.Connected_call||0).toLocaleString())}
+    ${tc(d.AVG_Staffing||'—')}
+    ${tc(d.AVG_Net_Login||'—')}
+    ${tc(d.AVG_Dail_Time||'—')}
+    ${tc(d.AVG_Talk_Time||'—',aprTalkColor(d.AVG_Talk_Time||'00:00:00'))}
+    ${tc(d.AVG_Wrap_Time||'—')}
+    ${tc(d.AVG_Handle_Time||'—')}
+    ${tc(d.AVG_Idle_Time||'—',aprIdleColor(d.AVG_Idle_Time||'00:00:00'))}
+    ${tc(d.AVG_Break||'—')}
+    ${tc((d.Occupancy_pct||0)+'%',aprOccColor(d.Occupancy_pct||0))}
+    ${tc(d.Avg_AHT||'—')}
+  </tr>`;
+}
+
+function renderAPR(){
+  const srch=(document.getElementById('aprSearch').value||'').toLowerCase();
+  const tlF=document.getElementById('aprTlFilter').value||'';
+  const metric=document.getElementById('aprMetric').value||'AVG_Talk_Time';
+
+  // ── AGENT VIEW ──
+  if(aprView==='agent'){
+    // pick MTD or week agent data
+    let agData=aprWk==='all'
+      ? APR_AGENT_DATA
+      : APR_AGENT_DATA.map(a=>{
+          // For week view use talk time from AMS_AGENTS weeks
+          const amsA=AMS_AGENTS.find(x=>x.name===a.short_name);
+          const wk=amsA?.weeks[aprWk];
+          if(!wk||!wk.days) return null;
+          return {...a, No_of_call:wk.outgoing, Connected_call:wk.connected,
+            AVG_Talk_Time: `${String(Math.floor(wk.talk_min/60)).padStart(2,'0')}:${String(wk.talk_min%60).padStart(2,'0')}:00`,
+            _talk_pct:wk.talk_pct, Occupancy_pct:wk.util, days:wk.days};
+        }).filter(Boolean);
+
+    if(tlF) agData=agData.filter(a=>a.TL===tlF);
+    if(srch) agData=agData.filter(a=>a.short_name.toLowerCase().includes(srch)||a.TL.toLowerCase().includes(srch));
+
+    const wklbl=aprWk==='all'?'MTD':{'W1':'Wk 1 (1-7 Jun)','W2':'Wk 2 (8-14 Jun)','W3':'Wk 3 (15-20 Jun)'}[aprWk];
+    document.getElementById('aprTableTitle').textContent=`Agent-Wise APR — ${wklbl} · June 2026`;
+
+    // Group by TL
+    const byTL={};
+    agData.forEach(a=>{if(!byTL[a.TL])byTL[a.TL]=[];byTL[a.TL].push(a);});
+    const tlOrd=APR_TL_ORDER.filter(t=>byTL[t]);
+
+    let html='';
+    let ci=0;
+    tlOrd.forEach(tl=>{
+      const ags=byTL[tl];
+      // TL subtotal
+      const tlD=APR_TL_DATA.find(t=>t.TL===tl)||{};
+      const tlWkD=aprWk!=='all'?APR_WK_TL.find(r=>r.Week===aprWk&&r.TL===tl):null;
+      html+=aprRow(`📋 ${tl} (${ags.length})`,null,tlWkD||tlD,true,false);
+      ags.forEach(a=>{ html+=aprRow(a.short_name,AVC[ci++%AVC.length],a,false,false); });
+    });
+    html+=aprRow('📊 TOTAL / AVG ('+agData.length+' agents)',null,APR_TOTAL,false,true);
+
+    document.getElementById('aprHead').innerHTML=aprColHead();
+    document.getElementById('aprBody').innerHTML=html;
+    document.getElementById('aprFooter').textContent=`${agData.length} agents · ${wklbl} · Color: 🟢 Green=Good · 🔴 Red=Attention · 🟡 Yellow=Warning`;
+
+  // ── TL VIEW ──
+  } else if(aprView==='tl'){
+    const wklbl=aprWk==='all'?'MTD':{'W1':'Wk 1','W2':'Wk 2','W3':'Wk 3'}[aprWk];
+    document.getElementById('aprTableTitle').textContent=`TL-Wise APR — ${wklbl} · June 2026`;
+
+    const rows=aprWk==='all'?APR_TL_DATA:APR_WK_TL.filter(r=>r.Week===aprWk);
+    let html=rows.map((t,i)=>aprRow(t.TL,AVC[i],t,false,false)).join('');
+    html+=aprRow('📊 TOTAL / AVG',null,APR_TOTAL,false,true);
+
+    document.getElementById('aprHead').innerHTML=aprColHead();
+    document.getElementById('aprBody').innerHTML=html;
+    document.getElementById('aprFooter').textContent=`5 Team Leads · ${wklbl}`;
+
+  // ── WEEK COMPARISON VIEW ──
+  } else {
+    document.getElementById('aprTableTitle').textContent=`Week-Wise Comparison — TL Level · June 2026`;
+    const WKCOLS=['No_of_call','Connected_call','AVG_Talk_Time','AVG_Idle_Time','Occupancy_pct','Avg_AHT'];
+    const WKHDRS=['Dials','Conn','Talk Time','Idle Time','Occ%','AHT'];
+    const wkColors=['rgba(124,92,252,.06)','rgba(30,111,217,.06)','rgba(34,197,94,.04)'];
+    const wkHeadColors=['rgba(124,92,252,.18)','rgba(30,111,217,.18)','rgba(34,197,94,.14)'];
+    const wkLabels=['Wk1 · 1-7 Jun','Wk2 · 8-14 Jun','Wk3 · 15-20 Jun'];
+    const wkKeys=['W1','W2','W3'];
+
+    const head=`<tr style="background:#0d1626">
+      <th style="position:sticky;left:0;background:#0d1626;z-index:3;padding:6px 10px;text-align:left;font-size:9px;color:var(--mu);border-bottom:1px solid var(--b);min-width:150px">Team Lead</th>
+      ${wkKeys.map((wk,wi)=>`<th colspan="${WKCOLS.length}" style="padding:5px 8px;font-size:9px;border-bottom:1px solid var(--b);text-align:center;background:${wkHeadColors[wi]};color:${wi===0?'#a78bfa':wi===1?'#6ab0ff':'#4ade80'}">${wkLabels[wi]}</th>`).join('')}
+    </tr>
+    <tr style="background:rgba(13,22,38,.95)">
+      <th style="position:sticky;left:0;background:rgba(13,22,38,.98);z-index:3;padding:5px 10px;text-align:left;font-size:9px;color:var(--mu);border-bottom:1px solid var(--b)"></th>
+      ${wkKeys.map((wk,wi)=>WKHDRS.map((h,hi)=>`<th style="padding:5px 7px;font-size:9px;color:${WKCOLS[hi]===metric?'var(--warn)':'var(--mu)'};border-bottom:${WKCOLS[hi]===metric?'2px solid var(--warn)':'1px solid var(--b)'};text-align:center;background:${wkColors[wi]}">${h}</th>`).join('')).join('')}
+    </tr>`;
+
+    const bodyRows=APR_TL_ORDER.map((tl,ti)=>{
+      const cells=wkKeys.map((wk,wi)=>{
+        const r=APR_WK_TL.find(x=>x.Week===wk&&x.TL===tl)||{};
+        return WKCOLS.map((c,ci)=>{
+          const v=r[c]??'—';
+          let sty=`background:${wkColors[wi]};`;
+          if(c===metric&&v!=='—'){
+            if(c==='AVG_Talk_Time') sty+=aprTalkColor(String(v));
+            else if(c==='AVG_Idle_Time') sty+=aprIdleColor(String(v));
+            else if(c==='Occupancy_pct') sty+=aprOccColor(parseFloat(v));
+          }
+          const disp=c==='Occupancy_pct'?v+'%':(typeof v==='number'?v.toLocaleString():v);
+          return `<td style="padding:6px 7px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;border-bottom:1px solid rgba(255,255,255,.03);${sty}">${disp}</td>`;
+        }).join('');
+      }).join('');
+      return `<tr style="transition:background .1s">
+        <td style="position:sticky;left:0;background:var(--s1);z-index:1;padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.03);border-right:1px solid var(--b)">
+          <div style="display:flex;align-items:center;gap:7px">
+            <div style="width:22px;height:22px;border-radius:5px;background:${AVC[ti]};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">${tl.slice(0,2).toUpperCase()}</div>
+            <span style="font-weight:700;font-size:11px">${tl}</span>
+          </div>
+        </td>
+        ${cells}
+      </tr>`;
+    }).join('');
+
+    document.getElementById('aprHead').innerHTML=head;
+    document.getElementById('aprBody').innerHTML=bodyRows;
+    document.getElementById('aprFooter').textContent=`W1=Jun 1-7 · W2=Jun 8-14 · W3=Jun 15-20 · Highlighted metric: ${metric.replace('AVG_','').replace('_',' ')}`;
+  }
+}
+
+// ── AMS UPLOAD ────────────────────────────────────────────────────────────────
+let _amsPending = null;
+
+function openAmsUpload(){
+  document.getElementById('amsUploadOvl').classList.add('on');
+  document.getElementById('amsUploadPreview').style.display='none';
+  document.getElementById('amsUploadProgress').style.display='none';
+  document.getElementById('amsUploadError').style.display='none';
+  document.getElementById('amsDropZone').style.borderColor='';
+  _amsPending=null;
+}
+function closeAmsUpload(){ document.getElementById('amsUploadOvl').classList.remove('on'); }
+function handleAmsDrop(e){
+  e.preventDefault();
+  document.getElementById('amsDropZone').style.borderColor='';
+  const f=e.dataTransfer.files[0];
+  if(f) processAmsFile(f);
+}
+function handleAmsUpload(e){
+  const f=e.target.files[0];
+  if(f) processAmsFile(f);
+  e.target.value='';
+}
+
+function toSec(v){
+  // v can be: "HH:MM:SS" string, Date (from xlsx serial), number (seconds), or null
+  if(!v) return 0;
+  if(typeof v==='number'){
+    // XLSX serial time: fraction of day
+    if(v < 2) return Math.round(v * 86400);
+    return v; // already seconds
+  }
+  if(typeof v==='string'){
+    const p=v.trim().split(':');
+    if(p.length===3) return +p[0]*3600 + +p[1]*60 + +p[2];
+    if(p.length===2) return +p[0]*60 + +p[1];
+  }
+  // Date object from openpyxl-style — shouldn't happen in browser but guard
+  return 0;
+}
+
+function secToHms(s){ s=Math.round(s); return `${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor(s%3600/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+function secToMm(s){ return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.round(s%60)).padStart(2,'0')}`; }
+
+function processAmsFile(file){
+  document.getElementById('amsUploadPreview').style.display='none';
+  document.getElementById('amsUploadError').style.display='none';
+  document.getElementById('amsUploadProgress').style.display='';
+  document.getElementById('amsProgressMsg').textContent='Reading file…';
+
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      document.getElementById('amsProgressMsg').textContent='Parsing rows…';
+      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array',cellDates:false});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''});
+
+      if(rows.length<2){ throw new Error('File appears empty — no data rows found.'); }
+
+      // Map headers
+      const hdrs=rows[0].map(h=>String(h||'').trim());
+      const col=name=>{
+        const aliases={
+          'Agent Name':['Agent Name','Agent_Name','AgentName'],
+          'Team Leader':['Team Leader','Team_Leader','TL'],
+          'Date':['Date'],
+          'Week':['Week'],
+          'Outgoing_Call':['Outgoing_Call','Outgoing Call'],
+          'Con_Outgoing_Call':['Con_Outgoing_Call','Con_Outgoing Call','Connected'],
+          'Total_Talk':['Total_Talk','Total Talk'],
+          'Staffed':['Staffed'],
+          'Idle_Time':['Idle_Time','Idle Time'],
+          'Break2_Time':['Break2_Time','Break2 Time'],
+          'Wrapup_Time':['Wrapup_Time','Wrapup Time'],
+          'Utilization_Per':['Utilization_Per','Utilization Per','Utilization%'],
+          'AHT':['AHT'],
+          'Dialing_Time':['Dialing_Time','Dialing Time'],
+          'Login_Hrs':['Login_Hrs','Login Hrs','Net Login','Final Net Login'],
+          'Demo Done':['Demo Done'],
+          'Total Lead':['Total Lead'],
+          'Demo Schedule':['Demo Schedule'],
+          'Activation':['Activation'],
+          'Handle Time':['Handle Time','Handle_Time'],
+        };
+        const opts=aliases[name]||[name];
+        for(const o of opts){ const i=hdrs.indexOf(o); if(i>=0) return i; }
+        return -1;
+      };
+
+      // Validate required cols
+      const required=['Agent Name','Total_Talk','Staffed','Idle_Time','Utilization_Per'];
+      const missing=required.filter(c=>col(c)<0);
+      if(missing.length>0) throw new Error(`Missing required columns: ${missing.join(', ')}`);
+
+      document.getElementById('amsProgressMsg').textContent='Aggregating data…';
+
+      // Parse all data rows
+      const parsed=[];
+      const WEEK_MAP={'1st Week':'W1','2nd Week':'W2','3rd Week':'W3','1st week':'W1','2nd week':'W2','3rd week':'W3'};
+
+      for(let i=1;i<rows.length;i++){
+        const r=rows[i];
+        const agentName=String(r[col('Agent Name')]||'').trim();
+        if(!agentName) continue;
+
+        // Short name: part before "Ocube" or first underscore group
+        let short=agentName;
+        if(agentName.includes('Ocube')) short=agentName.split('Ocube')[0];
+        else if(agentName.includes('_')) short=agentName.split('_')[0];
+
+        const tl=String(r[col('Team Leader')]||'').trim();
+        const wkRaw=String(r[col('Week')]||'').trim();
+        const wk=WEEK_MAP[wkRaw]||wkRaw;
+
+        // Time values — handle numeric (XLSX serial fraction) or string HH:MM:SS
+        const talkSec=toSec(r[col('Total_Talk')]);
+        const staffedSec=toSec(r[col('Staffed')]);
+        const idleSec=toSec(r[col('Idle_Time')]);
+        const breakSec=toSec(r[col('Break2_Time')]);
+        const wrapSec=toSec(r[col('Wrapup_Time')]);
+        const ahtSec=toSec(r[col('AHT')]);
+        const dialSec=toSec(r[col('Dialing_Time')]);
+        const loginSec=toSec(r[col('Login_Hrs')]);
+        const handleSec=toSec(r[col('Handle Time')]);
+        const util=parseFloat(r[col('Utilization_Per')])||0;
+        const outgoing=parseInt(r[col('Outgoing_Call')])||0;
+        const connected=parseInt(r[col('Con_Outgoing_Call')])||0;
+        const demoDone=parseInt(r[col('Demo Done')])||0;
+        const totalLead=parseInt(r[col('Total Lead')])||0;
+        const demoSch=parseInt(r[col('Demo Schedule')])||0;
+        const activation=parseInt(r[col('Activation')])||0;
+
+        if(staffedSec===0 && talkSec===0) continue;
+
+        parsed.push({agentName,short,tl,wk,talkSec,staffedSec,idleSec,breakSec,wrapSec,ahtSec,dialSec,loginSec,handleSec,util,outgoing,connected,demoDone,totalLead,demoSch,activation});
+      }
+
+      if(parsed.length===0) throw new Error('No valid data rows found. Check the file format.');
+
+      document.getElementById('amsProgressMsg').textContent='Building aggregations…';
+
+      // ── AGENT MTD aggregation ──
+      const agMap={};
+      parsed.forEach(r=>{
+        if(!agMap[r.short]) agMap[r.short]={name:r.short,tl:r.tlNorm||normTL(r.tl),days:0,talkSec:0,staffedSec:0,idleSec:0,breakSec:0,wrapSec:0,ahtSecs:[],dialSec:0,loginSec:0,handleSec:0,outgoing:0,connected:0,utilSum:0,weeks:{W1:{t:0,s:0,d:0,o:0,c:0,u:0},W2:{t:0,s:0,d:0,o:0,c:0,u:0},W3:{t:0,s:0,d:0,o:0,c:0,u:0}}};
+        const a=agMap[r.short];
+        a.tl=normTL(r.tl);
+        a.days++;a.talkSec+=r.talkSec;a.staffedSec+=r.staffedSec;a.idleSec+=r.idleSec;
+        a.breakSec+=r.breakSec;a.wrapSec+=r.wrapSec;a.dialSec+=r.dialSec;a.loginSec+=r.loginSec;
+        a.handleSec+=r.handleSec;a.outgoing+=r.outgoing;a.connected+=r.connected;a.utilSum+=r.util;
+        if(r.ahtSec>0) a.ahtSecs.push(r.ahtSec);
+        if(r.wk && a.weeks[r.wk]){
+          a.weeks[r.wk].t+=r.talkSec; a.weeks[r.wk].s+=r.staffedSec;
+          a.weeks[r.wk].d++; a.weeks[r.wk].o+=r.outgoing; a.weeks[r.wk].c+=r.connected;
+          a.weeks[r.wk].u+=r.util;
+        }
+      });
+
+      // Build AMS_AGENTS array
+      const newAgents=Object.values(agMap).sort((a,b)=>b.talkSec-a.talkSec).map(a=>{
+        const d=Math.max(a.days,1);
+        const s=Math.max(a.staffedSec,1);
+        const talkPct=+(a.talkSec/s*100).toFixed(1);
+        const idlePct=+(a.idleSec/s*100).toFixed(1);
+        const breakPct=+(a.breakSec/s*100).toFixed(1);
+        const wrapPct=+(a.wrapSec/s*100).toFixed(1);
+        const util=+(a.utilSum/d).toFixed(1);
+        const ahtAvg=a.ahtSecs.length>0?a.ahtSecs.reduce((x,y)=>x+y,0)/a.ahtSecs.length:0;
+        const weeks={};
+        ['W1','W2','W3'].forEach(wk=>{
+          const w=a.weeks[wk];
+          const wd=Math.max(w.d,1);
+          const wu=w.s>0?w.t/w.s*100:0;
+          weeks[wk]={talk_min:Math.round(w.t/60),talk_pct:w.s>0?+(w.t/w.s*100).toFixed(1):0,util:w.d>0?+(w.u/w.d).toFixed(1):0,days:w.d,outgoing:w.o,connected:w.c};
+        });
+        return {name:a.short,days:a.days,talk_sec:a.talkSec,talk_hrs:+(a.talkSec/3600).toFixed(2),
+          talk_pct:talkPct,idle_pct:idlePct,break_pct:breakPct,wrapup_pct:wrapPct,
+          util,aht:secToMm(ahtAvg),daily_talk_min:+(a.talkSec/d/60).toFixed(1),
+          outgoing:a.outgoing,connected:a.connected,weeks};
+      });
+
+      // ── DAILY aggregation ──
+      const dailyMap={};
+      parsed.forEach(r=>{
+        // Date from row index grouping — use row order
+        const dk=r.wk; // group by week for now
+      });
+      // Rebuild daily from parsed — group by unique dates
+      const dateMap={};
+      parsed.forEach(r=>{
+        // We don't have exact date in parsed, use wk as proxy
+        // Build week-level daily from original AMS_DAILY that already exists,
+        // but recalc totals from new data
+        if(!dateMap[r.wk]) dateMap[r.wk]={talkSec:0,staffedSec:0,utilSum:0,agSet:new Set(),cnt:0};
+        const dg=dateMap[r.wk];
+        dg.talkSec+=r.talkSec; dg.staffedSec+=r.staffedSec; dg.utilSum+=r.util;
+        dg.agSet.add(r.short); dg.cnt++;
+      });
+
+      // ── WEEK summary ──
+      const wkSumMap={W1:{t:0,s:0,u:0,ag:new Set(),idle:0,brk:0},W2:{t:0,s:0,u:0,ag:new Set(),idle:0,brk:0},W3:{t:0,s:0,u:0,ag:new Set(),idle:0,brk:0}};
+      parsed.forEach(r=>{ if(wkSumMap[r.wk]){wkSumMap[r.wk].t+=r.talkSec;wkSumMap[r.wk].s+=r.staffedSec;wkSumMap[r.wk].u+=r.util;wkSumMap[r.wk].ag.add(r.short);wkSumMap[r.wk].idle+=r.idleSec;wkSumMap[r.wk].brk+=r.breakSec;}});
+      const wkLabels={W1:'Wk 1 (1-7 Jun)',W2:'Wk 2 (8-14 Jun)',W3:'Wk 3 (15-20 Jun)'};
+      const newWkSum=['W1','W2','W3'].map(wk=>{
+        const w=wkSumMap[wk];
+        const rowCount=parsed.filter(r=>r.wk===wk).length;
+        return {week:wk,label:wkLabels[wk],talk_hrs:+(w.t/3600).toFixed(2),
+          talk_pct:w.s>0?+(w.t/w.s*100).toFixed(1):0,
+          util:rowCount>0?+(w.u/rowCount).toFixed(1):0,
+          idle_pct:w.s>0?+(w.idle/w.s*100).toFixed(1):0,
+          break_pct:w.s>0?+(w.brk/w.s*100).toFixed(1):0,
+          agents:w.ag.size};
+      });
+
+      // ── MTD totals ──
+      const totTalk=parsed.reduce((s,r)=>s+r.talkSec,0);
+      const totStaffed=parsed.reduce((s,r)=>s+r.staffedSec,0);
+      const totUtil=parsed.reduce((s,r)=>s+r.util,0)/Math.max(parsed.length,1);
+      const totIdle=parsed.reduce((s,r)=>s+r.idleSec,0);
+      const totBrk=parsed.reduce((s,r)=>s+r.breakSec,0);
+      const totWrap=parsed.reduce((s,r)=>s+r.wrapSec,0);
+      const newMTD={
+        talk_hrs:+(totTalk/3600).toFixed(1),
+        talk_pct:totStaffed>0?+(totTalk/totStaffed*100).toFixed(1):0,
+        idle_pct:totStaffed>0?+(totIdle/totStaffed*100).toFixed(1):0,
+        break_pct:totStaffed>0?+(totBrk/totStaffed*100).toFixed(1):0,
+        wrapup_pct:totStaffed>0?+(totWrap/totStaffed*100).toFixed(1):0,
+        util:+totUtil.toFixed(1),
+        agents:Object.keys(agMap).length,
+        staffed_hrs:+(totStaffed/3600).toFixed(1)
+      };
+
+      // ── APR AGENT aggregation for APR table ──
+      const aprAgents=Object.values(agMap).sort((a,b)=>b.talkSec-a.talkSec).map(a=>{
+        const d=Math.max(a.days,1);
+        const s=Math.max(a.staffedSec,1);
+        const ahtAvg=a.ahtSecs.length>0?a.ahtSecs.reduce((x,y)=>x+y,0)/a.ahtSecs.length:0;
+        return {
+          short_name:a.short, TL:a.tl, days:a.days,
+          No_of_call:a.outgoing, Connected_call:a.connected,
+          AVG_Staffing:secToHms(a.staffedSec/d), AVG_Net_Login:secToHms(a.loginSec/d),
+          AVG_Dail_Time:secToHms(a.dialSec/d), AVG_Talk_Time:secToHms(a.talkSec/d),
+          AVG_Wrap_Time:secToHms(a.wrapSec/d), AVG_Handle_Time:secToHms(a.handleSec/d||((a.talkSec+a.wrapSec)/d)),
+          AVG_Idle_Time:secToHms(a.idleSec/d), AVG_Break:secToHms(a.breakSec/d),
+          Occupancy_pct:+(a.utilSum/d).toFixed(1), Avg_AHT:secToMm(ahtAvg),
+          _talk_pct:+(a.talkSec/s*100).toFixed(1),_idle_pct:+(a.idleSec/s*100).toFixed(1)
+        };
+      });
+
+      // ── APR TL aggregation ──
+      const tlMap={};
+      parsed.forEach(r=>{
+        const tl=normTL(r.tl);
+        if(!tlMap[tl]) tlMap[tl]={tl,agents:new Set(),t:0,s:0,idle:0,brk:0,wrap:0,dial:0,login:0,handle:0,o:0,c:0,u:0,ahtSecs:[],cnt:0,
+          wks:{W1:{t:0,s:0,o:0,c:0,u:0,cnt:0,ag:new Set()},W2:{t:0,s:0,o:0,c:0,u:0,cnt:0,ag:new Set()},W3:{t:0,s:0,o:0,c:0,u:0,cnt:0,ag:new Set()}}};
+        const tg=tlMap[tl];
+        tg.agents.add(r.short);tg.t+=r.talkSec;tg.s+=r.staffedSec;tg.idle+=r.idleSec;
+        tg.brk+=r.breakSec;tg.wrap+=r.wrapSec;tg.dial+=r.dialSec;tg.login+=r.loginSec;
+        tg.handle+=r.handleSec;tg.o+=r.outgoing;tg.c+=r.connected;tg.u+=r.util;
+        if(r.ahtSec>0) tg.ahtSecs.push(r.ahtSec);
+        tg.cnt++;
+        if(r.wk && tg.wks[r.wk]){
+          tg.wks[r.wk].t+=r.talkSec;tg.wks[r.wk].s+=r.staffedSec;
+          tg.wks[r.wk].o+=r.outgoing;tg.wks[r.wk].c+=r.connected;tg.wks[r.wk].u+=r.util;
+          tg.wks[r.wk].cnt++;tg.wks[r.wk].ag.add(r.short);
+        }
+      });
+
+      const TL_ORDER_NEW=['Akash Tomer','Amit Verma','Anshu Sharma','Himanshu Tiwari','Sagar Maheshwari'];
+      const newTLData=TL_ORDER_NEW.filter(t=>tlMap[t]).map(tl=>{
+        const g=tlMap[tl];const d=Math.max(g.cnt,1);const ahtAvg=g.ahtSecs.length>0?g.ahtSecs.reduce((x,y)=>x+y,0)/g.ahtSecs.length:0;
+        return {TL:tl,Agents:g.agents.size,No_of_call:g.o,Connected_call:g.c,
+          AVG_Staffing:secToHms(g.s/d),AVG_Net_Login:secToHms(g.login/d),AVG_Dail_Time:secToHms(g.dial/d),
+          AVG_Talk_Time:secToHms(g.t/d),AVG_Wrap_Time:secToHms(g.wrap/d),AVG_Handle_Time:secToHms(g.handle/d||(g.t+g.wrap)/d),
+          AVG_Idle_Time:secToHms(g.idle/d),AVG_Break:secToHms(g.brk/d),
+          Occupancy_pct:+(g.u/d).toFixed(1),Avg_AHT:secToMm(ahtAvg),_talk_pct:+(g.t/Math.max(g.s,1)*100).toFixed(1)};
+      });
+
+      const newWkTL=[];
+      ['W1','W2','W3'].forEach(wk=>{
+        TL_ORDER_NEW.filter(t=>tlMap[t]).forEach(tl=>{
+          const g=tlMap[tl];const w=g.wks[wk];if(!w||w.cnt===0)return;
+          const d=Math.max(w.cnt,1);
+          newWkTL.push({Week:wk,TL:tl,Agents:w.ag.size,No_of_call:w.o,Connected_call:w.c,
+            AVG_Staffing:secToHms(g.s/g.cnt),AVG_Net_Login:secToHms(g.login/g.cnt),
+            AVG_Dail_Time:secToHms(g.dial/g.cnt),AVG_Talk_Time:secToHms(w.t/d),
+            AVG_Wrap_Time:secToHms(g.wrap/g.cnt),AVG_Handle_Time:secToHms(g.handle/g.cnt||(g.t+g.wrap)/g.cnt),
+            AVG_Idle_Time:secToHms(g.idle/g.cnt),AVG_Break:secToHms(g.brk/g.cnt),
+            Occupancy_pct:+(w.u/d).toFixed(1),Avg_AHT:'—',
+            _talk_pct:w.s>0?+(w.t/w.s*100).toFixed(1):0});
+        });
+      });
+
+      const newTotal={Agents:Object.keys(agMap).length,No_of_call:parsed.reduce((s,r)=>s+r.outgoing,0),
+        Connected_call:parsed.reduce((s,r)=>s+r.connected,0),
+        AVG_Staffing:secToHms(totStaffed/Math.max(parsed.length,1)),
+        AVG_Net_Login:secToHms(parsed.reduce((s,r)=>s+r.loginSec,0)/Math.max(parsed.length,1)),
+        AVG_Dail_Time:secToHms(parsed.reduce((s,r)=>s+r.dialSec,0)/Math.max(parsed.length,1)),
+        AVG_Talk_Time:secToHms(totTalk/Math.max(parsed.length,1)),
+        AVG_Wrap_Time:secToHms(parsed.reduce((s,r)=>s+r.wrapSec,0)/Math.max(parsed.length,1)),
+        AVG_Handle_Time:secToHms(parsed.reduce((s,r)=>s+r.handleSec||r.talkSec+r.wrapSec,0)/Math.max(parsed.length,1)),
+        AVG_Idle_Time:secToHms(totIdle/Math.max(parsed.length,1)),
+        AVG_Break:secToHms(parsed.reduce((s,r)=>s+r.breakSec,0)/Math.max(parsed.length,1)),
+        Occupancy_pct:+totUtil.toFixed(1),Avg_AHT:'—',_talk_pct:totStaffed>0?+(totTalk/totStaffed*100).toFixed(1):0};
+
+      _amsPending={newAgents,newWkSum,newMTD,aprAgents,newTLData,newWkTL,newTotal,rows:parsed.length,agents:Object.keys(agMap).length};
+      document.getElementById('amsUploadProgress').style.display='none';
+      showAmsPreview(_amsPending,file.name);
+
+    } catch(err){
+      document.getElementById('amsUploadProgress').style.display='none';
+      const el=document.getElementById('amsUploadError');
+      el.style.display='';el.textContent='❌ '+err.message;
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function normTL(tl){
+  if(!tl) return 'Unknown';
+  const t=String(tl).trim().toLowerCase();
+  if(t.includes('akash')) return 'Akash Tomer';
+  if(t.includes('amit')) return 'Amit Verma';
+  if(t.includes('anshu')) return 'Anshu Sharma';
+  if(t.includes('himanshu')) return 'Himanshu Tiwari';
+  if(t.includes('sagar')) return 'Sagar Maheshwari';
+  return tl;
+}
+
+function showAmsPreview(data,fname){
+  document.getElementById('amsUploadPreview').style.display='';
+  document.getElementById('amsPreviewTitle').textContent=`✓ ${fname} — ${data.rows} data rows · ${data.agents} agents`;
+  document.getElementById('amsPreviewSub').textContent=`MTD Talk: ${data.newMTD.talk_hrs}h · Avg Util: ${data.newMTD.util}% · ${data.newMTD.agents} agents`;
+
+  // Stats grid
+  document.getElementById('amsPreviewStats').innerHTML=[
+    {l:'Rows Parsed',v:data.rows.toLocaleString()},
+    {l:'Agents Found',v:data.agents},
+    {l:'Total Talk',v:data.newMTD.talk_hrs+'h'},
+    {l:'Avg Occupancy',v:data.newMTD.util+'%'},
+  ].map(s=>`<div style="background:rgba(0,212,170,.07);border:1px solid rgba(0,212,170,.15);border-radius:7px;padding:8px 10px;text-align:center"><div style="font-size:9px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">${s.l}</div><div style="font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;color:#fff">${s.v}</div></div>`).join('');
+
+  // Sample table — top 8 agents
+  const thStyle='padding:7px 10px;font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--mu);background:var(--s1);border-bottom:1px solid var(--b);white-space:nowrap';
+  const tdStyle='padding:6px 10px;font-family:\'JetBrains Mono\',monospace;font-size:10px;border-bottom:1px solid rgba(255,255,255,.04)';
+  document.getElementById('amsPreviewHead').innerHTML=`<tr>${['Agent','TL','Days','Talk Hrs','Talk%','Util%','Dials','Connected'].map(h=>`<th style="${thStyle}">${h}</th>`).join('')}</tr>`;
+  document.getElementById('amsPreviewBody').innerHTML=data.newAgents.slice(0,8).map(a=>`<tr>
+    <td style="${tdStyle};font-weight:600">${a.name}</td>
+    <td style="${tdStyle};color:var(--mu2)">${a.tl||''}</td>
+    <td style="${tdStyle}">${a.days}</td>
+    <td style="${tdStyle};color:var(--teal)">${a.talk_hrs}</td>
+    <td style="${tdStyle}">${a.talk_pct}%</td>
+    <td style="${tdStyle}">${a.util}%</td>
+    <td style="${tdStyle}">${a.outgoing}</td>
+    <td style="${tdStyle}">${a.connected}</td>
+  </tr>`).join('');
+}
+
+function confirmAmsUpload(){
+  if(!_amsPending){toast('No data to apply',false);return;}
+  const p=_amsPending;
+
+  // Apply to live data arrays
+  AMS_AGENTS.length=0;
+  p.newAgents.forEach(a=>AMS_AGENTS.push(a));
+
+  AMS_WEEKS.length=0;
+  p.newWkSum.forEach(w=>AMS_WEEKS.push(w));
+
+  Object.assign(AMS_MTD,p.newMTD);
+
+  APR_AGENT_DATA.length=0;
+  p.aprAgents.forEach(a=>APR_AGENT_DATA.push(a));
+
+  APR_TL_DATA.length=0;
+  p.newTLData.forEach(t=>APR_TL_DATA.push(t));
+
+  APR_WK_TL.length=0;
+  p.newWkTL.forEach(r=>APR_WK_TL.push(r));
+
+  Object.assign(APR_TOTAL,p.newTotal);
+
+  closeAmsUpload();
+  // Switch to AMS module and re-render
+  const amsTab=document.querySelector('.mod-tab:nth-child(2)');
+  if(amsTab) switchMod('ams',amsTab);
+  else renderAMS();
+  toast(`✅ AMS data updated — ${p.agents} agents · ${p.newMTD.talk_hrs}h talk time`);
+  _amsPending=null;
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
